@@ -1,54 +1,57 @@
 from langchain.prompts.prompt import PromptTemplate
-from langchain.docstore.document import Document
-from langchain_community.callbacks import get_openai_callback
 from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import OpenAI
+from langchain_community.utilities.dalle_image_generator import DallEAPIWrapper
+from langchain_community.callbacks import get_openai_callback
 
-from prompts import CREATE_IG_DECRIPTION
+from prompts import CREATE_IG_DECRIPTION, CREATE_DALLE_PROMPT
 
 
 class LudusSMA:
     """
-    Base BOT class.
-    It handles the search part and the formulation of the answer.
-
-    To be extended depending on the use case.
+    Ludus BOT class.
+    It creates description for social content, prompt for Dall-E and generates Dall-E image.
     """
 
     def __init__(
         self,
         openai_key: str,
-        generate_template: str = CREATE_IG_DECRIPTION,
+        description_template: str = CREATE_IG_DECRIPTION,
+        dalle_template: str = CREATE_DALLE_PROMPT,
     ):
         """
-        Create Base Bot object.
+        Create LudusSMA Bot object.
 
         Args:
             openai_key (str): Contains key for OpenAI service.
-            generate_template (str): Prompt for the generation.
+            description_template (str): Prompt for the description generation.
+            dalle_template (str): Prompt for the Dall-E prompt generation.
         """
 
-        prompt = PromptTemplate.from_template(template=generate_template)
+        description_prompt = PromptTemplate.from_template(template=description_template)
         llm = OpenAI(api_key=openai_key)
         output_parser = StrOutputParser()
-        self.generate = prompt | llm | output_parser
+        self.ig_description_generator = description_prompt | llm | output_parser
 
-        self.knowledge: str = None
+        dalle_prompt = PromptTemplate.from_template(template=dalle_template)
+        self.dalle_prompt_generator = dalle_prompt | llm | output_parser
 
+        self.dalle = DallEAPIWrapper()
         self.prompt_tokens = 0
         self.completion_tokens = 0
         self.cost = 0
 
-    def answer(self, message: str = "") -> dict:
+    def get_description(self, content_type: str, context: str) -> dict:
         """
         Function to answer the user question
 
         Args:
-            message (str): The user input
+            content_type (str): The type of content the description is for: story | post.
+            context (str): The context on which to generate the description.
 
         Returns:
             (dict): Contains bot answer and other metadata:
-                answer (str): The answer to the user's question
+                description (str): The answer to the user's question
                 prompt_token (int): Number of tokens in input.
                 completion_token (int): Number of tokens generated.
                 cost (int): Estimated cost.
@@ -56,34 +59,52 @@ class LudusSMA:
         """
 
         with get_openai_callback() as cb:
-            answer = self.generate.invoke(
-                {"knowledge": self.knowledge, "user_question": message}
+            description = self.ig_description_generator.invoke(
+                {"content_type": content_type, "context": context}
             )
             self.prompt_tokens += cb.prompt_tokens
             self.completion_tokens += cb.completion_tokens
             self.cost += cb.total_cost
 
         return {
-            "answer": answer,
+            "description": description,
             "prompt_tokens": self.prompt_tokens,
             "completion_tokens": self.completion_tokens,
             "cost": self.cost,
         }
 
-    def run(self, message: str):
+    def get_dalle_image(self, context: str) -> dict:
         """
-        Main function. Handles search part and answer formulation.
+        Function to answer the user question
 
         Args:
-            message (str): The user message.
+            context (str): The context on which to generate the description.
 
         Returns:
             (dict): Contains bot answer and other metadata:
-                answer (str): The answer to the user's question
+                description (str): The answer to the user's question
                 prompt_token (int): Number of tokens in input.
                 completion_token (int): Number of tokens generated.
                 cost (int): Estimated cost.
+
         """
 
-        # -------------------------------- ANSWER
-        return self.answer(message)
+        with get_openai_callback() as cb:
+            dalle_prompt = self.dalle_prompt_generator.invoke({"context": context})
+            self.prompt_tokens += cb.prompt_tokens
+            self.completion_tokens += cb.completion_tokens
+            self.cost += cb.total_cost
+
+        with get_openai_callback() as cb:
+            dalle_img_url = self.dalle.run(dalle_prompt)
+            self.prompt_tokens += cb.prompt_tokens
+            self.completion_tokens += cb.completion_tokens
+            self.cost += cb.total_cost
+
+        return {
+            "dalle_prompt": dalle_prompt,
+            "dalle_image_url": dalle_img_url,
+            "prompt_tokens": self.prompt_tokens,
+            "completion_tokens": self.completion_tokens,
+            "cost": self.cost,
+        }
