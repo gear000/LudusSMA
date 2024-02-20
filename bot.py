@@ -75,9 +75,12 @@ async def choose_content(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 
 async def topic(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Ask the user for info about the topic of the description."""
+    """
+    Ask the user for info about the topic of the description.
+    """
     text = update.message.text
-    context.user_data[CONTENT_TYPE] = text
+    if text != "No, aspetta...":
+        context.user_data[CONTENT_TYPE] = text
     await update.message.reply_text(
         f"Su cosa vuoi generare la descrizione?",
         reply_markup=ReplyKeyboardRemove(),
