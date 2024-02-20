@@ -80,7 +80,8 @@ class LudusSMA:
 
         Returns:
             (dict): Contains bot answer and other metadata:
-                description (str): The answer to the user's question
+                dalle_prompt (str): The prompt for Dall-E.
+                dalle_image_url (str): The url to the generated image.
                 prompt_token (int): Number of tokens in input.
                 completion_token (int): Number of tokens generated.
                 cost (int): Estimated cost.
