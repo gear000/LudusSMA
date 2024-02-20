@@ -4,7 +4,7 @@ from langchain_openai import OpenAI
 from langchain_community.utilities.dalle_image_generator import DallEAPIWrapper
 from langchain_community.callbacks import get_openai_callback
 
-from prompts import CREATE_IG_DECRIPTION, CREATE_DALLE_PROMPT
+from src.prompts import CREATE_IG_DECRIPTION, CREATE_DALLE_PROMPT
 
 
 class LudusSMA:
@@ -15,7 +15,6 @@ class LudusSMA:
 
     def __init__(
         self,
-        openai_key: str,
         description_template: str = CREATE_IG_DECRIPTION,
         dalle_template: str = CREATE_DALLE_PROMPT,
     ):
@@ -23,13 +22,12 @@ class LudusSMA:
         Create LudusSMA Bot object.
 
         Args:
-            openai_key (str): Contains key for OpenAI service.
             description_template (str): Prompt for the description generation.
             dalle_template (str): Prompt for the Dall-E prompt generation.
         """
 
         description_prompt = PromptTemplate.from_template(template=description_template)
-        llm = OpenAI(api_key=openai_key)
+        llm = OpenAI()
         output_parser = StrOutputParser()
         self.ig_description_generator = description_prompt | llm | output_parser
 
