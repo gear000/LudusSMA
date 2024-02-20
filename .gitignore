@@ -159,6 +159,10 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-tasks.xlsx
 
+# Visual Studio configuration
 .vscode
+
+# backup file
+*.backup
+*.bkp
