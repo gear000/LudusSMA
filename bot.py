@@ -12,9 +12,8 @@ from telegram.ext import (
 )
 
 from dotenv import load_dotenv
-
-
 from src.ludus_sma import LudusSMA
+import os
 
 
 # Enable logging
@@ -32,6 +31,12 @@ load_dotenv()
 CHOOSING, SUMMARY, CONFIRMATION, CONCLUSION = range(4)
 CONTENT_TYPE = "Tipologia di contenuto"
 TOPIC = "Argomento"
+
+
+def check_identity(user_id: str) -> bool:
+    """Check if the user is authorized to use bot"""
+    authorized_users = os.getenv("AUTHORIZED_USERS").split(",")
+    return user_id in authorized_users
 
 
 def facts_to_str(user_data: Dict[str, str]) -> str:
