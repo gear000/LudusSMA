@@ -11,14 +11,14 @@ def refresh_token(config, config_path):
 
     refresh_token_url = 'https://graph.facebook.com/v19.0/oauth/access_token'
     payload = {
-        "client_secret": config["page_info"]["client_secret"], # secret key della app (su meta developers)
         "grant_type": 'fb_exchange_token',
-        "client_id": '1816564495510379', #config["page_info"]["client_id"], # ID della app (su meta developers)        
+        "client_secret": config["page_info"]["client_secret"], # secret key della app (su meta developers)        
+        "client_id": config["page_info"]["client_id"], #config["page_info"]["client_id"], # ID della app (su meta developers)        
         "fb_exchange_token": config["page_info"]["access_token"] # Vecchio token, da refreshare
     }
     # Invio la richiesta
     print("Aggiornamento token.")
-    r = requests.get(refresh_token_url, data=payload)
+    r = requests.get(refresh_token_url, params=payload)
     print(r.request.body)
     sleep(.5)
     print(r.text)
@@ -96,7 +96,7 @@ def publish_story(image_url, config, config_path):
         raise Exception("E01: La richiesta di postare non è andata a buon fine.")
 
     # Aggiornamento del token
-    # refresh_token(config, config_path)
+    refresh_token(config, config_path)
 
 def publish_post_single(image_url, caption, config, config_path):
     api_version = "v19.0"
@@ -151,7 +151,7 @@ def publish_post_single(image_url, caption, config, config_path):
         raise Exception("E01: La richiesta di postare non è andata a buon fine.")
 
     # Aggiornamento del token
-    # refresh_token(config, config_path)
+    refresh_token(config, config_path)
 
 
 # Caricamento config
@@ -167,29 +167,8 @@ with open("test_images.txt", "r") as i:
 publish_post_single(choice(test_images), "Test pubblicazione post singolo", config, config_path)
 
 
-# refresh_token_url = 'https://graph.facebook.com/v19.0/oauth/access_token'
-# payload = {
-#     'grant_type': 'fb_exchange_token', 
-#     'client_id': '1816564495510379', #config["page_info"]["client_id"], # ID della app (su meta developers)      
-#     'client_secret': '59c7f63fb73be9722023019017025b70', # secret key della app (su meta developers)     
-#     'fb_exchange_token':'EAAZA0JZBF3a2sBO61jqFAFERrZAI4e0QjGyMGMJipfJy3SEXlJXE4GYSJvTZA8xeLzwJupxZAOzDvTK4BYxZCqqNhtIk70przJFAsihQgKJqmXFhZC50pkUO0L4bDEWgiRwsWcnPnw4VMwX4OGkPiplF7ODRrGCqrxhX2Cgv4xTbesHcSSbekKGMyH3w2otPI1W' # Vecchio token, da refreshare
-# }
-# # Invio la richiesta
-# print("Aggiornamento token.")
-# r = requests.get(refresh_token_url, data=payload)
-# # print(r.request.body)
-# print(r.text)
-
-
-
-# def publish_post_single():
-#     print("DA FARE")
-
 # def publish_post_multiple(): 
 #     print("DA FARE")
-
-1816564495510379
-1234567890123456
 
 
     # get_ig_id restituisce l'id dell'user ig. Se conosco già l'id non serve lanciarlo
