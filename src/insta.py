@@ -7,11 +7,23 @@ from random import choice
 # ATTENZIONE! Meta fornisce un short-lived access token (durata di qualche ora). E' necessario scambiarlo con un long-lived access token (durata c.a. 60 giorni)
 # attraverso la seguente GET request.
 
-def refresh_token(config, config_path):
+def refresh_token(config_path):
+    """
+    Aggiorna l'access token per l'utilizzo dell'API di Instagram.
+    :param config_path: Percorso del file JSON di configurazione.
+    La funzione carica le informazioni di configurazione da 'config_path', utilizza il token attuale per ottenere 
+    un nuovo token tramite una richiesta GET all'API di Facebook, quindi aggiorna il token nel file di configurazione.
+    Gestisce eventuali errori durante il processo e stampa informazioni di debug.
+    """
+    # Caricamento config    
+    with open(config_path) as c:
+        config  = json.load(c)
 
-    refresh_token_url = 'https://graph.facebook.com/v19.0/oauth/access_token'
+    api_version = config["page_info"]["api_version"]
+
+    refresh_token_url = f"https://graph.facebook.com/{api_version}/oauth/access_token"
     payload = {
-        "grant_type": 'fb_exchange_token',
+        "grant_type": "fb_exchange_token",
         "client_secret": config["page_info"]["client_secret"], # secret key della app (su meta developers)        
         "client_id": config["page_info"]["client_id"], #config["page_info"]["client_id"], # ID della app (su meta developers)        
         "fb_exchange_token": config["page_info"]["access_token"] # Vecchio token, da refreshare
@@ -32,7 +44,7 @@ def refresh_token(config, config_path):
 
             config["page_info"]["access_token"] = result["access_token"]
             with open(config_path, "w") as c:
-                json.dump(config, c)
+                json.dump(config, c, indent=4)
         else:
             print(result)
             raise Exception("E03: Aggiornamento token fallito.")
@@ -41,24 +53,30 @@ def refresh_token(config, config_path):
     
 
 
-def publish_story(image_url, config, config_path):
-    api_version = "v19.0"
-    media_type = "STORIES"
+def publish_story(image_url, config_path):
+    """
+    Utilizza l'API di Instagram per pubblicare una storia.
+    :param image_url: URL dell'immagine da pubblicare nella storia.
+    :param config_path: Percorso del file JSON di configurazione.
+    La funzione carica le informazioni di configurazione da 'config_path', 
+    crea una storia su Instagram e la pubblica definitivamente.
+    Gestisce eventuali errori e aggiorna il token di accesso.
+    """ 
 
+    # Caricamento config
+    with open(config_path) as c:
+        config  = json.load(c)
+
+    # Definizione variabili
     ig_user_id = config["page_info"]["ig_user_id"]
-
-    # Postare contenuti su ig richiede due step:
-    # 1. mandare una POST request per creare il 'container' relativo al post/storia
-    #   https://graph.facebook.com/v19.0/{ig_user_id}/media?image_url={image_url}&caption={caption}&access_token={access_token}&media_type={media_type}
-    # 2. mandare una POST request per pubblicare definitivamente il post/storia
-    #   https://graph.facebook.com/v19.0/{ig_user_id}/media_publish?creation_id={creation_id}&access_token={access_token}
+    api_version = config["page_info"]["api_version"]
+    media_type = "STORIES"
 
     post_content_step1 = f"https://graph.facebook.com/{api_version}/{ig_user_id}/media"
 
     # Contenuto della richiesta 1
     payload_step1 = {
         "image_url": image_url,
-        # "caption": caption,
         "access_token": config["page_info"]["access_token"],
         "media_type": media_type
     }
@@ -96,18 +114,25 @@ def publish_story(image_url, config, config_path):
         raise Exception("E01: La richiesta di postare non è andata a buon fine.")
 
     # Aggiornamento del token
-    refresh_token(config, config_path)
+    refresh_token(config_path)
 
-def publish_post_single(image_url, caption, config, config_path):
-    api_version = "v19.0"
+def publish_post_single(image_url, caption, config_path):
+    """
+    Utilizza l'API di Instagram per pubblicare un post.
+    :param image_url: URL dell'immagine da pubblicare.
+    :param caption: Didascalia del post.
+    :param config_path: Percorso del file JSON di configurazione.
+    La funzione carica le informazioni di configurazione da 'config_path', 
+    crea un contenitore per il post su Instagram e lo pubblica definitivamente.
+    Gestisce eventuali errori e aggiorna il token di accesso.
+    """
+
+    # Caricamento config
+    with open(config_path) as c:
+        config  = json.load(c)
 
     ig_user_id = config["page_info"]["ig_user_id"]
-
-    # Postare contenuti su ig richiede due step:
-    # 1. mandare una POST request per creare il 'container' relativo al post/storia
-    #   https://graph.facebook.com/v19.0/{ig_user_id}/media?image_url={image_url}&caption={caption}&access_token={access_token}&media_type={media_type}
-    # 2. mandare una POST request per pubblicare definitivamente il post/storia
-    #   https://graph.facebook.com/v19.0/{ig_user_id}/media_publish?creation_id={creation_id}&access_token={access_token}
+    api_version = config["page_info"]["api_version"]
 
     post_content_step1 = f"https://graph.facebook.com/{api_version}/{ig_user_id}/media"
 
@@ -151,25 +176,25 @@ def publish_post_single(image_url, caption, config, config_path):
         raise Exception("E01: La richiesta di postare non è andata a buon fine.")
 
     # Aggiornamento del token
-    refresh_token(config, config_path)
+    refresh_token(config_path)
 
 
-# Caricamento config
-config_path = "config.json"
-with open(config_path) as c:
-    config  = json.load(c)
+
+
+
+
+
+# -------------- TEST ---------------
 
 # Caricamento immagini di test
 with open("test_images.txt", "r") as i:
     test_images = [l.strip() for l in i]
-
+config_path = "config.json"
 # publish_story(choice(test_images), config, config_path)
-publish_post_single(choice(test_images), "Test pubblicazione post singolo", config, config_path)
+publish_post_single(choice(test_images), "Test pubblicazione post singolo", config_path)
 
 
 # def publish_post_multiple(): 
 #     print("DA FARE")
 
 
-    # get_ig_id restituisce l'id dell'user ig. Se conosco già l'id non serve lanciarlo
-    # get_ig_id = f"https://graph.facebook.com/v19.0/{fb_page_id}?fields=instagram_business_account&access_token={access_token}"
