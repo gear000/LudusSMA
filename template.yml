@@ -8,7 +8,9 @@ Conditions:
 
 Resources:
 
-  NonResource:
-    Type: Custom::NonResource
-    Condition: Never
+  LudusSMAArtifactS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: my-unique-bucket-name-123456789
+      AccessControl: PublicRead
   
