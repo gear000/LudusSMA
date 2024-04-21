@@ -17,7 +17,7 @@ phases:
     commands:
       - echo Build phase...
       - sam build
-      - ls
+      - ls -la .aws-sam/build
       - cfn-lint .aws-sam/build/template.yml
 
 artifacts:
