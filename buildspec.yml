@@ -21,6 +21,6 @@ phases:
       - cfn-lint .aws-sam/build/template.yaml
 
 artifacts:
-  name: SourceArtifact
+  name: BuildArtifact
   files:
     - '.aws-sam/build/template.yaml'
