@@ -1,0 +1,33 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.11  # Assicurati di usare la versione di runtime compatibile con il tuo progetto
+    commands:
+      - echo Installing source dependencies...
+      - pip install -r requirements.txt  # Installa le dipendenze necessarie
+
+  pre_build:
+    commands:
+      - echo Pre-build phase...
+      - sam validate  # Valida il template di SAM prima di procedere
+
+  build:
+    commands:
+      - echo Build phase...
+      - sam build  # Costruisce l'applicazione SAM
+
+  post_build:
+    commands:
+      - echo Post-build phase...
+      - sam package --output-template-file packaged.yaml --s3-bucket $S3_BUCKET  # Impacchetta l'applicazione e caricala su S3
+
+artifacts:
+  type: zip
+  files:
+    - packaged.yaml  # Il file output da SAM package
+
+cache:
+  paths:
+    - '/root/.cache/pip/**/*'  # Opzionale: imposta una cache per le dipendenze di pip
