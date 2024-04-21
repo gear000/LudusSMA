@@ -2,7 +2,7 @@ version: 0.2
 
 phases:
   install:
-    runtime- versions:
+    runtime-versions:
       python: 3.11
     commands:
       - echo Install phase...
