@@ -2,6 +2,63 @@ import requests # type: ignore
 from time import sleep
 import json
 from random import choice
+import base64
+from PIL import Image, ImageFont, ImageDraw 
+
+def image_edit(img_path, edit_dict):
+    # Carico immagine
+    my_image = Image.open(img_path)
+
+    # Carico parametri
+    title_text = edit_dict["title"]
+    # title_color = edit_dict["title_color"]
+    title_font =  edit_dict["title_font"]
+    # title_size = edit_dict["title_siz"]
+    body_text =  edit_dict["body"]
+    # body_color =  edit_dict["body_color"]
+    body_font = edit_dict["body_font"]
+    # body_size = edit_dict["body_s"]
+
+    title_font = ImageFont.truetype(title_font, 200)
+    body_font = ImageFont.truetype(body_font, 200)
+
+    image_editable = ImageDraw.Draw(my_image)
+    image_editable.text((15,15), body_text, (55, 0, 134), font=title_font)
+    image_editable.text((15,130), title_text, (55, 0, 134), font=title_font)
+
+    # Salvataggio risutlato
+    my_image.save("_EDIT.jpg")
+
+tmp_dict = {"title": "Titolo di prova",
+            "title_font": "ARCADECLASSIC.TTF",
+            "body": "Body di prova",
+            "body_font": "ARCADECLASSIC.TTF"}
+image_edit("img_test.jpeg", tmp_dict)
+
+def load_imgur(config_path, img_path):
+    # Caricamento config    
+    with open(config_path) as c:
+        config  = json.load(c)
+
+    # Set API endpoint and headers
+    url = "https://api.imgur.com/3/image"
+
+    headers = {
+        'Authorization': f"Client-ID {config['imgur_info']['imgur_client_id']}",
+    }
+    params = {
+    'image': base64.b64encode(open(img_path, 'rb').read())
+        }
+
+    r = requests.post(url, headers=headers, data=params)
+    if r.status_code != 200:
+        raise Exception("E04: Upload immagine fallito.")
+    # print('status:', r.status_code)
+    data = r.json()
+    print(data["data"]["link"])
+    return data["data"]["link"]
+
+
 
 
 # ATTENZIONE! Meta fornisce un short-lived access token (durata di qualche ora). E' necessario scambiarlo con un long-lived access token (durata c.a. 60 giorni)
@@ -53,7 +110,7 @@ def refresh_token(config_path):
     
 
 
-def publish_story(image_url, config_path):
+def publish_story(image_path, config_path):
     """
     Utilizza l'API di Instagram per pubblicare una storia.
     :param image_url: URL dell'immagine da pubblicare nella storia.
@@ -66,6 +123,9 @@ def publish_story(image_url, config_path):
     # Caricamento config
     with open(config_path) as c:
         config  = json.load(c)
+
+    # Ottieni image URL
+    image_url = load_imgur(config_path, image_path)
 
     # Definizione variabili
     ig_user_id = config["page_info"]["ig_user_id"]
@@ -116,7 +176,7 @@ def publish_story(image_url, config_path):
     # Aggiornamento del token
     refresh_token(config_path)
 
-def publish_post_single(image_url, caption, config_path):
+def publish_post_single(image_path, caption, config_path):
     """
     Utilizza l'API di Instagram per pubblicare un post.
     :param image_url: URL dell'immagine da pubblicare.
@@ -130,6 +190,9 @@ def publish_post_single(image_url, caption, config_path):
     # Caricamento config
     with open(config_path) as c:
         config  = json.load(c)
+
+    # Ottieni image URL
+    image_url = load_imgur(config_path, image_path)
 
     ig_user_id = config["page_info"]["ig_user_id"]
     api_version = config["page_info"]["api_version"]
@@ -186,12 +249,17 @@ def publish_post_single(image_url, caption, config_path):
 
 # -------------- TEST ---------------
 
+
+
 # Caricamento immagini di test
-with open("test_images.txt", "r") as i:
-    test_images = [l.strip() for l in i]
+# with open("test_images.txt", "r") as i:
+#     test_images = [l.strip() for l in i]
 config_path = "config.json"
 # publish_story(choice(test_images), config, config_path)
-publish_post_single(choice(test_images), "Test pubblicazione post singolo", config_path)
+
+img = "img_test.jpeg"
+load_imgur(config_path, img)
+# publish_post_single(img, "Test pubblicazione post singolo", config_path)
 
 
 # def publish_post_multiple(): 

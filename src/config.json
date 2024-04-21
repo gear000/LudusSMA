@@ -6,5 +6,9 @@
         "client_secret": "59c7f63fb73be9722023019017025b70",
         "api_version": "v19.0",
         "access_token": "EAAZA0JZBF3a2sBOziZAZA7wLXM6FZAFVk5SAQHuRPXkkwOAWoZAKOy2ZAncaW2yfp4nsUyL1cxRuqEr0r9ykgqiOoIR7ZCzdfNbrA7Oob4JRaNHjKkWE4fsEZAUVYf6zxpyySCcg9nIteVYKoNIb9zQQFmJwQY20YgkFZBex5w9nd7kub33f5eQumSFQsBXxtqOSWs"
+    },
+    "imgur_info": {
+        "imgur_client_id": "a479ab6df29945b",
+        "imgur_client_secret": "2683b21fc6bfc8705508a487ed04b169c8d092c0"
     }
 }
