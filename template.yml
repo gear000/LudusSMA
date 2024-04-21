@@ -2,15 +2,12 @@ AWSTemplateFormatVersion: '2010-09-09'
 
 Description: AWS CodePipeline for a Serverless Application
 
-Conditions:
-  Never:
-    !Equals [ "A", "B" ]
-
 Resources:
 
-  LudusSMAArtifactS3Bucket:
-    Type: AWS::S3::Bucket
+  LudusSMALastChatIdParameter:
+    Type: AWS::SSM::Parameter
     Properties:
-      BucketName: my-unique-bucket-name-123456789
-      AccessControl: PublicRead
+      Name: last_chat_id
+      Type: String
+      Value: "initial_value"  # Change this as necessary
   
