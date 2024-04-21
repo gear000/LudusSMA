@@ -1,6 +1,12 @@
 version: 0.2
 
 phases:
+  install:
+    runtime- versions:
+      python: 3.11
+    commands:
+      - echo Install phase...
+      - pip3 install cfn-lint
 
   pre_build:
     commands:
