@@ -11,6 +11,7 @@ phases:
   pre_build:
     commands:
       - echo Pre-build phase...
+      - echo "S3_BUCKET is $S3_BUCKET"
       - sam validate  # Valida il template di SAM prima di procedere
 
   build:
