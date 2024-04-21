@@ -18,8 +18,8 @@ phases:
       - echo Build phase...
       - sam build
       - ls -la .aws-sam/build
-      - cfn-lint .aws-sam/build/template.yml
+      - cfn-lint .aws-sam/build/template.yaml
 
 artifacts:
   files:
-    - '.aws-sam/build/template.yml'
+    - '.aws-sam/build/template.yaml'
