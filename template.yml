@@ -3,15 +3,6 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: AWS CodePipeline for a Serverless Application
 
 Resources:
-
-  ### PARAMETERS ###
-
-  LudusSMALastChatIdParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: last-chat-id
-      Type: String
-      Value: initial_value
   
   ### SECRETS ###
 
@@ -34,6 +25,13 @@ Resources:
     Properties:
       Name: telegram-bot-token
       Description: Telegram Bot Token
+      SecretString: initial_value
+
+  LudusSMATelegramHeaderWebhookSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: telegram-header-webhook
+      Description: A secret token used by Telegram in the header "X-Telegram-Bot-Api-Secret-Token"
       SecretString: initial_value
 
   LudusSMATelegramAllowChatIDSecret:
@@ -62,6 +60,20 @@ Resources:
           KeyType: HASH
         - AttributeName: message_timestamp
           KeyType: RANGE
+
+  LudusSMAUserLastChatIDDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      DeletionProtectionEnabled: true
+      TableName: UserLastChatID
+      TableClass: STANDARD
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
 
   LudusSMAEventsDynamoDBTable:
     Type: AWS::DynamoDB::Table
