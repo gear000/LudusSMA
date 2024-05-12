@@ -20,34 +20,6 @@ Resources:
       Description: Credential for Imgur Account
       SecretString: initial_value
 
-  LudusSMATelegramBotTokenSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: telegram-bot-token
-      Description: Telegram Bot Token
-      SecretString: initial_value
-
-  LudusSMATelegramHeaderWebhookSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: telegram-header-webhook
-      Description: A secret token used by Telegram in the header "X-Telegram-Bot-Api-Secret-Token"
-      SecretString: initial_value
-
-  LudusSMATelegramHeaderWebhookSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: telegram-header-webhook
-      Description: A secret token used by Telegram in the header "X-Telegram-Bot-Api-Secret-Token"
-      SecretString: initial_value
-
-  LudusSMATelegramAllowChatIDSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: telegram-allow-chat-id
-      Description: Telegram Allow Chat ID
-      SecretString: initial_value
-
   ### DYNAMODB TABLES ###
 
   LudusSMAChatsHistoryDynamoDBTable:
