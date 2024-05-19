@@ -46,8 +46,8 @@ async def process_update(update: Update):
 def lambda_handler(event: dict, context):
     """AWS Lambda function to handle incoming webhook."""
 
-    logger.info()
-    logger.info()
+    logger.info("Event: %s", event)
+    logger.info("Context: %s", context)
 
     SECRET_TOKEN = aws_utils.get_parameters(
         parameter_name="telegram-header-webhook-token",
