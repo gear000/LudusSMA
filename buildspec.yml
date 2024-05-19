@@ -27,4 +27,4 @@ phases:
 artifacts:
   name: BuildArtifact
   files:
-    - '.aws-sam/build/template.yaml'
+    - template.yml
