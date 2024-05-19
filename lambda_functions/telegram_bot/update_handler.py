@@ -1,6 +1,7 @@
 import telegram
-
 from telegram.ext import ContextTypes
+
+from chatbot.event_handler import EventHandler
 
 
 async def start(update: telegram.Update, context):
@@ -22,9 +23,17 @@ async def start(update: telegram.Update, context):
 
 
 async def event(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Start the conversation and ask user for input."""
-
-    reply_anwser = await update.message.reply_text("Elaboro l'evento")
+    """
+    Instantiate the bot and get the answer
+    """
+    # TODO
+    # get chat_history from DB
+    # context._user_id
+    # context._chat_id
+    # chat_history = get_history(user_id, chat_id)
+    bot = EventHandler(chat_history=[])
+    answer_dict = bot.run(update.message.text)
+    reply_anwser = await update.message.reply_text(answer_dict["output"])
 
     print(f"Reply Awnser:\n {reply_anwser}")
 

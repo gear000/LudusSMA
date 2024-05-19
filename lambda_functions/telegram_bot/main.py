@@ -8,6 +8,8 @@ import utils.aws_utils as aws_utils
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
+from lambda_functions.telegram_bot.update_handler import start, event
+
 ### Setup Logging ###
 logger = logging.getLogger("SMA Logger")
 logger.setLevel(logging.INFO)
@@ -22,9 +24,6 @@ ssm_client = boto3.client("ssm")
 TELEGRAM_TOKEN = aws_utils.get_parameters(
     parameter_name="telegram-bot-token", is_secure=True, ssm_client=ssm_client
 )
-
-### Command handlers from a separate module ###
-from command_handler import start, event
 
 ### Telegram bot app setup ###
 app = Application.builder().token(TELEGRAM_TOKEN).build()
