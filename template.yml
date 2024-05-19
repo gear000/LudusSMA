@@ -37,7 +37,7 @@ Resources:
               - 'dynamodb:*'              
               - 'events:*'
               - 'sqs:*'
-              - 'systemsmanager:*'
+              - 'ssm:*'
             Resource: '*'
 
   ### PARAMETER ###
