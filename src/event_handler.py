@@ -1,37 +1,59 @@
+from langchain_aws import ChatBedrock
 from langchain.prompts.prompt import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_openai import OpenAI
-from langchain_community.utilities.dalle_image_generator import DallEAPIWrapper
+from langchain.agents import tool
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_openai.chat_models import ChatOpenAI
+from langchain_core.messages import AIMessage, HumanMessage, BaseMessage
+from langchain.agents import AgentExecutor, create_json_chat_agent
 
-from langchain_community.llms import Bedrock
 
-
-from prompts import EVENT_PROMPT
-from operator import itemgetter
+from src.prompts import EVENT_SYSTEM_PROMPT, EVENT_TOOLS_PROMPT, CHECK_INFO_PROMPT
 
 
 def history_to_str(chat: list) -> str:
     """
     chat = [
         {
-            "text":"text",
+            "content":"content",
             "author":"bot"|"user",
             "timestamp":str(datetime.now())
         }
     ]
 
     Returns:
-        hostory (str)
+        history (str)
     """
     chat = sorted(chat, lambda x: x["timestamp"])
     history = ""
     for msg in chat:
         if msg["author"] == "user":
-            history += "[INST]" + msg["text"] + "[\INST]"
+            history += "[INST]" + msg["content"] + "[\INST]"
         elif msg["author"] == "bot":
-            history += msg["text"]
+            history += msg["content"]
+
+    return history
+
+
+def history_to_list(chat_history: list) -> list[BaseMessage]:
+    """
+    chat = [
+        {
+            "content":"content",
+            "author":"bot"|"user",
+            "timestamp":str(datetime.now())
+        }
+    ]
+
+    Returns:
+        history (list)
+    """
+    chat_history.sort(key=lambda x: x["timestamp"])
+    history = []
+    for msg in chat_history:
+        if msg["author"] == "user":
+            history.append(AIMessage(content=msg["content"]))
+        elif msg["author"] == "bot":
+            history.append(HumanMessage(content=msg["content"]))
 
     return history
 
@@ -44,8 +66,7 @@ class EventHandler:
 
     def __init__(
         self,
-        chat: list = [],
-        event_template: str = EVENT_PROMPT,
+        chat_history: list = [],
     ):
         """
         Create EventHandler Bot object.
@@ -53,36 +74,66 @@ class EventHandler:
         Args:
             event_template (str): Prompt for the event generation.
         """
-
-        event_prompt = ChatPromptTemplate.from_messages(
+        prompt = ChatPromptTemplate.from_messages(
             [
-                ("system", event_template),
-                ("human", "[INST]{input}[\INST]"),
+                ("system", EVENT_SYSTEM_PROMPT),
+                MessagesPlaceholder("chat_history", optional=True),
+                ("human", EVENT_TOOLS_PROMPT),
+                MessagesPlaceholder("agent_scratchpad"),
             ]
         )
-        # llm = ChatOpenAI()
-        llm = Bedrock(
-            credentials_profile_name="bedrock-admin", model_id="meta.llama2-70b-chat-v1"
-        )
-        output_parser = StrOutputParser()
-        self.event_handler = (
-            {
-                "knowledge": itemgetter("knowledge"),
-                "chat_history": itemgetter("chat_history"),
-                "input": itemgetter("input"),
-            }
-            | event_prompt
-            | llm
-            | output_parser
+
+        tools = self._define_tools()
+
+        self.agent_executor = AgentExecutor(
+            agent=create_json_chat_agent(
+                ChatBedrock(
+                    model_id="mistral.mixtral-8x7b-instruct-v0:1",
+                    region_name="us-east-1",
+                ),
+                tools,
+                prompt,
+                stop_sequence=False,
+            ),
+            tools=tools,
+            return_intermediate_steps=True,
+            verbose=True,
         )
 
-        self.chat = chat
+        self.chat_history = history_to_list(chat_history)
 
         self.prompt_tokens = 0
         self.completion_tokens = 0
         self.cost = 0
 
+    def _define_tools(self) -> list:
+
+        @tool
+        def create_event(specifics: str):
+            """Creates the event. Syntax: event name; event description; date; start time; ending time; adress."""
+            splitted = specifics.split(";")
+            check_info_chain = (
+                PromptTemplate.from_template(CHECK_INFO_PROMPT)
+                | ChatBedrock(
+                    model_id="mistral.mixtral-8x7b-instruct-v0:1",
+                    region_name="us-east-1",
+                )
+                | StrOutputParser()
+            )
+            missing = check_info_chain.invoke({"input": specifics})
+            if missing.strip() == "OK":
+                print(f"Create event with: {splitted}")
+                return "Event created"
+            else:
+                return (
+                    "Failed to create the event:"
+                    + missing
+                    + "\nPlease ask the user the missing information."
+                )
+
+        return [create_event]
+
     def run(self, message: str):
-        self.event_handler.invoke(
-            {"input": message, "chat_history": history_to_str(self.chat)}
+        return self.agent_executor.invoke(
+            {"input": message, "chat_history": self.chat_history}
         )
