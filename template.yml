@@ -1,10 +1,52 @@
 AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
 
 Description: AWS CodePipeline for a Serverless Application
 
 Resources:
+
+  ### IAM ROLE ###
+
+  LudusSMALambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+              
+  ### IAM POLICY ###
+
+  LudusSMALambdaPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: LudusSMALambdaPolicy
+      Roles:
+        - !Ref LudusSMALambdaRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'logs:*'
+              - 'dynamodb:*'              
+              - 'events:*'
+              - 'sqs:*'
+              - 'systemsmanager:*'
+            Resource: '*'
+
+  ### PARAMETER ###
+
+  # Parameters cannot be created by Cloud Formation if they are of type SecureString
+  # which is why they were created by hand inside the console
+  # TODO: add a build step to create these parameters
   
-  ### SECRETS ###
+  ### SECRET ###
 
   LudusSMAMetaCredentialsSecret:
     Type: AWS::SecretsManager::Secret
@@ -67,3 +109,37 @@ Resources:
       KeySchema:
         - AttributeName: event_id
           KeyType: HASH
+        
+### LAMBDA FUNCTIONS ###
+
+  LudusSMATelegramBotFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: telegram_bot/
+      Handler: main.lambda_handler
+      Runtime: python3.11
+      Timeout: 300
+      MemorySize: 1024
+      Architectures:
+        - x86_64
+      Role: !GetAtt LudusSMALambdaRole.Arn
+      Layers:
+        - !Ref LudusSMALambdaLayer
+      Events:
+        HelloWorld:
+          Type: Api
+          Properties:
+            Path: /telegram-bot
+            Method: post
+
+### LAMBDA LAYER ###
+
+  LudusSMALambdaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: LudusSMAUtilsLayer
+      Description: 'LudusSMA Utils Lambda Layer'
+      ContentUri: 'lambda_functions/utils_layer.zip'
+      CompatibleRuntimes:
+        - python3.11
+

@@ -18,6 +18,8 @@ phases:
       - echo Build phase...
       - sam build
       - cfn-lint .aws-sam/build/template.yaml
+      # Creating layers for Lambda Functions
+      - ./scripts/lambda_layer_zipper.sh
 
 artifacts:
   name: BuildArtifact

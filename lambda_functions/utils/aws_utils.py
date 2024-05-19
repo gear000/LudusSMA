@@ -4,7 +4,7 @@ from botocore.exceptions import ClientError
 
 def get_parameters(
     parameter_name: str, is_secure: bool = False, ssm_client=boto3.client("ssm")
-):
+) -> str | None:
     """
     Retrieve an encrypted parameter from AWS Systems Manager Parameter Store.
 
