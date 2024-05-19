@@ -6,7 +6,7 @@ folders=("utils")
 # Function to create zip files
 create_zip() {
     folder=$1
-    zip_name="${folder}_layer.zip"
+    zip_name="${folder}.zip"
     
     if [ -d "$folder" ]; then
         zip -r "$zip_name" "$folder"

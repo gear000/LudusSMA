@@ -139,7 +139,7 @@ Resources:
     Properties:
       LayerName: LudusSMAUtilsLayer
       Description: LudusSMA Utils Lambda Layer
-      ContentUri: lambda_functions/utils_layer.zip
+      ContentUri: lambda_functions/utils.zip
       CompatibleRuntimes:
         - python3.11
 
