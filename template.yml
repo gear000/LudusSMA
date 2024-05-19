@@ -2,13 +2,68 @@ AWSTemplateFormatVersion: '2010-09-09'
 
 Description: AWS CodePipeline for a Serverless Application
 
-Conditions:
-  Never:
-    !Equals [ "A", "B" ]
-
 Resources:
-
-  NonResource:
-    Type: Custom::NonResource
-    Condition: Never
   
+  ### SECRETS ###
+
+  LudusSMAMetaCredentialsSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: meta-credentials
+      Description: Credential for Meta Account      
+      SecretString: initial_value
+  
+  LudusSMAImgurCredentialsSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: imgur-credentials
+      Description: Credential for Imgur Account
+      SecretString: initial_value
+
+  ### DYNAMODB TABLES ###
+
+  LudusSMAChatsHistoryDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      DeletionProtectionEnabled: true
+      TableName: ChatsHistory
+      TableClass: STANDARD
+      AttributeDefinitions:
+        - AttributeName: chat_id
+          AttributeType: S
+        - AttributeName: message_timestamp
+          AttributeType: S
+      KeySchema:
+        - AttributeName: chat_id
+          KeyType: HASH
+        - AttributeName: message_timestamp
+          KeyType: RANGE
+
+  LudusSMAUserLastChatIDDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      DeletionProtectionEnabled: true
+      TableName: UserLastChatID
+      TableClass: STANDARD
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+
+  LudusSMAEventsDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      DeletionProtectionEnabled: true
+      TableName: Events
+      TableClass: STANDARD
+      AttributeDefinitions:
+        - AttributeName: event_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: event_id
+          KeyType: HASH
