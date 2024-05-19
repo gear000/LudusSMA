@@ -22,7 +22,7 @@ phases:
       - echo Building SAM Template
       - sam build --template-file template.yml
       - cfn-lint .aws-sam/build/template.yaml
-      - sam package --template-file .aws-sam/build/template.yaml --output-template-file template.yaml --s3-bucket ludussma-artifact --s3-prefix sam-output
+      - sam package --template-file .aws-sam/build/template.yaml --output-template-file template.yml --s3-bucket ludussma-artifact --s3-prefix sam-output
 
 artifacts:
   name: BuildArtifact
