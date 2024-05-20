@@ -21,41 +21,45 @@ def lambda_handler(event: dict, context):
         # salvataggio immagine su img_path_edit
     img_path = "test_img.png"
 
-
-    # edit_dict = {
-    #     "title": {"text": "Torneo di Bang",
-    #               "font": "ARCADECLASSIC.TTF",
-    #               "size": 150, 
-    #               "color": (55, 0, 134),
-    #               "position":},
-    #     "body": {"text": "",
-    #               "font": "ARCADECLASSIC.TTF",
-    #               "size": 80, 
-    #               "color": (55, 0, 134),
-    #               "position":},
-    #     "location": {"text": "Centro NOI di Povegliano",
-    #               "font": "ARCADECLASSIC.TTF",
-    #               "size": 80, 
-    #               "color": (55, 0, 134),
-    #               "position":},
-    #     "datetime": {"text": "Mercoledì 31 febbraio ore 21:00",
-    #               "font": "ARCADECLASSIC.TTF",
-    #               "size": 80, 
-    #               "color": ,
-    #               "position"},
-    #     "cost": {"text": "Iscrizione libera",
-    #               "font": "ARCADECLASSIC.TTF",
-    #               "size": 80, 
-    #               "color": (55, 0, 134),
-    #               "position":}
-    # }
+    # da fare:
+    # - mettere posizione parametrica (e.g. titolo centrato)
+    # - scegliere colore testo parametrico, adatto all'immagine
 
 
-    img_path_edit = image_edit(img_path, {})
+    edit_dict = {
+        "title": {"text": "Torneo di Bang",
+                  "font": "ARCADECLASSIC.TTF",
+                  "size": 90, 
+                  "color": (55, 0, 134),
+                  "position":(0,100)},
+        "body": {"text": "",
+                  "font": "ARCADECLASSIC.TTF",
+                  "size": 80, 
+                  "color": (55, 0, 134),
+                  "position":(0,0)},
+        "location": {"text": "Centro NOI di Povegliano",
+                  "font": "ARCADECLASSIC.TTF",
+                  "size": 40, 
+                  "color": (55, 0, 134),
+                  "position":(0,900)},
+        "datetime": {"text": "Mercoledì 31 febbraio ore 21:00",
+                  "font": "ARCADECLASSIC.TTF",
+                  "size": 40, 
+                  "color": (55, 0, 134),
+                  "position":(0,950)},
+        "cost": {"text": "Iscrizione libera",
+                  "font": "ARCADECLASSIC.TTF",
+                  "size": 40, 
+                  "color": (55, 0, 134),
+                  "position":(0,1000)}
+    }
+
+    img_path_edit = image_edit(img_path, edit_dict)
     # ----------------------------
 
     # ----------------------------
     # caricamento immagine su imgur per ottenere url
+    
     # ----------------------------
 
     # ----------------------------
@@ -75,4 +79,4 @@ def lambda_handler(event: dict, context):
 
 if __name__ == "__main__":
 
-    lambda_handler()
+    lambda_handler(1,2)

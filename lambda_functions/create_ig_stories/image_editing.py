@@ -1,14 +1,14 @@
 from PIL import Image, ImageFont, ImageDraw 
 
-def crop_image(img_path: str, aspect_ratio: tuple):
-    image  = Image.open(img_path)
+def crop_image(my_image, aspect_ratio: tuple):
+    image  = my_image
     width  = image.size[0]
     height = image.size[1]
 
     aspect_now = width / float(height)
 
-    ideal_width = 648
-    ideal_height = 1152
+    ideal_width = aspect_ratio[0]
+    ideal_height = aspect_ratio[1]
     ideal_aspect = ideal_width / float(ideal_height)
 
     if aspect_now > ideal_aspect:
@@ -22,37 +22,36 @@ def crop_image(img_path: str, aspect_ratio: tuple):
         offset = (height - new_height) / 2
         resize = (0, offset, width, height - offset)
 
-    thumb = image.crop(resize).resize((ideal_width, ideal_height), Image.ANTIALIAS)
-    img_path_cropped = "CROPPED_"+img_path
-    thumb.save(img_path_cropped)
+    image = image.crop(resize).resize((ideal_width, ideal_height), Image.LANCZOS)
+    # img_path_cropped = "CROPPED_"+img_path
+    # thumb.save(img_path_cropped)
+    return image
 
+def write_on_image(my_image, edit_dict):
+    image_editable = ImageDraw.Draw(my_image)
 
-
-
+    for scope in edit_dict.keys():
+        image_editable.text(edit_dict[scope]["position"], 
+                            edit_dict[scope]["text"],
+                            edit_dict[scope]["color"],
+                            font=ImageFont.truetype(edit_dict[scope]["font"]
+                                                    , edit_dict[scope]["size"]))
+    
+    return my_image
 
 def image_edit(img_path: str, edit_dict: dict, crop=True):
-
+    
     if crop:
+        # Carico immagine
+        my_image = Image.open(img_path) 
         # Crop immagine
-        my_image = crop_image(img_path)
+        my_image = crop_image(my_image, (648,1152))
     else:
         # Carico immagine
         my_image = Image.open(img_path) 
 
-    # # Carico parametri
-    # title_text = edit_dict["title"]
-    # # title_color = edit_dict["title_color"]
-    # title_font =  edit_dict["title_font"]
-    # # title_size = edit_dict["title_siz"]
-    # body_text =  edit_dict["body"]
-    # # body_color =  edit_dict["body_color"]
-    # body_font = edit_dict["body_font"]
-    # # body_size = edit_dict["body_s"]
+    my_image = write_on_image(my_image, edit_dict)
 
-    # image_editable = ImageDraw.Draw(my_image)
-    # image_editable.text((15,15), body_text, (55, 0, 134), font=title_font)
-    # image_editable.text((15,130), title_text, (55, 0, 134), font=title_font)
+    # Salvataggio risutlato
+    my_image.save("EDIT_"+img_path)
 
-
-
-    return edited_path
