@@ -1,4 +1,19 @@
 from PIL import Image, ImageFont, ImageDraw 
+import requests
+import io
+
+def get_google_font(font: str, size=24):
+    """
+    Questa funzione scarica temporaneamente da github.com/google/fonts/ il file .ttf del font desiderato.
+    font: stringa indicante il percorso del font su github.com/google/fonts/ nel formato cartella/font_file.ttf
+    size: dimensione del font
+    """
+    url = f"https://github.com/google/fonts/blob/main/ofl/{font}?raw=true"
+    print(url)
+    r = requests.get(url, allow_redirects=True)
+    font = ImageFont.truetype(io.BytesIO(r.content), size=size)
+
+    return font
 
 def crop_image(my_image, aspect_ratio: tuple):
     image  = my_image
@@ -34,7 +49,7 @@ def write_on_image(my_image, edit_dict):
         image_editable.text(edit_dict[scope]["position"], 
                             edit_dict[scope]["text"],
                             edit_dict[scope]["color"],
-                            font=ImageFont.truetype(edit_dict[scope]["font"]
+                            font=get_google_font(edit_dict[scope]["font"]
                                                     , edit_dict[scope]["size"]))
     
     return my_image
