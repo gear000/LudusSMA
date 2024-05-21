@@ -3,6 +3,21 @@ Transform: AWS::Serverless-2016-10-31
 
 Description: AWS CodePipeline for a Serverless Application
 
+Parameters:
+  TelegramBotKeyParameter:
+    Type: String
+    Default: /telegram/bot-token
+    Description: The key of SSM parameter that contains the Telegram Bot token
+  TelegramAllowChatIdsKeyParameter:
+    Type: String
+    Default: /telegram/allow-chat-ids
+    Description: The key of SSM parameter that contains the Telegram allowed chat ids
+  TelegramHeaderWebhookTokenKeyParameter:
+    Type: String
+    Default: /telegram/header-webhook-token
+    Description: The key of SSM parameter that contains the Telegram header webhook token
+
+
 Resources:
 
   ### IAM ROLE ###
@@ -17,6 +32,19 @@ Resources:
             Principal:
               Service:
                 - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+  
+  LudusSMAEventSchedulerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - scheduler.amazonaws.com
             Action:
               - 'sts:AssumeRole'
               
@@ -35,16 +63,33 @@ Resources:
             Action:
               - 'logs:*'
               - 'dynamodb:*'              
-              - 'events:*'
               - 'sqs:*'
-              - 'ssm:*'
             Resource: '*'
+          - Effect: Allow
+            Action:
+              - 'ssm:GetParameter'
+            Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/telegram/*'
+
+  
+  LudusSMAEventSchedulerPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: LudusSMASchedulerPolicy
+      Roles:
+        - !Ref LudusSMAEventSchedulerRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'sqs:SendMessage'
+            Resource: !GetAtt 'LudusSMAEventsSQSQueue.Arn'
 
   ### PARAMETER ###
 
   # Parameters cannot be created by Cloud Formation if they are of type SecureString
   # which is why they were created by hand inside the console
-  # TODO: add a build step to create these parameters
+  # parameter keys are passed within the Lambda Function as environment variables.
   
   ### SECRET ###
 
@@ -113,6 +158,15 @@ Resources:
       Architectures:
         - x86_64
       Role: !GetAtt LudusSMALambdaRole.Arn
+      Environment:
+        Variables:
+          TELEGRAM_BOT_KEY: !Ref TelegramBotKeyParameter
+          TELEGRAM_ALLOW_CHAT_IDS: !Ref TelegramAllowChatIdsKeyParameter
+          TELEGRAM_HEADER_WEBHOOK_TOKEN: !Ref TelegramHeaderWebhookTokenKeyParameter
+          SQS_QUEUE_EVENTS_ARN: !GetAtt LudusSMAEventsSQSQueue.Arn
+          DYNAMODB_TABLE_CHATS_HISTORY_NAME: !Ref LudusSMAChatsHistoryDynamoDBTable
+          DYNAMODB_TABLE_EVENTS_NAME: !Ref LudusSMAEventsDynamoDBTable
+          IAM_ROLE_EVENT_SCHEDULER_ARN: !GetAtt LudusSMAEventSchedulerRole.Arn
       Layers:
         - !Ref LudusSMALambdaLayer
       Events:
