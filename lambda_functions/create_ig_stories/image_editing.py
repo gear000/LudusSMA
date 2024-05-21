@@ -2,6 +2,42 @@ from PIL import Image, ImageFont, ImageDraw
 import requests
 import io
 
+LOWER_BOXEX_X0 = 50
+LOWER_BOXEX_Y0 = 860
+LOWER_BOXEX_X1 = 524
+
+
+
+def draw_textboxes(my_image, edit_dict):
+    """
+    Disegno i rettangoli dei textboxes sull'immagine. 
+    Necessaria solo per la fase di sviluppo, non usata in produzione.
+    """
+
+    image_editable = ImageDraw.Draw(my_image)
+
+    # x_0 = 50
+    # y_0 = 860
+    # x_1 = 524
+    # y_1 = 524
+    # lower_textbox = ((50, 860), (524,))
+    y_0 = LOWER_BOXEX_Y0
+    for scope in edit_dict.keys():
+        if edit_dict[scope]["text"] != "":
+            if scope in ["title", "body"]:
+                image_editable.rectangle(edit_dict[scope]["textbox"], width=3)
+            else: 
+
+                lower_textbox = ((LOWER_BOXEX_X0, LOWER_BOXEX_Y0), 
+                                 (LOWER_BOXEX_X1, y_0+edit_dict[scope]["size"]))
+                image_editable.rectangle(lower_textbox, width=3)
+                y_0 = y_0+edit_dict[scope]["size"]
+    return my_image
+
+
+
+
+
 def get_google_font(font: str, size=24):
     """
     Questa funzione scarica temporaneamente da github.com/google/fonts/ il file .ttf del font desiderato.
@@ -101,8 +137,9 @@ def image_edit(img_path: str, edit_dict: dict, crop=True):
         # Carico immagine
         my_image = Image.open(img_path) 
 
-    my_image = write_on_image(my_image, edit_dict)
+    # my_image = write_on_image(my_image, edit_dict)
+    my_image = draw_textboxes(my_image, edit_dict)
 
     # Salvataggio risutlato
-    my_image.save("EDIT_"+img_path)
+    my_image.save("BOX_"+img_path)
 
