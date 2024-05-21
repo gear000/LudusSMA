@@ -72,28 +72,10 @@ Resources:
       TableName: ChatsHistory
       TableClass: STANDARD
       AttributeDefinitions:
-        - AttributeName: chat_id
-          AttributeType: S
-        - AttributeName: message_timestamp
-          AttributeType: S
-      KeySchema:
-        - AttributeName: chat_id
-          KeyType: HASH
-        - AttributeName: message_timestamp
-          KeyType: RANGE
-
-  LudusSMAUserLastChatIDDynamoDBTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      BillingMode: PAY_PER_REQUEST
-      DeletionProtectionEnabled: true
-      TableName: UserLastChatID
-      TableClass: STANDARD
-      AttributeDefinitions:
         - AttributeName: user_id
           AttributeType: S
       KeySchema:
-        - AttributeName: user_id
+        - AttributeName: chat_id
           KeyType: HASH
 
   LudusSMAEventsDynamoDBTable:
@@ -109,6 +91,14 @@ Resources:
       KeySchema:
         - AttributeName: event_id
           KeyType: HASH
+
+### SQS QUEUE ###
+
+  LudusSMAEventsSQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: ScheduledEvents
+      VisibilityTimeout: 300
         
 ### LAMBDA FUNCTIONS ###
 
