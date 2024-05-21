@@ -45,9 +45,6 @@ async def process_update(update: Update):
 def lambda_handler(event: dict, context):
     """AWS Lambda function to handle incoming webhook."""
 
-    logger.info()
-    logger.info()
-
     SECRET_TOKEN = aws_utils.get_parameters(
         parameter_name="telegram-header-webhook-token",
         is_secure=True,
@@ -62,9 +59,14 @@ def lambda_handler(event: dict, context):
 
     update = Update.de_json(json.loads(event["body"]), app.bot)
     chat_id = update.effective_chat.id
-    ALLOWED_CHAT_IDS = aws_utils.get_parameters(
-        parameter_name="telegram-allow-chat-id", is_secure=True, ssm_client=ssm_client
-    )
+    ALLOWED_CHAT_IDS = [
+        int(chat_id)
+        for chat_id in aws_utils.get_parameters(
+            parameter_name="telegram-allow-chat-id",
+            is_secure=True,
+            ssm_client=ssm_client,
+        ).split(",")
+    ]
 
     if chat_id not in ALLOWED_CHAT_IDS:
         asyncio.run(update.message.reply_text("You are not allowed to use this bot"))

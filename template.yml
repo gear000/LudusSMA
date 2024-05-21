@@ -37,7 +37,7 @@ Resources:
               - 'dynamodb:*'              
               - 'events:*'
               - 'sqs:*'
-              - 'systemsmanager:*'
+              - 'ssm:*'
             Resource: '*'
 
   ### PARAMETER ###
@@ -115,7 +115,7 @@ Resources:
   LudusSMATelegramBotFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: telegram_bot/
+      CodeUri: lambda_functions/telegram_bot/
       Handler: main.lambda_handler
       Runtime: python3.11
       Timeout: 300
@@ -138,8 +138,8 @@ Resources:
     Type: AWS::Serverless::LayerVersion
     Properties:
       LayerName: LudusSMAUtilsLayer
-      Description: 'LudusSMA Utils Lambda Layer'
-      ContentUri: 'lambda_functions/utils_layer.zip'
+      Description: LudusSMA Utils Lambda Layer
+      ContentUri: lambda_functions/utils.zip
       CompatibleRuntimes:
         - python3.11
 

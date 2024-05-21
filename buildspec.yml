@@ -16,13 +16,15 @@ phases:
   build:
     commands:
       - echo Build phase...
-      - sam build
-      - cfn-lint .aws-sam/build/template.yaml
-      # Creating layers for Lambda Functions
+      - echo Creating layers for Lambda Functions
       - chmod +x ./scripts/lambda_layer_zipper.sh
       - ./scripts/lambda_layer_zipper.sh
+      - echo Building SAM Template
+      - sam build --template-file template.yml
+      - cfn-lint .aws-sam/build/template.yaml
+      - sam package --template-file .aws-sam/build/template.yaml --output-template-file template.yml --s3-bucket ludussma-artifact --s3-prefix sam-output
 
 artifacts:
   name: BuildArtifact
   files:
-    - '.aws-sam/build/template.yaml'
+    - template.yml
