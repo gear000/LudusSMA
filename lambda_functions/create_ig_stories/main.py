@@ -25,7 +25,9 @@ def lambda_handler(event: dict, context):
     # https://stackoverflow.com/questions/1970807/center-middle-align-text-with-pil
     # https://pillow.readthedocs.io/en/stable/handbook/text-anchors.html
     # - scegliere colore testo parametrico, adatto all'immagine
+    #   - non funziona, non c'è un algoritmo per scegliere il migliore colore. Meglio usare bianco con outline nero
     # - aggiungere icone per luogo, data, ora, costo etc. e metterle a sx del testo
+    # - aggiungere sezione contatti
 
     edit_dict = {
         "title": {"text": "Torneo di Bang",
