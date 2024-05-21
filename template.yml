@@ -75,7 +75,7 @@ Resources:
         - AttributeName: user_id
           AttributeType: S
       KeySchema:
-        - AttributeName: chat_id
+        - AttributeName: user_id
           KeyType: HASH
 
   LudusSMAEventsDynamoDBTable:
