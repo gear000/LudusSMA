@@ -8,7 +8,7 @@ import utils.aws_utils as aws_utils
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
-from lambda_functions.telegram_bot.update_handler import start, event
+from update_handler import start, event
 
 ### Setup Logging ###
 logger = logging.getLogger("SMA Logger")
@@ -22,7 +22,7 @@ ssm_client = boto3.client("ssm")
 
 ### Constants ###
 TELEGRAM_TOKEN = aws_utils.get_parameters(
-    parameter_name="telegram-bot-token", is_secure=True, ssm_client=ssm_client
+    parameter_name="/telegram/bot-token", is_secure=True, ssm_client=ssm_client
 )
 
 ### Telegram bot app setup ###
@@ -46,7 +46,7 @@ def lambda_handler(event: dict, context):
     """AWS Lambda function to handle incoming webhook."""
 
     SECRET_TOKEN = aws_utils.get_parameters(
-        parameter_name="telegram-header-webhook-token",
+        parameter_name="/telegram/header-webhook-token",
         is_secure=True,
         ssm_client=ssm_client,
     )
@@ -62,7 +62,7 @@ def lambda_handler(event: dict, context):
     ALLOWED_CHAT_IDS = [
         int(chat_id)
         for chat_id in aws_utils.get_parameters(
-            parameter_name="telegram-allow-chat-id",
+            parameter_name="/telegram/allow-chat-ids",
             is_secure=True,
             ssm_client=ssm_client,
         ).split(",")

@@ -7,7 +7,7 @@ from langchain_core.messages import AIMessage, HumanMessage, BaseMessage
 from langchain.agents import AgentExecutor, create_json_chat_agent
 
 
-from src.prompts import EVENT_SYSTEM_PROMPT, EVENT_TOOLS_PROMPT, CHECK_INFO_PROMPT
+from .prompts import EVENT_SYSTEM_PROMPT, EVENT_TOOLS_PROMPT, CHECK_INFO_PROMPT
 
 
 def history_to_str(chat: list) -> str:
