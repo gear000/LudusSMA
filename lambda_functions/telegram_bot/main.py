@@ -29,8 +29,8 @@ TELEGRAM_TOKEN = aws_utils.get_parameters(
 app = Application.builder().token(TELEGRAM_TOKEN).build()
 
 # Add handlers
-app.add_handler(CommandHandler("event", start))
-app.add_handler(MessageHandler(filters.TEXT & ~(filters.COMMAND), event))
+app.add_handler(CommandHandler("event", event))
+# app.add_handler(MessageHandler(filters.TEXT & ~(filters.COMMAND), event))
 
 
 async def process_update(update: Update):
