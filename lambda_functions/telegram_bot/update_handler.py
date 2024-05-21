@@ -15,7 +15,7 @@ logger.handlers[0].setFormatter(formatter)
 async def start(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Start the conversation and ask user for input."""
 
-    update.message.reply_text(
+    await update.message.reply_text(
         "Ciao! Sono Giulio!\n"
         "Sono qui per aiutarti a creare eventi.\n"
         "Per creare un evento ho bisogno di:\n"
@@ -31,7 +31,7 @@ async def event(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE) -> 
     """
     Instantiate the bot and get the answer
     """
-    update.message.reply_text(
+    await update.message.reply_text(
         """Grande! Creiamo un evento!
         Per creare un evento ho bisogno di:
            - il nome dell'evento;
