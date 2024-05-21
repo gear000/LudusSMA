@@ -43,14 +43,50 @@ def crop_image(my_image, aspect_ratio: tuple):
     return image
 
 def write_on_image(my_image, edit_dict):
+    """
+    https://pillow.readthedocs.io/en/stable/handbook/text-anchors.html
+    """
+
     image_editable = ImageDraw.Draw(my_image)
 
     for scope in edit_dict.keys():
-        image_editable.text(edit_dict[scope]["position"], 
+        # Get textbox dimensions from coordinates
+        box_w = edit_dict[scope]["textbox"][1][0] - edit_dict[scope]["textbox"][0][0]
+        box_h = edit_dict[scope]["textbox"][1][1] - edit_dict[scope]["textbox"][0][1]
+
+        # Get appropriate font size to make the text fit the box in a single line
+        max_size = edit_dict[scope]["size"] # Start from default font size
+        text_length = get_google_font(edit_dict[scope]["font"], max_size).getlength(edit_dict[scope]["text"]) # Get text length given font and size
+        # Finché il testo non ci sta nel box predefinito, riduco la size di 2 punti e riprovo
+        while text_length > box_w:
+            max_size -= 2
+            text_length = get_google_font(edit_dict[scope]["font"], max_size).getlength(edit_dict[scope]["text"])
+
+        # Determinare la posizione del testo
+        # - se testo centrato ("anchor" == "mm"): posizione = centro del box
+        # - se testo allineato a dx ("anchor" == "lb"): posizione = angolo lower left del box
+        # - se testo allineato a dx ("anchor" == "lm"): posizione = middle left del box
+        # - per ora ci sono solo queste casistiche
+            
+        if edit_dict[scope]["anchor"] == "mm":
+            position_x = (edit_dict[scope]["textbox"][1][0]+edit_dict[scope]["textbox"][0][0])/2
+            position_y = (edit_dict[scope]["textbox"][1][1]+edit_dict[scope]["textbox"][0][1])/2
+            position = (position_x, position_y)
+        elif edit_dict[scope]["anchor"] == "lb":
+            position_x = edit_dict[scope]["textbox"][0][0]
+            position_y = edit_dict[scope]["textbox"][0][1] + box_h
+            position = (position_x, position_y)
+        elif edit_dict[scope]["anchor"] == "lm":
+            position_x = edit_dict[scope]["textbox"][0][0]
+            position_y = edit_dict[scope]["textbox"][0][1] + box_h/2
+            position = (position_x, position_y)
+            
+        image_editable.text(position, 
                             edit_dict[scope]["text"],
                             edit_dict[scope]["color"],
+                            anchor=edit_dict[scope]["anchor"],
                             font=get_google_font(edit_dict[scope]["font"]
-                                                    , edit_dict[scope]["size"]))
+                                                    , max_size))
     
     return my_image
 
