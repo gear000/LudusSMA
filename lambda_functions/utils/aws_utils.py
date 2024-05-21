@@ -1,5 +1,6 @@
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
+import awswrangler as wr
 
 
 def get_parameters(
@@ -23,3 +24,60 @@ def get_parameters(
     except ClientError as e:
         print(f"An error occurred: {e}")
         return None
+
+
+# =====================
+# DYNAMO
+
+
+def convert_record(record):
+    converted_record = {}
+    for key, value in record.items():
+        if isinstance(value, str):
+            converted_record[key] = {"S": value}
+        elif isinstance(value, int) or isinstance(value, float):
+            converted_record[key] = {"N": str(value)}
+        elif isinstance(value, bool):
+            converted_record[key] = {"BOOL": value}
+        elif isinstance(value, list):
+            converted_record[key] = {
+                "L": [convert_record({"value": v})["value"] for v in value]
+            }
+        elif isinstance(value, dict):
+            converted_record[key] = {"M": convert_record(value)}
+        elif isinstance(value, set):
+            if all(isinstance(v, str) for v in value):
+                converted_record[key] = {"SS": list(value)}
+            elif all(isinstance(v, int) or isinstance(v, float) for v in value):
+                converted_record[key] = {"NS": list(map(str, value))}
+            else:
+                raise TypeError(f"Set non supportato con tipi misti: {type(value)}")
+        else:
+            raise TypeError(f"Tipo di dato non supportato: {type(value)}")
+    return converted_record
+
+
+def insert_record_in_dynamo(
+    table_name: str,
+    record: dict,
+    dynamodb_client=boto3.client("dynamodb", region_name="eu-west-1"),
+):
+    try:
+        converted_record = convert_record(record)
+        dynamodb_client.put_item(TableName=table_name, Item=converted_record)
+        print("Record saved successfully: ", record)
+    except (NoCredentialsError, PartialCredentialsError) as e:
+        print("Error in saving record: ", e)
+
+
+# OLD
+def insert_record_in_dynamo_awswr(
+    table_name: str,
+    record: list,
+    # dynamodb_client=boto3.client("dynamodb", region_name="eu-west-1"),
+):
+    try:
+        wr.dynamodb.put_items(items=record, table_name=table_name)
+        print("Record saved successfully: ", record)
+    except (NoCredentialsError, PartialCredentialsError) as e:
+        print("Error in saving record: ", e)
