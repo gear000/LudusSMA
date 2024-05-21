@@ -62,13 +62,18 @@ Resources:
           - Effect: Allow
             Action:
               - 'logs:*'
-              - 'dynamodb:*'              
-              - 'sqs:*'
+              - 'dynamodb:PutItem'
+              - 'dynamodb:UpdateItem'           
             Resource: '*'
           - Effect: Allow
             Action:
               - 'ssm:GetParameter'
             Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/telegram/*'
+          - Effect: Allow
+            Action:
+              - 'sqs:sendMessage'
+            Resource: !GetAtt 'LudusSMAEventsSQSQueue.Arn'            
+
 
   
   LudusSMAEventSchedulerPolicy:
