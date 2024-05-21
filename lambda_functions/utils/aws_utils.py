@@ -1,6 +1,5 @@
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
-import awswrangler as wr
 
 
 def get_parameters(
@@ -65,19 +64,6 @@ def insert_record_in_dynamo(
     try:
         converted_record = convert_record(record)
         dynamodb_client.put_item(TableName=table_name, Item=converted_record)
-        print("Record saved successfully: ", record)
-    except (NoCredentialsError, PartialCredentialsError) as e:
-        print("Error in saving record: ", e)
-
-
-# OLD
-def insert_record_in_dynamo_awswr(
-    table_name: str,
-    record: list,
-    # dynamodb_client=boto3.client("dynamodb", region_name="eu-west-1"),
-):
-    try:
-        wr.dynamodb.put_items(items=record, table_name=table_name)
         print("Record saved successfully: ", record)
     except (NoCredentialsError, PartialCredentialsError) as e:
         print("Error in saving record: ", e)
