@@ -2,39 +2,59 @@ from PIL import Image, ImageFont, ImageDraw
 import requests
 import io
 
+# ------------------
 # Global constants
-UPPER_BOXES_START_POINT = (50, 50)
+# ---
+# Textbox constants
+UPPER_BOXES_START_POINT = (50, 100)
 UPPER_BOXES_WIDTH = 550
 UPPER_SECTIONS = ["title", "body"]
 
-LOWER_BOXES_START_POINT = (50, 860)
+LOWER_BOXES_START_POINT = (50, 750)
 LOWER_BOXES_WIDTH = 500
 LOWER_SECTIONS = ["date", "time", "location", "cost"]
-
+LOWER_SECTIONS_ORDER = {"date":1,
+                         "time":2, 
+                         "location":3,
+                         "cost":4} # Defines the order of each box. If one section is not present, the next one will take its place
 BOX_MARGIN = 8
-
+CONTACTS_BOX_START_POINT = (130,1000)
+# ---
+# Text color constants
+TEXT_COLOR = (255,255,255)
 STROKE_WIDTH = 2
 STROKE_COLOR = (0,0,0)
-
+# Text size constants
+CONTACT_TEXT_SIZE = 30
+# Font constants
+CONTACT_FONT = "montserratalternates/MontserratAlternates-Bold.ttf"
+# ---
+# Icons constants
 ICONS_PATH = "../../images/icons/"
 ICONS_DICT = {"date":"calendar-color.png", 
               "time":"clock-color.png", 
               "location":"map2-color.png", 
               "cost":"cash-color.png"}
+# ---
+# Contacts constants
+CONTACTS = {
+    "email": {"text": "ludusgate@gmail.com",
+                "icon":"email-color.png"},
+    "whatsapp": {"text": "34X XXX XX XX",
+                "icon":"whatsapp-logo-color.png"},
+    "insta_dm": {"text": "DM: @ludusgate",
+                "icon":"instagram-color.png"}
+}
+
+# ------------------
 
 def draw_textboxes(my_image, edit_dict):
     """
     Disegno i rettangoli dei textboxes sull'immagine. 
     Necessaria solo per la fase di sviluppo, non usata in produzione.
     """
-
     image_editable = ImageDraw.Draw(my_image)
 
-    # x_0 = 50
-    # y_0 = 860
-    # x_1 = 524
-    # y_1 = 524
-    # lower_textbox = ((50, 860), (524,))
     upper_y_0 = UPPER_BOXES_START_POINT[1]
     lower_y_0 = LOWER_BOXES_START_POINT[1]
 
@@ -54,6 +74,8 @@ def draw_textboxes(my_image, edit_dict):
     return my_image
 
 def get_google_font(font: str, size=24):
+    # MIGLIORIA: SCARICARE IL FONT SOLO UNA VOLTA E TENERLO BUONO PER TUTTE LE SEZIONI
+    # E' POSSIBILE? FORSE NO PERCHé VA SCARICATO PER LA SIZE SPECIFICA DI QUEL TESTO
     """
     Questa funzione scarica temporaneamente da github.com/google/fonts/ il file .ttf del font desiderato.
     font: stringa indicante il percorso del font su github.com/google/fonts/ nel formato cartella/font_file.ttf
@@ -93,8 +115,6 @@ def crop_image(my_image, aspect_ratio: tuple):
         resize = (0, offset, width, height - offset)
 
     image = image.crop(resize).resize((ideal_width, ideal_height), Image.LANCZOS)
-    # img_path_cropped = "CROPPED_"+img_path
-    # thumb.save(img_path_cropped)
     return image
 
 def get_text_size(max_width, text, font, max_size):
@@ -114,15 +134,18 @@ def get_text_size(max_width, text, font, max_size):
     return actual_size
 
 def get_text_position(textbox, anchor):
-    # Get textbox dimensions from coordinates
+    """
+    Dato il textbox entro cui deve essere scritto il testo, e il tipo di anchor (i.e. posizione del testo rispetto alla textbox),
+    ritorna la posizione da cui deve essere scritto il testo
+        - se testo centrato ("anchor" == "mm"): posizione = centro del box
+        - se testo allineato a dx ("anchor" == "lb"): posizione = angolo lower left del box
+        - se testo allineato a dx ("anchor" == "lm"): posizione = middle left del box
+        - per ora ci sono solo queste casistiche    
+    """
+    # Get textbox hight from coordinates
     box_h = textbox[1][1] - textbox[0][1]
 
-    # Determinare la posizione del testo
-    # - se testo centrato ("anchor" == "mm"): posizione = centro del box
-    # - se testo allineato a dx ("anchor" == "lb"): posizione = angolo lower left del box
-    # - se testo allineato a dx ("anchor" == "lm"): posizione = middle left del box
-    # - per ora ci sono solo queste casistiche    
-        
+    # Determinare la posizione del testo  
     if anchor == "mm":
         position_x = (textbox[1][0]+textbox[0][0])/2
         position_y = (textbox[1][1]+textbox[0][1])/2
@@ -135,8 +158,40 @@ def get_text_position(textbox, anchor):
 
     return (int(position_x), int(position_y))
 
+def write_contacts(my_image):
+    image_editable = ImageDraw.Draw(my_image)
+
+    writing_cursor_y = CONTACTS_BOX_START_POINT[1]
+    for contact in CONTACTS.keys():
+        writing_cursor_x = CONTACTS_BOX_START_POINT[0]
+        # Get icon
+        icon_path = ICONS_PATH+CONTACTS[contact]["icon"]
+        icon = Image.open(icon_path)
+        # Resize icon
+        icon.thumbnail((CONTACT_TEXT_SIZE, CONTACT_TEXT_SIZE), Image.Resampling.LANCZOS)
+        # Paste the icon on the image
+        icon_position = (int(writing_cursor_x), int(writing_cursor_y))
+        my_image.paste(icon, icon_position, mask=icon)
+        writing_cursor_x += CONTACT_TEXT_SIZE+BOX_MARGIN 
+
+        # Write the text
+        text = CONTACTS[contact]["text"]
+        text_position = (int(writing_cursor_x), int(writing_cursor_y))
+        image_editable.text(text_position, 
+                            text,                        
+                            TEXT_COLOR,
+                            font=get_google_font(CONTACT_FONT, CONTACT_TEXT_SIZE),
+                            stroke_width=STROKE_WIDTH,
+                            stroke_fill=STROKE_COLOR)
+        writing_cursor_y += CONTACT_TEXT_SIZE+BOX_MARGIN
+
+    return my_image
+
 def write_on_image(my_image, edit_dict):
     """
+    Prende in input una PIL.Image e la rende editabile.
+    Itera fra le sezioni di testo (scope) presenti in edit_dict. 
+
     https://pillow.readthedocs.io/en/stable/handbook/text-anchors.html
     """
     image_editable = ImageDraw.Draw(my_image)
@@ -145,13 +200,16 @@ def write_on_image(my_image, edit_dict):
     lower_y_0 = LOWER_BOXES_START_POINT[1]
 
     for scope in edit_dict.keys():
-        if edit_dict[scope]["text"] != "":
+        if edit_dict[scope]["text"] != "": # Solo se la sezione contiene del testo (NB: migliorare la gestione delle sezioni senza testo)
             if scope in UPPER_SECTIONS:
+                # Calcolo dimensione carattere adeguata in base al testo e alla larghezza del box
                 actual_size = get_text_size(UPPER_BOXES_WIDTH, edit_dict[scope]["text"], edit_dict[scope]["font"], edit_dict[scope]["size"])
+                # Definisco le coordinate del textbox in base a dove siamo arrivati a scrivere e alla dimensione del carattere
                 upper_textbox = ((UPPER_BOXES_START_POINT[0], upper_y_0), 
                                  (UPPER_BOXES_START_POINT[0]+UPPER_BOXES_WIDTH, upper_y_0+actual_size)) 
-                position = get_text_position(upper_textbox, edit_dict[scope]["anchor"])      
-   
+                # Calcolo la posizione di scrittura del testo
+                position = get_text_position(upper_textbox, edit_dict[scope]["anchor"])
+                # Scrivo il testo
                 image_editable.text(position, 
                                     edit_dict[scope]["text"],
                                     edit_dict[scope]["color"],
@@ -160,18 +218,18 @@ def write_on_image(my_image, edit_dict):
                                                             , actual_size),
                                     stroke_width=STROKE_WIDTH,
                                     stroke_fill=STROKE_COLOR)
+                # Effettuo update delle coordinate del prossimo upper textbox
                 upper_y_0 = upper_y_0+actual_size+BOX_MARGIN
 
             elif scope in LOWER_SECTIONS:
-                # print(scope)
+                # Calcolo dimensione carattere adeguata in base al testo e alla larghezza del box
                 actual_size = get_text_size(LOWER_BOXES_WIDTH, edit_dict[scope]["text"], edit_dict[scope]["font"], edit_dict[scope]["size"])
-                # print("actual_size", actual_size)  
+                 # Definisco le coordinate del textbox in base a dove siamo arrivati a scrivere e alla dimensione del carattere 
                 lower_textbox = ((LOWER_BOXES_START_POINT[0], lower_y_0), 
                                  (LOWER_BOXES_START_POINT[0]+LOWER_BOXES_WIDTH, lower_y_0+actual_size))
-                # print(lower_textbox)
+                # Calcolo la posizione di scrittura del testo
                 position = get_text_position(lower_textbox, edit_dict[scope]["anchor"])   
-
-                # image_editable.rectangle(lower_textbox, width=3)
+                # Scrivo il testo
                 image_editable.text(position, 
                                     edit_dict[scope]["text"],
                                     edit_dict[scope]["color"],
@@ -181,8 +239,8 @@ def write_on_image(my_image, edit_dict):
                                     stroke_width=STROKE_WIDTH,
                                     stroke_fill=STROKE_COLOR)
                 
-                if scope in ICONS_DICT.keys():
-                    # Add icon
+                # If I have an icon for this section, I add it
+                if scope in ICONS_DICT.keys():                    
                     # Get icon
                     icon_path = ICONS_PATH+ICONS_DICT[scope]
                     icon = Image.open(icon_path)
@@ -191,16 +249,23 @@ def write_on_image(my_image, edit_dict):
 
                     # Paste icon on poster
                     icon_position = (position[0]-actual_size-3, position[1]-int(actual_size/2)) # 3 è un ulteriore offset renderlo parametrico ??
+                    # Paste the icon on the image
                     my_image.paste(icon, icon_position, mask=icon)
-
                 
-
+                # Effettuo update delle coordinate del prossimo lower textbox
                 lower_y_0 = lower_y_0+actual_size+BOX_MARGIN
     
+    my_image = write_contacts(my_image)
+
+
     return my_image
 
-def image_edit(img_path: str, edit_dict: dict, crop=True):
-    
+def image_edit(img_path: str, edit_dict: dict, crop=True, textboxes=False):
+    """
+    Funzione principale per l'editing dell'immagine. Richiama la funzione di cropping e di writing.
+    Le logiche sul posizionamento del testo sono richiamate da write_on_image().
+    Viene salvata fisicamente l'immagine di output con il prefisso "EDIT_".
+    """    
     if crop:
         # Carico immagine
         my_image = Image.open(img_path) 
@@ -211,7 +276,10 @@ def image_edit(img_path: str, edit_dict: dict, crop=True):
         my_image = Image.open(img_path) 
 
     my_image = write_on_image(my_image, edit_dict)
-    # my_image = draw_textboxes(my_image, edit_dict)
+
+    # Richiamo della funzione per disegnare i textboxes. Disattivata di default.
+    if textboxes:
+        my_image = draw_textboxes(my_image, edit_dict)
 
     # Salvataggio risutlato
     my_image.save("EDIT_"+img_path)

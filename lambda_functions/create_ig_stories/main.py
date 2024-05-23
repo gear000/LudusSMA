@@ -22,12 +22,12 @@ def lambda_handler(event: dict, context):
     img_path = "test_img.png"
 
     # da fare:
-    # https://stackoverflow.com/questions/1970807/center-middle-align-text-with-pil
-    # https://pillow.readthedocs.io/en/stable/handbook/text-anchors.html
-    # - scegliere colore testo parametrico, adatto all'immagine
+    # - rivedere la posizione/layout dei blocchi sia esteticamente
+    # - valutare se iniziare a scrivere i blocchi dal basso, a partire da certe coordinate
+    # - FATTO aggiungere sezione contatti
+    # - FATTO scegliere colore testo parametrico, adatto all'immagine
     #   - non funziona, non c'è un algoritmo per scegliere il migliore colore. Meglio usare bianco con outline nero
-    # - aggiungere icone per luogo, data, ora, costo etc. e metterle a sx del testo
-    # - aggiungere sezione contatti
+    # - FATTO aggiungere icone per luogo, data, ora, costo etc. e metterle a sx del testo
 
     edit_dict = {
         "title": {"text": "Torneo di Bang",
