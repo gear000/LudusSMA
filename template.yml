@@ -16,7 +16,14 @@ Parameters:
     Type: String
     Default: /telegram/header-webhook-token
     Description: The key of SSM parameter that contains the Telegram header webhook token
-
+  MetaClientSecretKeyParameter:
+    Type: String
+    Default: /meta/client-secret
+    Description: The key of SSM parameter that contains the Client Secret of Meta Account
+  MetaAccessTokenKeyParameter:
+    Type: String
+    Default: /meta/access-token
+    Description: The key of SSM parameter that contains the Access Token of Meta Account    
 
 Resources:
 
@@ -179,11 +186,35 @@ Resources:
       Layers:
         - !Ref LudusSMALambdaLayer
       Events:
-        HelloWorld:
+        TelegramUpdateHandler:
           Type: Api
           Properties:
             Path: /telegram-bot
             Method: post
+
+  LudusSMACreateIGStoriesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda_functions/create_ig_stories/
+      Handler: main.lambda_handler
+      Runtime: python3.11
+      Timeout: 300
+      MemorySize: 1024
+      Architectures:
+        - x86_64
+      Role: !GetAtt LudusSMALambdaRole.Arn
+      Environment:
+        Variables:
+          META_CLIENT_SECRET: !Ref MetaClientSecretKeyParameter
+          META_ACCESS_TOKEN: !Ref MetaAccessTokenKeyParameter
+      Layers:
+        - !Ref LudusSMALambdaLayer
+      Events:
+        ScheduledEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt LudusSMAEventsSQSQueue.Arn
+            BatchSize: 1      
 
 ### LAMBDA LAYER ###
 
