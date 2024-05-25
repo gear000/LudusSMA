@@ -71,11 +71,13 @@ Resources:
             Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/telegram/*'
           - Effect: Allow
             Action:
-              - 'sqs:sendMessage'
+              - 'ssm:GetParameter'
+            Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/meta/*'            
+          - Effect: Allow
+            Action:
+              - 'sqs:receiveMessage'
             Resource: !GetAtt 'LudusSMAEventsSQSQueue.Arn'            
 
-
-  
   LudusSMAEventSchedulerPolicy:
     Type: AWS::IAM::Policy
     Properties:
