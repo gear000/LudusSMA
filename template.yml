@@ -76,6 +76,7 @@ Resources:
           - Effect: Allow
             Action:
               - 'sqs:receiveMessage'
+              - 'sqs:deleteMessage'              
             Resource: !GetAtt 'LudusSMAEventsSQSQueue.Arn'            
 
   LudusSMAEventSchedulerPolicy:
