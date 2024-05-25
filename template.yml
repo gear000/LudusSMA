@@ -75,8 +75,9 @@ Resources:
             Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/meta/*'            
           - Effect: Allow
             Action:
-              - 'sqs:receiveMessage'
-              - 'sqs:deleteMessage'              
+              - 'sqs:ReceiveMessage'
+              - 'sqs:DeleteMessage' 
+              - 'sqs:GetQueueAttributes'             
             Resource: !GetAtt 'LudusSMAEventsSQSQueue.Arn'            
 
   LudusSMAEventSchedulerPolicy:
