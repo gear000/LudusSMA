@@ -8,7 +8,7 @@ import utils.aws_utils as aws_utils
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
-from update_handler import start, event
+from update_handler import start, event, help
 
 ### Setup Logging ###
 logger = logging.getLogger("SMA Logger")
@@ -29,8 +29,10 @@ TELEGRAM_TOKEN = aws_utils.get_parameters(
 app = Application.builder().token(TELEGRAM_TOKEN).build()
 
 # Add handlers
-app.add_handler(CommandHandler("event", start))
-app.add_handler(MessageHandler(filters.TEXT & ~(filters.COMMAND), event))
+app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("help", help))
+app.add_handler(CommandHandler("event", event))
+# app.add_handler(MessageHandler(filters.TEXT & ~(filters.COMMAND), event))
 
 
 async def process_update(update: Update):

@@ -1,8 +1,6 @@
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
 
-# import awswrangler as wr
-
 
 def get_parameters(
     parameter_name: str, is_secure: bool = False, ssm_client=boto3.client("ssm")
