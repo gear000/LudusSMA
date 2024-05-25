@@ -35,7 +35,7 @@ def lambda_handler(event: dict, context):
                   "size": 70, 
                   "color": (255, 255, 255),
                   "anchor":"mm"},
-        "body": {"text": "Divertiti con noi al più famoso gioco western!",
+        "body": {"text": "Divertiti con noi al più famoso gioco western!", # description
                   "font": "montserratalternates/MontserratAlternates-Bold.ttf",
                   "size": 40, 
                   "color": (255, 255, 255),
@@ -60,7 +60,9 @@ def lambda_handler(event: dict, context):
                   "size": 40, 
                   "color": (255, 255, 255),
                   "anchor":"lm"}
+        # "other_info": se non ci sono "na"
     }
+
 
     img_path_edit = image_edit(img_path, edit_dict)
     # ----------------------------

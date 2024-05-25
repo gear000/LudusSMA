@@ -5,29 +5,29 @@ from random import choice
 import base64
 from PIL import Image, ImageFont, ImageDraw 
 
-def image_edit(img_path, edit_dict):
-    # Carico immagine
-    my_image = Image.open(img_path)
+# def image_edit(img_path, edit_dict):
+#     # Carico immagine
+#     my_image = Image.open(img_path)
 
-    # Carico parametri
-    title_text = edit_dict["title"]
-    # title_color = edit_dict["title_color"]
-    title_font =  edit_dict["title_font"]
-    # title_size = edit_dict["title_siz"]
-    body_text =  edit_dict["body"]
-    # body_color =  edit_dict["body_color"]
-    body_font = edit_dict["body_font"]
-    # body_size = edit_dict["body_s"]
+#     # Carico parametri
+#     title_text = edit_dict["title"]
+#     # title_color = edit_dict["title_color"]
+#     title_font =  edit_dict["title_font"]
+#     # title_size = edit_dict["title_siz"]
+#     body_text =  edit_dict["body"]
+#     # body_color =  edit_dict["body_color"]
+#     body_font = edit_dict["body_font"]
+#     # body_size = edit_dict["body_s"]
 
-    title_font = ImageFont.truetype(title_font, 200)
-    body_font = ImageFont.truetype(body_font, 200)
+#     title_font = ImageFont.truetype(title_font, 200)
+#     body_font = ImageFont.truetype(body_font, 200)
 
-    image_editable = ImageDraw.Draw(my_image)
-    image_editable.text((15,15), body_text, (55, 0, 134), font=title_font)
-    image_editable.text((15,130), title_text, (55, 0, 134), font=title_font)
+#     image_editable = ImageDraw.Draw(my_image)
+#     image_editable.text((15,15), body_text, (55, 0, 134), font=title_font)
+#     image_editable.text((15,130), title_text, (55, 0, 134), font=title_font)
 
-    # Salvataggio risutlato
-    my_image.save("_EDIT.jpg")
+#     # Salvataggio risutlato
+#     my_image.save("_EDIT.jpg")
 
 tmp_dict = {"title": "Titolo di prova",
             "title_font": "ARCADECLASSIC.TTF",
