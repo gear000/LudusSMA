@@ -1,4 +1,13 @@
 from image_editing import image_edit
+import utils.aws_utils as aws_utils # ricordati di spostare utils in lambda_functions
+
+META_CLIENT_SECRET = aws_utils.get_parameters(
+    parameter_name="/meta/client-secret", is_secure=True#, ssm_client=ssm_client
+)
+
+META_ACCESS_TOKEN = aws_utils.get_parameters(
+    parameter_name="/meta/access-token", is_secure=True#, ssm_client=ssm_client
+)
 
 def lambda_handler(event: dict, context):
     """
@@ -15,56 +24,46 @@ def lambda_handler(event: dict, context):
         # salvataggio immagine su img_path
     # ----------------------------
 
+
+
     # ----------------------------
     # edit immagine con testo
         # crop to aspect ratio 9:16
         # salvataggio immagine su img_path_edit
+
+    print(META_CLIENT_SECRET)
+    print(META_ACCESS_TOKEN)
+
+
+    # provare su aws s3 a caricare un file e creare un url presigned
+
     img_path = "test_img.png"
 
-    # da fare:
-    # - rivedere la posizione/layout dei blocchi sia esteticamente
-    # - valutare se iniziare a scrivere i blocchi dal basso, a partire da certe coordinate
-    # - FATTO aggiungere sezione contatti
-    # - FATTO scegliere colore testo parametrico, adatto all'immagine
-    #   - non funziona, non c'è un algoritmo per scegliere il migliore colore. Meglio usare bianco con outline nero
-    # - FATTO aggiungere icone per luogo, data, ora, costo etc. e metterle a sx del testo
 
     edit_dict = {
         "title": {"text": "Torneo di Bang",
-                  "font": "montserratalternates/MontserratAlternates-Bold.ttf",
                   "size": 70, 
-                  "color": (255, 255, 255),
                   "anchor":"mm"},
-        "body": {"text": "Divertiti con noi al più famoso gioco western!", # description
-                  "font": "montserratalternates/MontserratAlternates-Bold.ttf",
+        "description": {"text": "Divertiti con noi al più famoso gioco western!", # description
                   "size": 40, 
-                  "color": (255, 255, 255),
                   "anchor":"mm"},        
         "date": {"text": "Mercoledì 31 febbraio",
-                  "font": "montserratalternates/MontserratAlternates-Bold.ttf",
                   "size": 40, 
-                  "color": (255, 255, 255),
                   "anchor":"lm"},
         "time": {"text": "21:00",
-                  "font": "montserratalternates/MontserratAlternates-Bold.ttf",
                   "size": 40, 
-                  "color": (255, 255, 255),
                   "anchor":"lm"},
         "location": {"text": "Centro NOI di Povegliano",
-                  "font": "montserratalternates/MontserratAlternates-Bold.ttf",
                   "size": 40, 
-                  "color": (255, 255, 255),
                   "anchor":"lm"},
         "cost": {"text": "Iscrizione libera",
-                  "font": "montserratalternates/MontserratAlternates-Bold.ttf",
                   "size": 40, 
-                  "color": (255, 255, 255),
                   "anchor":"lm"}
         # "other_info": se non ci sono "na"
     }
 
 
-    img_path_edit = image_edit(img_path, edit_dict)
+    # img_path_edit = image_edit(img_path, edit_dict)
     # ----------------------------
 
     # ----------------------------

@@ -8,7 +8,7 @@ import io
 # Textbox constants
 UPPER_BOXES_START_POINT = (50, 100)
 UPPER_BOXES_WIDTH = 550
-UPPER_SECTIONS = ["title", "body"]
+UPPER_SECTIONS = ["title", "description"]
 
 LOWER_BOXES_START_POINT = (50, 750)
 LOWER_BOXES_WIDTH = 500
@@ -27,6 +27,7 @@ STROKE_COLOR = (0,0,0)
 # Text size constants
 CONTACT_TEXT_SIZE = 30
 # Font constants
+TEXT_FONT = "montserratalternates/MontserratAlternates-Bold.ttf"
 CONTACT_FONT = "montserratalternates/MontserratAlternates-Bold.ttf"
 # ---
 # Icons constants
@@ -60,7 +61,7 @@ def draw_textboxes(my_image, edit_dict):
 
     for scope in edit_dict.keys():
         if edit_dict[scope]["text"] != "":
-            if scope in ["title", "body"]:
+            if scope in UPPER_SECTIONS:
                 upper_textbox = ((UPPER_BOXES_START_POINT[0], UPPER_BOXES_START_POINT[1]), 
                                  (UPPER_BOXES_START_POINT[0]+UPPER_BOXES_WIDTH, upper_y_0+edit_dict[scope]["size"]))
                 image_editable.rectangle(upper_textbox, width=3)
@@ -203,7 +204,7 @@ def write_on_image(my_image, edit_dict):
         if edit_dict[scope]["text"] != "": # Solo se la sezione contiene del testo (NB: migliorare la gestione delle sezioni senza testo)
             if scope in UPPER_SECTIONS:
                 # Calcolo dimensione carattere adeguata in base al testo e alla larghezza del box
-                actual_size = get_text_size(UPPER_BOXES_WIDTH, edit_dict[scope]["text"], edit_dict[scope]["font"], edit_dict[scope]["size"])
+                actual_size = get_text_size(UPPER_BOXES_WIDTH, edit_dict[scope]["text"], TEXT_FONT, edit_dict[scope]["size"])
                 # Definisco le coordinate del textbox in base a dove siamo arrivati a scrivere e alla dimensione del carattere
                 upper_textbox = ((UPPER_BOXES_START_POINT[0], upper_y_0), 
                                  (UPPER_BOXES_START_POINT[0]+UPPER_BOXES_WIDTH, upper_y_0+actual_size)) 
@@ -214,7 +215,7 @@ def write_on_image(my_image, edit_dict):
                                     edit_dict[scope]["text"],
                                     edit_dict[scope]["color"],
                                     anchor=edit_dict[scope]["anchor"],
-                                    font=get_google_font(edit_dict[scope]["font"]
+                                    font=get_google_font(TEXT_FONT
                                                             , actual_size),
                                     stroke_width=STROKE_WIDTH,
                                     stroke_fill=STROKE_COLOR)
@@ -223,7 +224,7 @@ def write_on_image(my_image, edit_dict):
 
             elif scope in LOWER_SECTIONS:
                 # Calcolo dimensione carattere adeguata in base al testo e alla larghezza del box
-                actual_size = get_text_size(LOWER_BOXES_WIDTH, edit_dict[scope]["text"], edit_dict[scope]["font"], edit_dict[scope]["size"])
+                actual_size = get_text_size(LOWER_BOXES_WIDTH, edit_dict[scope]["text"], TEXT_FONT, edit_dict[scope]["size"])
                  # Definisco le coordinate del textbox in base a dove siamo arrivati a scrivere e alla dimensione del carattere 
                 lower_textbox = ((LOWER_BOXES_START_POINT[0], lower_y_0), 
                                  (LOWER_BOXES_START_POINT[0]+LOWER_BOXES_WIDTH, lower_y_0+actual_size))
@@ -234,7 +235,7 @@ def write_on_image(my_image, edit_dict):
                                     edit_dict[scope]["text"],
                                     edit_dict[scope]["color"],
                                     anchor=edit_dict[scope]["anchor"],
-                                    font=get_google_font(edit_dict[scope]["font"]
+                                    font=get_google_font(TEXT_FONT
                                                             , actual_size),
                                     stroke_width=STROKE_WIDTH,
                                     stroke_fill=STROKE_COLOR)
