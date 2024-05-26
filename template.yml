@@ -16,7 +16,14 @@ Parameters:
     Type: String
     Default: /telegram/header-webhook-token
     Description: The key of SSM parameter that contains the Telegram header webhook token
-
+  MetaClientSecretKeyParameter:
+    Type: String
+    Default: /meta/client-secret
+    Description: The key of SSM parameter that contains the Client Secret of Meta Account
+  MetaAccessTokenKeyParameter:
+    Type: String
+    Default: /meta/access-token
+    Description: The key of SSM parameter that contains the Access Token of Meta Account    
 
 Resources:
 
@@ -71,11 +78,15 @@ Resources:
             Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/telegram/*'
           - Effect: Allow
             Action:
-              - 'sqs:sendMessage'
+              - 'ssm:GetParameter'
+            Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/meta/*'            
+          - Effect: Allow
+            Action:
+              - 'sqs:ReceiveMessage'
+              - 'sqs:DeleteMessage' 
+              - 'sqs:GetQueueAttributes'             
             Resource: !GetAtt 'LudusSMAEventsSQSQueue.Arn'            
 
-
-  
   LudusSMAEventSchedulerPolicy:
     Type: AWS::IAM::Policy
     Properties:
@@ -128,20 +139,6 @@ Resources:
         - AttributeName: user_id
           KeyType: HASH
 
-  LudusSMAEventsDynamoDBTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      BillingMode: PAY_PER_REQUEST
-      DeletionProtectionEnabled: true
-      TableName: Events
-      TableClass: STANDARD
-      AttributeDefinitions:
-        - AttributeName: event_id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: event_id
-          KeyType: HASH
-
 ### SQS QUEUE ###
 
   LudusSMAEventsSQSQueue:
@@ -175,11 +172,35 @@ Resources:
       Layers:
         - !Ref LudusSMALambdaLayer
       Events:
-        HelloWorld:
+        TelegramUpdateHandler:
           Type: Api
           Properties:
             Path: /telegram-bot
             Method: post
+
+  LudusSMACreateIGStoriesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda_functions/create_ig_stories/
+      Handler: main.lambda_handler
+      Runtime: python3.11
+      Timeout: 300
+      MemorySize: 1024
+      Architectures:
+        - x86_64
+      Role: !GetAtt LudusSMALambdaRole.Arn
+      Environment:
+        Variables:
+          META_CLIENT_SECRET: !Ref MetaClientSecretKeyParameter
+          META_ACCESS_TOKEN: !Ref MetaAccessTokenKeyParameter
+      Layers:
+        - !Ref LudusSMALambdaLayer
+      Events:
+        ScheduledEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt LudusSMAEventsSQSQueue.Arn
+            BatchSize: 1      
 
 ### LAMBDA LAYER ###
 
