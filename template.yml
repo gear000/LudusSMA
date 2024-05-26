@@ -85,7 +85,13 @@ Resources:
               - 'sqs:ReceiveMessage'
               - 'sqs:DeleteMessage' 
               - 'sqs:GetQueueAttributes'             
-            Resource: !GetAtt 'LudusSMAEventsSQSQueue.Arn'            
+            Resource: !GetAtt 'LudusSMAEventsSQSQueue.Arn'
+          - Effect: Allow
+            Action:
+              - 'sqs:ReceiveMessage'
+              - 'sqs:DeleteMessage' 
+              - 'sqs:GetQueueAttributes'             
+            Resource: !GetAtt 'LudusSMATelegramUpdatesSQSQueue.Arn'                          
 
   LudusSMAEventSchedulerPolicy:
     Type: AWS::IAM::Policy
