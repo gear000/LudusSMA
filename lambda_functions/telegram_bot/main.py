@@ -45,9 +45,10 @@ async def process_update(update: Update):
 def lambda_handler(event: dict, context):
     """AWS Lambda function to handle incoming webhook."""
 
-    logger.info(f"Received event: {event}")
+    sqs_record: dict = event.get("Records")[0]
+    logger.info(f"Received event: {sqs_record.get('body')}")
 
-    update = Update.de_json(json.loads(event["body"]), app.bot)
+    update = Update.de_json(sqs_record.get("body"), app.bot)
     chat_id = update.effective_chat.id
     ALLOWED_CHAT_IDS = [
         int(chat_id)

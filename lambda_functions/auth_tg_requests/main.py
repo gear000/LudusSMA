@@ -19,8 +19,6 @@ sqs_client = boto3.client("sqs")
 def lambda_handler(event: dict, context):
     """AWS Lambda function to handle incoming webhook."""
 
-    logger.info(f"Received event: {event}")
-
     SECRET_TOKEN = aws_utils.get_parameter(
         parameter_name=os.getenv("TELEGRAM_HEADER_WEBHOOK_TOKEN"),
         is_secure=True,
