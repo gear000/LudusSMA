@@ -175,7 +175,7 @@ Resources:
       Environment:
         Variables:
           TELEGRAM_HEADER_WEBHOOK_TOKEN: !Ref TelegramHeaderWebhookTokenKeyParameter
-          SQS_QUEUE_TELEGRAM_UPDATES_ARN: !GetAtt LudusSMATelegramUpdatesSQSQueue.Arn
+          SQS_QUEUE_TELEGRAM_UPDATES_NAME: !GetAtt LudusSMATelegramUpdatesSQSQueue.QueueName
       Layers:
         - !Ref LudusSMALambdaLayer
       Events:

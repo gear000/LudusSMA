@@ -35,7 +35,7 @@ def lambda_handler(event: dict, context):
     else:
 
         aws_utils.send_message_in_sqs_queue(
-            queue_name=os.getenv("SQS_QUEUE_TELEGRAM_UPDATES_ARN"),
+            queue_name=os.getenv("SQS_QUEUE_TELEGRAM_UPDATES_NAME"),
             message=event.get("body", {}),
             sqs_client=sqs_client,
         )
