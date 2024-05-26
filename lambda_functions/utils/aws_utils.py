@@ -1,9 +1,20 @@
 import boto3
+import logging
 from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
+
+### Logger ###
+logger = logging.getLogger("AWS Utils Logger")
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+logger.addHandler(logging.StreamHandler())
+logger.handlers[0].setFormatter(formatter)
 
 
 def get_parameter(
-    parameter_name: str, is_secure: bool = False, ssm_client=boto3.client("ssm")
+    parameter_name: str,
+    is_secure: bool = False,
+    ssm_client=boto3.client("ssm"),
+    logger=logger,
 ) -> str | None:
     """
     Retrieve an encrypted parameter from AWS Systems Manager Parameter Store.
@@ -21,7 +32,7 @@ def get_parameter(
         )
         return response["Parameter"]["Value"]
     except ClientError as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
         return None
 
 
@@ -64,9 +75,9 @@ def insert_record_in_dynamo(
     try:
         converted_record = convert_record(record)
         dynamodb_client.put_item(TableName=table_name, Item=converted_record)
-        print("Record saved successfully: ", record)
+        logger.info("Record saved successfully: ", record)
     except (NoCredentialsError, PartialCredentialsError) as e:
-        print("Error in saving record: ", e)
+        logger.error("Error in saving record: ", e)
 
 
 def get_record_from_dynamo(
@@ -81,7 +92,7 @@ def get_record_from_dynamo(
         )
         return response["Item"]
     except (NoCredentialsError, PartialCredentialsError) as e:
-        print("Error in getting record: ", e)
+        logger.error("Error in getting record: ", e)
 
 
 # OLD
@@ -95,3 +106,18 @@ def get_record_from_dynamo(
 #         print("Record saved successfully: ", record)
 #     except (NoCredentialsError, PartialCredentialsError) as e:
 #         print("Error in saving record: ", e)
+
+### SQS QUEUES ###
+
+
+def send_message_in_sqs_queue(
+    queue_name: str,
+    message: dict,
+    sqs_client=boto3.client("sqs"),
+    logger=logger,
+):
+    try:
+        sqs_client.send_message(QueueUrl=queue_name, MessageBody=message)
+        logger.info("Message sent successfully")
+    except (NoCredentialsError, PartialCredentialsError) as e:
+        logger.error("Error in saving record: ", e)

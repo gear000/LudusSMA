@@ -32,5 +32,12 @@ def lambda_handler(event: dict, context):
 
     if client_secret != SECRET_TOKEN:
         return {"statusCode": 401, "body": "Unauthorized"}
+    else:
+
+        aws_utils.send_message_in_sqs_queue(
+            queue_name=os.getenv("SQS_QUEUE_TELEGRAM_UPDATES_ARN"),
+            message=event.get("body", {}),
+            sqs_client=sqs_client,
+        )
 
     return {"statusCode": 202, "body": "Accepted"}
