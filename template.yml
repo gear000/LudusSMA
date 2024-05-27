@@ -162,83 +162,83 @@ Resources:
         
 ### LAMBDA FUNCTIONS ###
 
-  LudusSMAAuthTgRequestsFunction:
-    Type: AWS::Serverless::Function    
-    Name: auth-tg-requests
-    Properties:
-      CodeUri: lambda_functions/auth_tg_requests/
-      Handler: main.lambda_handler
-      Runtime: python3.11
-      Timeout: 60
-      Architectures:
-        - x86_64
-      Role: !GetAtt LudusSMALambdaRole.Arn
-      Environment:
-        Variables:
-          TELEGRAM_HEADER_WEBHOOK_TOKEN: !Ref TelegramHeaderWebhookTokenKeyParameter
-          SQS_QUEUE_TELEGRAM_UPDATES_NAME: !GetAtt LudusSMATelegramUpdatesSQSQueue.QueueName
-      Layers:
-        - !Ref LudusSMALambdaLayer
-      Events:
-        TelegramUpdateHandler:
-          Type: Api
-          Properties:
-            Path: /telegram-bot
-            Method: post
+  # LudusSMAAuthTgRequestsFunction:
+  #   Type: AWS::Serverless::Function    
+  #   Name: auth-tg-requests
+  #   Properties:
+  #     CodeUri: lambda_functions/auth_tg_requests/
+  #     Handler: main.lambda_handler
+  #     Runtime: python3.11
+  #     Timeout: 60
+  #     Architectures:
+  #       - x86_64
+  #     Role: !GetAtt LudusSMALambdaRole.Arn
+  #     Environment:
+  #       Variables:
+  #         TELEGRAM_HEADER_WEBHOOK_TOKEN: !Ref TelegramHeaderWebhookTokenKeyParameter
+  #         SQS_QUEUE_TELEGRAM_UPDATES_NAME: !GetAtt LudusSMATelegramUpdatesSQSQueue.QueueName
+  #     Layers:
+  #       - !Ref LudusSMALambdaLayer
+  #     Events:
+  #       TelegramUpdateHandler:
+  #         Type: Api
+  #         Properties:
+  #           Path: /telegram-bot
+  #           Method: post
 
-  LudusSMATelegramBotFunction:
-    Type: AWS::Serverless::Function
-    Name: telegram-bot
-    Properties:
-      CodeUri: lambda_functions/telegram_bot/
-      Handler: main.lambda_handler
-      Runtime: python3.11
-      Timeout: 300
-      MemorySize: 512
-      Architectures:
-        - x86_64
-      Role: !GetAtt LudusSMALambdaRole.Arn
-      Environment:
-        Variables:
-          TELEGRAM_BOT_KEY: !Ref TelegramBotKeyParameter
-          TELEGRAM_ALLOW_CHAT_IDS: !Ref TelegramAllowChatIdsKeyParameter
-          SQS_QUEUE_TELEGRAM_UPDATES_NAME: !GetAtt LudusSMATelegramUpdatesSQSQueue.QueueName
-          SQS_QUEUE_EVENTS_ARN: !GetAtt LudusSMAEventsSQSQueue.Arn
-          DYNAMODB_TABLE_CHATS_HISTORY_NAME: !Ref LudusSMAChatsHistoryDynamoDBTable
-          IAM_ROLE_EVENT_SCHEDULER_ARN: !GetAtt LudusSMAEventSchedulerRole.Arn
-      Layers:
-        - !Ref LudusSMALambdaLayer
-      Events:
-        TelegramUpdateHandler:
-          Type: SQS
-          Properties:
-            Queue: !GetAtt LudusSMATelegramUpdatesSQSQueue.Arn
-            BatchSize: 1
+  # LudusSMATelegramBotFunction:
+  #   Type: AWS::Serverless::Function
+  #   Name: telegram-bot
+  #   Properties:
+  #     CodeUri: lambda_functions/telegram_bot/
+  #     Handler: main.lambda_handler
+  #     Runtime: python3.11
+  #     Timeout: 300
+  #     MemorySize: 512
+  #     Architectures:
+  #       - x86_64
+  #     Role: !GetAtt LudusSMALambdaRole.Arn
+  #     Environment:
+  #       Variables:
+  #         TELEGRAM_BOT_KEY: !Ref TelegramBotKeyParameter
+  #         TELEGRAM_ALLOW_CHAT_IDS: !Ref TelegramAllowChatIdsKeyParameter
+  #         SQS_QUEUE_TELEGRAM_UPDATES_NAME: !GetAtt LudusSMATelegramUpdatesSQSQueue.QueueName
+  #         SQS_QUEUE_EVENTS_ARN: !GetAtt LudusSMAEventsSQSQueue.Arn
+  #         DYNAMODB_TABLE_CHATS_HISTORY_NAME: !Ref LudusSMAChatsHistoryDynamoDBTable
+  #         IAM_ROLE_EVENT_SCHEDULER_ARN: !GetAtt LudusSMAEventSchedulerRole.Arn
+  #     Layers:
+  #       - !Ref LudusSMALambdaLayer
+  #     Events:
+  #       TelegramUpdateHandler:
+  #         Type: SQS
+  #         Properties:
+  #           Queue: !GetAtt LudusSMATelegramUpdatesSQSQueue.Arn
+  #           BatchSize: 1
 
-  LudusSMACreateIGStoriesFunction:
-    Type: AWS::Serverless::Function
-    Name: create-ig-stories
-    Properties:
-      CodeUri: lambda_functions/create_ig_stories/
-      Handler: main.lambda_handler
-      Runtime: python3.11
-      Timeout: 300
-      MemorySize: 512
-      Architectures:
-        - x86_64
-      Role: !GetAtt LudusSMALambdaRole.Arn
-      Environment:
-        Variables:
-          META_CLIENT_SECRET: !Ref MetaClientSecretKeyParameter
-          META_ACCESS_TOKEN: !Ref MetaAccessTokenKeyParameter
-      Layers:
-        - !Ref LudusSMALambdaLayer
-      Events:
-        ScheduledEvent:
-          Type: SQS
-          Properties:
-            Queue: !GetAtt LudusSMAEventsSQSQueue.Arn
-            BatchSize: 1      
+  # LudusSMACreateIGStoriesFunction:
+  #   Type: AWS::Serverless::Function
+  #   Name: create-ig-stories
+  #   Properties:
+  #     CodeUri: lambda_functions/create_ig_stories/
+  #     Handler: main.lambda_handler
+  #     Runtime: python3.11
+  #     Timeout: 300
+  #     MemorySize: 512
+  #     Architectures:
+  #       - x86_64
+  #     Role: !GetAtt LudusSMALambdaRole.Arn
+  #     Environment:
+  #       Variables:
+  #         META_CLIENT_SECRET: !Ref MetaClientSecretKeyParameter
+  #         META_ACCESS_TOKEN: !Ref MetaAccessTokenKeyParameter
+  #     Layers:
+  #       - !Ref LudusSMALambdaLayer
+  #     Events:
+  #       ScheduledEvent:
+  #         Type: SQS
+  #         Properties:
+  #           Queue: !GetAtt LudusSMAEventsSQSQueue.Arn
+  #           BatchSize: 1      
 
 ### LAMBDA LAYER ###
 
