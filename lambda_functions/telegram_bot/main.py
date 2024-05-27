@@ -20,6 +20,7 @@ logger.handlers[0].setFormatter(formatter)
 
 ### AWS clients ###
 ssm_client = boto3.client("ssm")
+sqs_client = boto3.client("sqs")
 
 ### Constants ###
 TELEGRAM_TOKEN = aws_utils.get_parameter(
@@ -53,7 +54,7 @@ def lambda_handler(event: dict, context):
     aws_utils.delete_message_from_sqs_queue(
         queue_name=os.getenv("SQS_QUEUE_TELEGRAM_UPDATES_NAME"),
         receipt_handle=sqs_receipt_handle,
-        ssm_client=ssm_client,
+        ssm_client=sqs_client,
     )
 
     update = Update.de_json(json.loads(sqs_record.get("body")), app.bot)
