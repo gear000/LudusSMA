@@ -26,7 +26,7 @@ async def start(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 async def help(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text(
-        "Al momento sono in grado di fare molto, ma imparo in fretta e sto migliorando giorno dopo giorno!"
+        "Al momento sono in grado di fare molto, ma imparo in fretta e sto migliorando giorno dopo giorno!\n"
         "Ecco i comandi che al momento sono disponibili e cosa posso fare:\n"
         "  - /start: il comando con cui mi presento.\n"
         "  - /event: ti guido nella creazione di un evento, sulla base di questo verranno create delle storie su Instagram."
