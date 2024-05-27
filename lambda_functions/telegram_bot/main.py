@@ -1,6 +1,7 @@
 import json
 import asyncio
 import logging
+import os
 import boto3
 
 import utils.aws_utils as aws_utils
@@ -47,6 +48,13 @@ def lambda_handler(event: dict, context):
 
     sqs_record: dict = event.get("Records")[0]
     logger.info(f"Received event: {sqs_record.get('body')}")
+
+    sqs_receipt_handle: str = sqs_record.get("receiptHandle")
+    aws_utils.delete_message_from_sqs_queue(
+        queue_name=os.getenv("SQS_QUEUE_TELEGRAM_UPDATES_NAME"),
+        receipt_handle=sqs_receipt_handle,
+        ssm_client=ssm_client,
+    )
 
     update = Update.de_json(json.loads(sqs_record.get("body")), app.bot)
     chat_id = update.effective_chat.id

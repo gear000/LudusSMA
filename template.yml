@@ -163,7 +163,8 @@ Resources:
 ### LAMBDA FUNCTIONS ###
 
   LudusSMAAuthTgRequestsFunction:
-    Type: AWS::Serverless::Function
+    Type: AWS::Serverless::Function    
+    Name: auth-tg-requests
     Properties:
       CodeUri: lambda_functions/auth_tg_requests/
       Handler: main.lambda_handler
@@ -187,6 +188,7 @@ Resources:
 
   LudusSMATelegramBotFunction:
     Type: AWS::Serverless::Function
+    Name: telegram-bot
     Properties:
       CodeUri: lambda_functions/telegram_bot/
       Handler: main.lambda_handler
@@ -200,6 +202,7 @@ Resources:
         Variables:
           TELEGRAM_BOT_KEY: !Ref TelegramBotKeyParameter
           TELEGRAM_ALLOW_CHAT_IDS: !Ref TelegramAllowChatIdsKeyParameter
+          SQS_QUEUE_TELEGRAM_UPDATES_NAME: !GetAtt LudusSMATelegramUpdatesSQSQueue.QueueName
           SQS_QUEUE_EVENTS_ARN: !GetAtt LudusSMAEventsSQSQueue.Arn
           DYNAMODB_TABLE_CHATS_HISTORY_NAME: !Ref LudusSMAChatsHistoryDynamoDBTable
           IAM_ROLE_EVENT_SCHEDULER_ARN: !GetAtt LudusSMAEventSchedulerRole.Arn
@@ -214,6 +217,7 @@ Resources:
 
   LudusSMACreateIGStoriesFunction:
     Type: AWS::Serverless::Function
+    Name: create-ig-stories
     Properties:
       CodeUri: lambda_functions/create_ig_stories/
       Handler: main.lambda_handler
@@ -240,6 +244,7 @@ Resources:
 
   LudusSMALambdaLayer:
     Type: AWS::Serverless::LayerVersion
+    Name: lambda-utils-layer
     Properties:
       LayerName: LudusSMAUtilsLayer
       Description: LudusSMA Utils Lambda Layer

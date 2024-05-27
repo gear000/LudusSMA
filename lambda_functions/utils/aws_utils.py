@@ -121,3 +121,16 @@ def send_message_in_sqs_queue(
         logger.info("Message sent successfully")
     except (NoCredentialsError, PartialCredentialsError) as e:
         logger.error("Error in saving record: ", e)
+
+
+def delete_message_from_sqs_queue(
+    queue_name: str,
+    receipt_handle: str,
+    sqs_client=boto3.client("sqs"),
+    logger=logger,
+):
+    try:
+        sqs_client.delete_message(QueueUrl=queue_name, ReceiptHandle=receipt_handle)
+        logger.info("Message deleted successfully")
+    except (NoCredentialsError, PartialCredentialsError) as e:
+        logger.error("Error in saving record: ", e)
