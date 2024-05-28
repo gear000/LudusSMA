@@ -1,5 +1,6 @@
 from image_editing import image_edit
 from imgur_functions import load_imgur
+from meta_functions import publish_story
 import utils.aws_utils as aws_utils # ricordati di spostare utils in lambda_functions
 
 META_CLIENT_SECRET = aws_utils.get_parameters(
@@ -32,10 +33,6 @@ def lambda_handler(event: dict, context):
         # crop to aspect ratio 9:16
         # salvataggio immagine su img_path_edit
 
-    print(META_CLIENT_SECRET)
-    print(META_ACCESS_TOKEN)
-
-
     # provare su aws s3 a caricare un file e creare un url presigned
 
     img_path = "test_img.png"
@@ -61,6 +58,7 @@ def lambda_handler(event: dict, context):
                   "anchor":"lm"}
         # "other_info": se non ci sono "na"
     }
+    print("Editing immagine in corso.")
     img_path_edit = image_edit(img_path, edit_dict)
     # ----------------------------
 
@@ -71,6 +69,7 @@ def lambda_handler(event: dict, context):
                         "imgur_client_id": "a479ab6df29945b",
                         "imgur_client_secret": "2683b21fc6bfc8705508a487ed04b169c8d092c0"
                     } # da mettere nel gestore parametri
+    print("Caricamento immagine su imgur.")
     img_url = load_imgur(imgur_config, img_path_edit)
     print(img_url)
     # ----------------------------
@@ -78,6 +77,16 @@ def lambda_handler(event: dict, context):
     # ----------------------------
     # post storia ig
         # ritornare messaggio di successo o eventuale errore
+    meta_config = {
+        "fb_page_id": "317629034756571",
+        "ig_user_id": "17841465940733845",
+        "client_id": "1816564495510379",
+        "client_secret": META_CLIENT_SECRET,
+        "api_version": "v19.0",
+        "access_token": META_ACCESS_TOKEN
+    }
+    print("Pubblicazione storia Instagram in corso.")
+    publish_story(img_url, meta_config)
     # ----------------------------
 
 
