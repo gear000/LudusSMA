@@ -1,4 +1,5 @@
 from image_editing import image_edit
+from imgur_functions import load_imgur
 import utils.aws_utils as aws_utils # ricordati di spostare utils in lambda_functions
 
 META_CLIENT_SECRET = aws_utils.get_parameters(
@@ -39,12 +40,11 @@ def lambda_handler(event: dict, context):
 
     img_path = "test_img.png"
 
-
     edit_dict = {
         "title": {"text": "Torneo di Bang",
                   "size": 70, 
                   "anchor":"mm"},
-        "description": {"text": "Divertiti con noi al più famoso gioco western!", # description
+        "description": {"text": "Divertiti con noi al più famoso gioco western!",
                   "size": 40, 
                   "anchor":"mm"},        
         "date": {"text": "Mercoledì 31 febbraio",
@@ -61,14 +61,18 @@ def lambda_handler(event: dict, context):
                   "anchor":"lm"}
         # "other_info": se non ci sono "na"
     }
-
-
-    # img_path_edit = image_edit(img_path, edit_dict)
+    img_path_edit = image_edit(img_path, edit_dict)
     # ----------------------------
 
     # ----------------------------
     # caricamento immagine su imgur per ottenere url
-    
+
+    imgur_config = {
+                        "imgur_client_id": "a479ab6df29945b",
+                        "imgur_client_secret": "2683b21fc6bfc8705508a487ed04b169c8d092c0"
+                    } # da mettere nel gestore parametri
+    img_url = load_imgur(imgur_config, img_path_edit)
+    print(img_url)
     # ----------------------------
 
     # ----------------------------

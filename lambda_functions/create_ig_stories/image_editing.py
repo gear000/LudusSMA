@@ -213,7 +213,7 @@ def write_on_image(my_image, edit_dict):
                 # Scrivo il testo
                 image_editable.text(position, 
                                     edit_dict[scope]["text"],
-                                    edit_dict[scope]["color"],
+                                    TEXT_COLOR,
                                     anchor=edit_dict[scope]["anchor"],
                                     font=get_google_font(TEXT_FONT
                                                             , actual_size),
@@ -233,7 +233,7 @@ def write_on_image(my_image, edit_dict):
                 # Scrivo il testo
                 image_editable.text(position, 
                                     edit_dict[scope]["text"],
-                                    edit_dict[scope]["color"],
+                                    TEXT_COLOR,
                                     anchor=edit_dict[scope]["anchor"],
                                     font=get_google_font(TEXT_FONT
                                                             , actual_size),
@@ -283,5 +283,8 @@ def image_edit(img_path: str, edit_dict: dict, crop=True, textboxes=False):
         my_image = draw_textboxes(my_image, edit_dict)
 
     # Salvataggio risutlato
-    my_image.save("EDIT_"+img_path)
+    output_path = "EDIT_"+img_path
+    my_image.save(output_path)
+    
+    return output_path
 
