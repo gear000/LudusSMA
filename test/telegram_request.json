@@ -1,0 +1,50 @@
+{
+    "update_id": 36905338,
+    "message": {
+        "message_id": 588,
+        "from": {
+            "id": 143243107,
+            "is_bot": false,
+            "first_name": "Gear0",
+            "username": "HardStone00",
+            "language_code": "it"
+        },
+        "chat": {
+            "id": 143243107,
+            "first_name": "Gear0",
+            "username": "HardStone00",
+            "type": "private"
+        },
+        "date": 1716677576,
+        "photo": [
+            {
+                "file_id": "AgACAgQAAxkBAAICTGZSa8grj3_z-5skIhvFVgABh-Qa8wAC2MAxG22_mVLsYwTfqMbjiwEAAwIAA3MAAzUE",
+                "file_unique_id": "AQAD2MAxG22_mVJ4",
+                "file_size": 1846,
+                "width": 64,
+                "height": 90
+            },
+            {
+                "file_id": "AgACAgQAAxkBAAICTGZSa8grj3_z-5skIhvFVgABh-Qa8wAC2MAxG22_mVLsYwTfqMbjiwEAAwIAA20AAzUE",
+                "file_unique_id": "AQAD2MAxG22_mVJy",
+                "file_size": 29546,
+                "width": 229,
+                "height": 320
+            },
+            {
+                "file_id": "AgACAgQAAxkBAAICTGZSa8grj3_z-5skIhvFVgABh-Qa8wAC2MAxG22_mVLsYwTfqMbjiwEAAwIAA3gAAzUE",
+                "file_unique_id": "AQAD2MAxG22_mVJ9",
+                "file_size": 130696,
+                "width": 573,
+                "height": 800
+            },
+            {
+                "file_id": "AgACAgQAAxkBAAICTGZSa8grj3_z-5skIhvFVgABh-Qa8wAC2MAxG22_mVLsYwTfqMbjiwEAAwIAA3kAAzUE",
+                "file_unique_id": "AQAD2MAxG22_mVJ-",
+                "file_size": 170939,
+                "width": 744,
+                "height": 1039
+            }
+        ]
+    }
+}
