@@ -15,7 +15,8 @@ from langchain.agents import AgentExecutor
 from langchain.tools.render import render_text_description
 
 import logging
-
+import json
+from datetime import date
 
 from .prompts import EVENT_SYSTEM_PROMPT, EVENT_TOOLS_PROMPT, CHECK_INFO_PROMPT
 from .custom_parser import CustomJSONAgentOutputParser
@@ -97,7 +98,7 @@ def create_agent(prompt: str, tools: list):
 class EventHandler:
     """
     Ludus BOT class.
-    It creates description for social content, prompt for Dall-E and generates Dall-E image.
+    It handles the creation of events.
     """
 
     def __init__(
@@ -147,18 +148,22 @@ class EventHandler:
         @tool
         def create_event(specifics: str):
             """
-            Creates the event. Syntax: event name; event description; date; start time; ending time; adress.
+            Creates the event. Syntax:
             {
-                title
-                description
-                date # data inizio e fine
-                time # start end time
-                location # nome del posto
-                other info # eventualmente NA
+                "title"
+                "description"
+                "date" // must be of the format DD/MM/YYYY
+                "time" // as the user input
+                "location"
+                "other_info" // optional
             }
-
             """
-            splitted = specifics.split(";")
+            spec_dict = json.loads(specifics)
+            if len(spec_dict.get("other_info", "NA")) < 3:
+                spec_dict["other_info"] = "NA"
+
+            # TODO: check if provided year is correct - >= today.year
+
             check_info_chain = (
                 PromptTemplate.from_template(CHECK_INFO_PROMPT)
                 | ChatBedrock(
@@ -169,7 +174,7 @@ class EventHandler:
             )
             missing = check_info_chain.invoke({"input": specifics})
             if missing.strip() == "OK":
-                print(f"Create event with: {splitted}")
+                print(f"Create event with: {specifics}")
                 return "Event created"
             else:
                 return (

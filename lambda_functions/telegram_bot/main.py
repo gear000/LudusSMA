@@ -65,3 +65,11 @@ def lambda_handler(event: dict, context):
     asyncio.run(process_update(update))
 
     return {"statusCode": 200, "body": "Elaboration completed"}
+
+
+if __name__ == "__main__":
+    with open("test\\telegram_request.json", "r") as f:
+        text = f.read()
+    event = {"body": text}
+
+    lambda_handler(event, None)
