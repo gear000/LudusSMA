@@ -72,12 +72,12 @@ async def my_event_handler(
     record = get_record_from_dynamo(
         table_name="ChatsHistory", key_name="user_id", key_value=str(user_id)
     )
-    chat_history = record.get(["messages"])
+    chat_history = record.get("messages", [])
 
     bot = EventHandler(chat_history=chat_history)
     answer_dict = bot.run(update.message.text)
 
-    reply_anwser = await update.message.reply_text(answer_dict["output"])
+    reply_answer = await update.message.reply_text(answer_dict["output"])
 
     insert_record_in_dynamo(
         table_name="ChatsHistory",
@@ -100,6 +100,6 @@ async def my_event_handler(
             ],
         },
     )
-    print(f"Reply Answer:\n {reply_anwser}")
+    print(f"Reply Answer:\n {reply_answer}")
 
     return 0
