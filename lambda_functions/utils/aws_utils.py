@@ -100,9 +100,9 @@ def insert_record_in_dynamo(
     try:
         converted_record = encode_record(record)
         dynamodb_client.put_item(TableName=table_name, Item=converted_record)
-        print("Record saved successfully: ", record)
+        logger.info("Record saved successfully: ", record)
     except (NoCredentialsError, PartialCredentialsError) as e:
-        print("Error in saving record: ", e)
+        logger.error("Error in saving record: ", e)
 
 
 def get_record_from_dynamo(
@@ -130,7 +130,7 @@ def get_record_from_dynamo(
         print(response["Item"])
         return decode_record(response["Item"])
     except (NoCredentialsError, PartialCredentialsError) as e:
-        print("Error in getting record: ", e)
+        logger.error("Error in getting record: ", e)
 
 
 def clear_history(
