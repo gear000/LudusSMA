@@ -1,6 +1,7 @@
 import json
 import asyncio
 import logging
+import os
 import boto3
 
 import utils.aws_utils as aws_utils
@@ -19,6 +20,7 @@ logger.handlers[0].setFormatter(formatter)
 
 ### AWS clients ###
 ssm_client = boto3.client("ssm")
+sqs_client = boto3.client("sqs")
 
 ### Constants ###
 TELEGRAM_TOKEN = aws_utils.get_parameter(
@@ -45,9 +47,17 @@ async def process_update(update: Update):
 def lambda_handler(event: dict, context):
     """AWS Lambda function to handle incoming webhook."""
 
-    logger.info(f"Received event: {event}")
+    sqs_record: dict = event.get("Records")[0]
+    logger.info(f"Received event: {sqs_record.get('body')}")
 
-    update = Update.de_json(json.loads(event["body"]), app.bot)
+    sqs_receipt_handle: str = sqs_record.get("receiptHandle")
+    aws_utils.delete_message_from_sqs_queue(
+        queue_name=os.getenv("SQS_QUEUE_TELEGRAM_UPDATES_NAME"),
+        receipt_handle=sqs_receipt_handle,
+        sqs_client=sqs_client,
+    )
+
+    update = Update.de_json(json.loads(sqs_record.get("body")), app.bot)
     chat_id = update.effective_chat.id
     ALLOWED_CHAT_IDS = [
         int(chat_id)

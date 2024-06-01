@@ -75,17 +75,28 @@ Resources:
           - Effect: Allow
             Action:
               - 'ssm:GetParameter'
-            Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/telegram/*'
-          - Effect: Allow
-            Action:
-              - 'ssm:GetParameter'
-            Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/meta/*'            
+            Resource:
+              - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/telegram/*'
+              - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/meta/*'            
           - Effect: Allow
             Action:
               - 'sqs:ReceiveMessage'
               - 'sqs:DeleteMessage' 
               - 'sqs:GetQueueAttributes'             
-            Resource: !GetAtt 'LudusSMAEventsSQSQueue.Arn'            
+            Resource:
+              - !GetAtt 'LudusSMAEventsSQSQueue.Arn'
+              - !GetAtt 'LudusSMATelegramUpdatesSQSQueue.Arn'
+          - Effect: Allow
+            Action:
+              - 'sqs:SendMessage'
+            Resource: !GetAtt 'LudusSMATelegramUpdatesSQSQueue.Arn'
+          - Effect: Allow
+            Action:
+              - 's3:GetObject'
+              - 's3:PutObject'
+            Resource:
+              - !GetAtt 'LudusSMAImagesBucket.Arn'
+              - !Sub '${LudusSMAImagesBucket.Arn}/*'
 
   LudusSMAEventSchedulerPolicy:
     Type: AWS::IAM::Policy
@@ -106,22 +117,15 @@ Resources:
   # Parameters cannot be created by Cloud Formation if they are of type SecureString
   # which is why they were created by hand inside the console
   # parameter keys are passed within the Lambda Function as environment variables.
-  
-  ### SECRET ###
 
-  LudusSMAMetaCredentialsSecret:
-    Type: AWS::SecretsManager::Secret
+  ### S3 BUCKET ###
+
+  LudusSMAImagesBucket:
+    Type: AWS::S3::Bucket
     Properties:
-      Name: meta-credentials
-      Description: Credential for Meta Account      
-      SecretString: initial_value
-  
-  LudusSMAImgurCredentialsSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: imgur-credentials
-      Description: Credential for Imgur Account
-      SecretString: initial_value
+      BucketName: ludussma-images
+      VersioningConfiguration:
+        Status: Enabled
 
   ### DYNAMODB TABLES ###
 
@@ -156,20 +160,20 @@ Resources:
 ### LAMBDA FUNCTIONS ###
 
   LudusSMAAuthTgRequestsFunction:
-    Type: AWS::Serverless::Function
+    Type: AWS::Serverless::Function    
+    Name: auth-tg-requests
     Properties:
       CodeUri: lambda_functions/auth_tg_requests/
       Handler: main.lambda_handler
       Runtime: python3.11
-      Timeout: 300
-      MemorySize: 1024
+      Timeout: 60
       Architectures:
         - x86_64
       Role: !GetAtt LudusSMALambdaRole.Arn
       Environment:
         Variables:
           TELEGRAM_HEADER_WEBHOOK_TOKEN: !Ref TelegramHeaderWebhookTokenKeyParameter
-          SQS_QUEUE_TELEGRAM_UPDATES_ARN: !GetAtt LudusSMATelegramUpdatesSQSQueue.Arn
+          SQS_QUEUE_TELEGRAM_UPDATES_NAME: !GetAtt LudusSMATelegramUpdatesSQSQueue.QueueName
       Layers:
         - !Ref LudusSMALambdaLayer
       Events:
@@ -181,12 +185,13 @@ Resources:
 
   LudusSMATelegramBotFunction:
     Type: AWS::Serverless::Function
+    Name: telegram-bot
     Properties:
       CodeUri: lambda_functions/telegram_bot/
       Handler: main.lambda_handler
       Runtime: python3.11
       Timeout: 300
-      MemorySize: 1024
+      MemorySize: 512
       Architectures:
         - x86_64
       Role: !GetAtt LudusSMALambdaRole.Arn
@@ -194,9 +199,11 @@ Resources:
         Variables:
           TELEGRAM_BOT_KEY: !Ref TelegramBotKeyParameter
           TELEGRAM_ALLOW_CHAT_IDS: !Ref TelegramAllowChatIdsKeyParameter
+          SQS_QUEUE_TELEGRAM_UPDATES_NAME: !GetAtt LudusSMATelegramUpdatesSQSQueue.QueueName
           SQS_QUEUE_EVENTS_ARN: !GetAtt LudusSMAEventsSQSQueue.Arn
           DYNAMODB_TABLE_CHATS_HISTORY_NAME: !Ref LudusSMAChatsHistoryDynamoDBTable
           IAM_ROLE_EVENT_SCHEDULER_ARN: !GetAtt LudusSMAEventSchedulerRole.Arn
+          S3_BUCKET_IMAGES_NAME: !Ref LudusSMAImagesBucket
       Layers:
         - !Ref LudusSMALambdaLayer
       Events:
@@ -208,12 +215,13 @@ Resources:
 
   LudusSMACreateIGStoriesFunction:
     Type: AWS::Serverless::Function
+    Name: create-ig-stories
     Properties:
       CodeUri: lambda_functions/create_ig_stories/
       Handler: main.lambda_handler
       Runtime: python3.11
       Timeout: 300
-      MemorySize: 1024
+      MemorySize: 512
       Architectures:
         - x86_64
       Role: !GetAtt LudusSMALambdaRole.Arn
@@ -234,6 +242,7 @@ Resources:
 
   LudusSMALambdaLayer:
     Type: AWS::Serverless::LayerVersion
+    Name: lambda-utils-layer
     Properties:
       LayerName: LudusSMAUtilsLayer
       Description: LudusSMA Utils Lambda Layer
