@@ -88,12 +88,12 @@ async def my_event_handler(
             "messages": [
                 *chat_history,
                 {
-                    "role": "user",
+                    "author": "user",
                     "content": update.message.text,
                     "timestamp": st,
                 },
                 {
-                    "role": "bot",
+                    "author": "bot",
                     "content": answer_dict["output"],
                     "timestamp": str(datetime.now()),
                 },
