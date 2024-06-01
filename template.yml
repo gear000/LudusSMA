@@ -75,7 +75,7 @@ Resources:
               - 'dynamodb:GetItem'
               - 'dynamodb:PutItem'
               - 'dynamodb:UpdateItem'           
-            Resource: !GetAtt 'LudusSMAEventsTable.Arn'
+            Resource: !GetAtt 'LudusSMAChatsHistoryDynamoDBTable.Arn'
           - Effect: Allow
             Action:
               - 'ssm:GetParameter'
