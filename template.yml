@@ -69,9 +69,13 @@ Resources:
           - Effect: Allow
             Action:
               - 'logs:*'
+            Resource: '*'
+          - Effect: Allow
+            Action:
+              - 'dynamodb:GetItem'
               - 'dynamodb:PutItem'
               - 'dynamodb:UpdateItem'           
-            Resource: '*'
+            Resource: !GetAtt 'LudusSMAEventsTable.Arn'
           - Effect: Allow
             Action:
               - 'ssm:GetParameter'
