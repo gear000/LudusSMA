@@ -90,9 +90,25 @@ def create_agent(prompt: str, tools: list):
         | ChatBedrock(
             model_id="mistral.mixtral-8x7b-instruct-v0:1",
             region_name="us-east-1",
+            streaming=False,
         )
         | CustomJSONAgentOutputParser()
     )
+
+
+def create_agent_executor(prompt: str, tools: list):
+    """
+    Creates agent with given prompt and tools
+    """
+    agent_executor = AgentExecutor(
+        agent=create_agent(prompt, tools),
+        tools=tools,
+        return_intermediate_steps=True,
+        verbose=True,
+        max_iterations=5,
+    )
+    agent_executor.agent.stream_runnable = False
+    return agent_executor
 
 
 class EventHandler:
@@ -129,13 +145,7 @@ class EventHandler:
 
         tools = self._define_tools()
 
-        self.agent_executor = AgentExecutor(
-            agent=create_agent(prompt, tools),
-            tools=tools,
-            return_intermediate_steps=True,
-            verbose=True,
-            max_iterations=5,
-        )
+        self.agent_executor = create_agent_executor(prompt, tools)
 
         self.chat_history = history_to_list(chat_history)
 
@@ -169,6 +179,7 @@ class EventHandler:
                 | ChatBedrock(
                     model_id="mistral.mixtral-8x7b-instruct-v0:1",
                     region_name="us-east-1",
+                    streaming=False,
                 )
                 | StrOutputParser()
             )

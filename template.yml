@@ -103,7 +103,7 @@ Resources:
               - !Sub '${LudusSMAImagesBucket.Arn}/*'
           - Effect: Allow
             Action:
-              - 'bedrock:InvokeModelWithResponseStream'
+              - 'bedrock:InvokeModel'
             Resource: 'arn:aws:bedrock:*'
 
   LudusSMAEventSchedulerPolicy:
