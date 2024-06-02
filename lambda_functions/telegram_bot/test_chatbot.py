@@ -1,7 +1,13 @@
 from chatbot.event_handler import EventHandler
+from aws_utils import get_record_from_dynamo
+
+record = get_record_from_dynamo(
+    table_name="ChatsHistory", key_name="user_id", key_value="505969510"
+)
+chat_history = record.get("messages", [])
 
 bot = EventHandler([])
 answer = bot.run(
-    "ciao, voglio creare un evento per il torneo di warhammer, il torneo dell'anno! sarà il 4 febbraio dalle 10 alle 18 alla sede di ludus di povegliano."
+    "titolo: torneo di warhammer, descrizione: vieni a guerreggiare con noi!, data: 15 marzo, ora: 10-18, location: Qbo di Sommacampagna"
 )
 print(answer["output"])

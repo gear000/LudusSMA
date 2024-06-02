@@ -75,31 +75,37 @@ async def my_event_handler(
     chat_history = record.get("messages", [])
 
     bot = EventHandler(chat_history=chat_history)
-    answer_dict = bot.run(update.message.text)
 
-    reply_answer = await update.message.reply_text(answer_dict["output"])
+    try:
+        answer_dict = bot.run(update.message.text)
 
-    insert_record_in_dynamo(
-        table_name="ChatsHistory",
-        record={
-            "user_id": str(user_id),
-            "chat_id": "dani_prova",
-            "chat_type": "event_creation",
-            "messages": [
-                *chat_history,
-                {
-                    "author": "user",
-                    "content": update.message.text,
-                    "timestamp": st,
-                },
-                {
-                    "author": "bot",
-                    "content": answer_dict["output"],
-                    "timestamp": str(datetime.now()),
-                },
-            ],
-        },
-    )
-    print(f"Reply Answer:\n {reply_answer}")
+        reply_answer = await update.message.reply_text(answer_dict["output"])
+
+        insert_record_in_dynamo(
+            table_name="ChatsHistory",
+            record={
+                "user_id": str(user_id),
+                "chat_id": "dani_prova",
+                "chat_type": "event_creation",
+                "messages": [
+                    *chat_history,
+                    {
+                        "author": "user",
+                        "content": update.message.text,
+                        "timestamp": st,
+                    },
+                    {
+                        "author": "bot",
+                        "content": answer_dict["output"],
+                        "timestamp": str(datetime.now()),
+                    },
+                ],
+            },
+        )
+        print(f"Reply Answer:\n {reply_answer}")
+    except Exception as e:
+        reply_answer = await update.message.reply_text(
+            f"Si è verificato un errore: {e}"
+        )
 
     return 0

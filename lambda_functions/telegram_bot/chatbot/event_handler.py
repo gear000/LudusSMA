@@ -168,11 +168,19 @@ class EventHandler:
                 "other_info" // optional
             }
             """
-            spec_dict = json.loads(specifics)
-            if len(spec_dict.get("other_info", "NA")) < 3:
-                spec_dict["other_info"] = "NA"
 
-            # TODO: check if provided year is correct - >= today.year
+            spec_dict: dict = json.loads(specifics)
+
+            other_info = spec_dict.get("other_info")
+            if other_info is None or len(other_info) < 3:
+                spec_dict["other_info"] = None
+
+            event_date = spec_dict.get("date")
+            if event_date is not None and event_date[-4:] < str(date.today().year):
+                spec_dict["date"] = None
+
+            spec_dict["title"] = spec_dict["title"].title()
+            print(spec_dict)
 
             check_info_chain = (
                 PromptTemplate.from_template(CHECK_INFO_PROMPT)
@@ -183,7 +191,7 @@ class EventHandler:
                 )
                 | StrOutputParser()
             )
-            missing = check_info_chain.invoke({"input": specifics})
+            missing = check_info_chain.invoke({"input": json.dumps(spec_dict)})
             if missing.strip() == "OK":
                 print(f"Create event with: {specifics}")
                 return "Event created"
