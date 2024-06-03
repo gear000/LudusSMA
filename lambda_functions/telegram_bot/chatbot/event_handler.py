@@ -20,6 +20,7 @@ from datetime import date
 
 from .prompts import EVENT_SYSTEM_PROMPT, EVENT_TOOLS_PROMPT, CHECK_INFO_PROMPT
 from .custom_parser import CustomJSONAgentOutputParser
+from .tools import create_schedulers
 
 
 logger = logging.getLogger(__name__)
@@ -194,6 +195,7 @@ class EventHandler:
             missing = check_info_chain.invoke({"input": json.dumps(spec_dict)})
             if missing.strip() == "OK":
                 print(f"Create event with: {specifics}")
+                create_schedulers(spec_dict)
                 return "Event created"
             else:
                 return (
