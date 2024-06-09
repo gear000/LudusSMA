@@ -1,11 +1,12 @@
+import datetime
 from pydantic import BaseModel
 
 
-class EventScheduler(BaseModel):
+class Event(BaseModel):
     title: str
     description: str
-    date: str
-    time: str
+    startdate: datetime
+    enddate: datetime
     event_type: str
     location: str
     other_info: str

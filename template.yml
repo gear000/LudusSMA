@@ -98,7 +98,7 @@ Resources:
             Action:
               - 's3:GetObject'
               - 's3:PutObject'
-              - 's3:ListObjectsV2'
+              - 's3:ListObjects'
             Resource:
               - !GetAtt 'LudusSMAImagesBucket.Arn'
               - !Sub '${LudusSMAImagesBucket.Arn}/*'
