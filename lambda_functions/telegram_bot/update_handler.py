@@ -56,7 +56,7 @@ async def event(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE) -> 
         "  - il nome dell'evento;\n"
         "  - la descrizione dell'evento;\n"
         "  - quando sarà l'evento, cioè il giorno (o i giorni) e quando inizia e finisce;\n"
-        "  - dove si terrà l'evento, cioè l'indirizzo e la città (se necessario includi anche il nome del posto, es. Kubo).\n"
+        "  - dove si terrà l'evento, cioè il nome del posto o l'indirizzo.\n"
         "Quale evento creiamo oggi?"
     )
 

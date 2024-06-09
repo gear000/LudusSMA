@@ -206,5 +206,9 @@ class EventHandler:
 
     def run(self, message: str):
         return self.agent_executor.invoke(
-            {"input": message, "chat_history": self.chat_history}
+            {
+                "input": message,
+                "chat_history": self.chat_history,
+                "today": date.today().strftime("%d/%m/%Y"),
+            }
         )
