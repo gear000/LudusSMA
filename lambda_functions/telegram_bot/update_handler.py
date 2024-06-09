@@ -104,6 +104,7 @@ async def my_event_handler(
         )
         print(f"Reply Answer:\n {reply_answer}")
     except Exception as e:
+        logger.error(e)
         reply_answer = await update.message.reply_text(
             f"Si è verificato un errore: {e}"
         )
