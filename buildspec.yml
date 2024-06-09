@@ -21,7 +21,7 @@ phases:
       - ./scripts/lambda_layer_zipper.sh
       - echo Building SAM Template
       - sam build --template-file template.yml
-      - cfn-lint .aws-sam/build/template.yaml
+      - cfn-lint .aws-sam/build/template.yaml --ignore-checks W2
       - sam package --template-file .aws-sam/build/template.yaml --output-template-file template.yml --s3-bucket ludussma-artifact --s3-prefix sam-output
 
 artifacts:

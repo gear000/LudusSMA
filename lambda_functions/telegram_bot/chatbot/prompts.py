@@ -24,7 +24,7 @@ You have to create a prompt for Dall-E to generate an image on the context below
 # ----------------- EVENT HANDLER
 # https://github.com/AIAnytime/Function-Calling-Mistral-7B/blob/main/Function-Calling-Mistral-7B%20(using%20mistral%20API%20Key).py
 
-EVENT_SYSTEM_PROMPT = '''Assistant is a large language model trained by Mistral.
+EVENT_SYSTEM_PROMPT = """Assistant is a large language model trained by Mistral.
 
 Assistant is designed to be able to assist LudusGate, a board game association, with \
 the creation of events. As a language model, Assistant is able to generate human-like \
@@ -41,9 +41,9 @@ descriptions on a wide range of topics.
 Overall, Assistant is a powerful system that can help with a wide range of tasks \
 and provide valuable insights and information on a wide range of topics. Whether \
 you need help with a specific question or just want to have a conversation about \
-a particular topic, Assistant is here to assist.'''
+a particular topic, Assistant is here to assist."""
 
-EVENT_TOOLS_PROMPT = '''TOOLS
+EVENT_TOOLS_PROMPT = """TOOLS
 ------
 Assistant can ask the user to use tools to create the event. \
 Before using any of the tools, please make sure the user specified all the necessary information.
@@ -69,7 +69,7 @@ Markdown code snippet formatted in the following schema:
 
 **Option #2:**
 Use this if you want to respond directly to the human or TO ASK ADDITIONAL INFO. Markdown code snippet formatted \
-in the following schema:
+in the following schemas:
 
 ```json
 {{
@@ -77,7 +77,13 @@ in the following schema:
     "action_input": string \ You should put what you want to say to the user here (in ITALIAN)
 }}
 ```
-
+or
+```json
+{{
+    "action": "Ask for info",
+    "action_input": string \ You should put what you want to ask the user here (in ITALIAN)
+}}
+```
 
 INPUT
 --------------------
@@ -85,7 +91,7 @@ Here is the user's input:
 
 {input}
 Remember to respond with a markdown code snippet of a json blob with a single action, and NOTHING else:
-'''
+"""
 
 
 CHECK_INFO_PROMPT = """You are an extremely precise manager.

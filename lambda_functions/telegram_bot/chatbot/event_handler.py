@@ -1,13 +1,27 @@
 from langchain_aws import ChatBedrock
+
 from langchain.prompts.prompt import PromptTemplate
+
 from langchain_core.output_parsers import StrOutputParser
-from langchain.agents import tool
+from langchain_core.prompts.chat import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import AIMessage, HumanMessage, BaseMessage
-from langchain.agents import AgentExecutor, create_json_chat_agent
+
+from langchain.agents.format_scratchpad import format_log_to_messages
+from langchain.agents.json_chat.prompt import TEMPLATE_TOOL_RESPONSE
+from langchain.agents import tool
+from langchain.agents import AgentExecutor
+from langchain.tools.render import render_text_description
+
+import logging
 
 
 from .prompts import EVENT_SYSTEM_PROMPT, EVENT_TOOLS_PROMPT, CHECK_INFO_PROMPT
+from .custom_parser import CustomJSONAgentOutputParser
+
+
+logger = logging.getLogger(__name__)
 
 
 def history_to_str(chat: list) -> str:
@@ -58,6 +72,28 @@ def history_to_list(chat_history: list) -> list[BaseMessage]:
     return history
 
 
+def create_agent(prompt: str, tools: list):
+    """
+    Creates agent with given prompt and tools, using CustomJSONAgentOutputParser
+    """
+    return (
+        RunnablePassthrough.assign(
+            agent_scratchpad=lambda x: format_log_to_messages(
+                x["intermediate_steps"], template_tool_response=TEMPLATE_TOOL_RESPONSE
+            )
+        )
+        | prompt.partial(
+            tools=render_text_description(list(tools)),
+            tool_names=", ".join([t.name for t in tools]),
+        )
+        | ChatBedrock(
+            model_id="mistral.mixtral-8x7b-instruct-v0:1",
+            region_name="us-east-1",
+        )
+        | CustomJSONAgentOutputParser()
+    )
+
+
 class EventHandler:
     """
     Ludus BOT class.
@@ -72,7 +108,14 @@ class EventHandler:
         Create EventHandler Bot object.
 
         Args:
-            event_template (str): Prompt for the event generation.
+            chat_history (list): Chat history:
+            [
+                {
+                    "content":"content",
+                    "author":"bot"|"user",
+                    "timestamp":str(datetime.now())
+                }
+            ]
         """
         prompt = ChatPromptTemplate.from_messages(
             [
@@ -86,18 +129,11 @@ class EventHandler:
         tools = self._define_tools()
 
         self.agent_executor = AgentExecutor(
-            agent=create_json_chat_agent(
-                ChatBedrock(
-                    model_id="mistral.mixtral-8x7b-instruct-v0:1",
-                    region_name="us-east-1",
-                ),
-                tools,
-                prompt,
-                stop_sequence=False,
-            ),
+            agent=create_agent(prompt, tools),
             tools=tools,
             return_intermediate_steps=True,
             verbose=True,
+            max_iterations=5,
         )
 
         self.chat_history = history_to_list(chat_history)
@@ -110,7 +146,18 @@ class EventHandler:
 
         @tool
         def create_event(specifics: str):
-            """Creates the event. Syntax: event name; event description; date; start time; ending time; adress."""
+            """
+            Creates the event. Syntax: event name; event description; date; start time; ending time; adress.
+            {
+                title
+                description
+                date # data inizio e fine
+                time # start end time
+                location # nome del posto
+                other info # eventualmente NA
+            }
+
+            """
             splitted = specifics.split(";")
             check_info_chain = (
                 PromptTemplate.from_template(CHECK_INFO_PROMPT)

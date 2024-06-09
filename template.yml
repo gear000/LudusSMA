@@ -16,7 +16,14 @@ Parameters:
     Type: String
     Default: /telegram/header-webhook-token
     Description: The key of SSM parameter that contains the Telegram header webhook token
-
+  MetaClientSecretKeyParameter:
+    Type: String
+    Default: /meta/client-secret
+    Description: The key of SSM parameter that contains the Client Secret of Meta Account
+  MetaAccessTokenKeyParameter:
+    Type: String
+    Default: /meta/access-token
+    Description: The key of SSM parameter that contains the Access Token of Meta Account    
 
 Resources:
 
@@ -71,11 +78,22 @@ Resources:
             Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/telegram/*'
           - Effect: Allow
             Action:
-              - 'sqs:sendMessage'
-            Resource: !GetAtt 'LudusSMAEventsSQSQueue.Arn'            
+              - 'ssm:GetParameter'
+            Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/meta/*'            
+          - Effect: Allow
+            Action:
+              - 'sqs:ReceiveMessage'
+              - 'sqs:DeleteMessage' 
+              - 'sqs:GetQueueAttributes'             
+            Resource: !GetAtt 'LudusSMAEventsSQSQueue.Arn'
+          - Effect: Allow
+            Action:
+              - 'sqs:ReceiveMessage'
+              - 'sqs:DeleteMessage' 
+              - 'sqs:GetQueueAttributes'
+              - 'sqs:SendMessage'
+            Resource: !GetAtt 'LudusSMATelegramUpdatesSQSQueue.Arn'                          
 
-
-  
   LudusSMAEventSchedulerPolicy:
     Type: AWS::IAM::Policy
     Properties:
@@ -128,20 +146,6 @@ Resources:
         - AttributeName: user_id
           KeyType: HASH
 
-  LudusSMAEventsDynamoDBTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      BillingMode: PAY_PER_REQUEST
-      DeletionProtectionEnabled: true
-      TableName: Events
-      TableClass: STANDARD
-      AttributeDefinitions:
-        - AttributeName: event_id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: event_id
-          KeyType: HASH
-
 ### SQS QUEUE ###
 
   LudusSMAEventsSQSQueue:
@@ -149,17 +153,48 @@ Resources:
     Properties:
       QueueName: ScheduledEvents
       VisibilityTimeout: 300
+
+  LudusSMATelegramUpdatesSQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: TelegramUpdates
+      VisibilityTimeout: 300
         
 ### LAMBDA FUNCTIONS ###
 
+  LudusSMAAuthTgRequestsFunction:
+    Type: AWS::Serverless::Function    
+    Name: auth-tg-requests
+    Properties:
+      CodeUri: lambda_functions/auth_tg_requests/
+      Handler: main.lambda_handler
+      Runtime: python3.11
+      Timeout: 60
+      Architectures:
+        - x86_64
+      Role: !GetAtt LudusSMALambdaRole.Arn
+      Environment:
+        Variables:
+          TELEGRAM_HEADER_WEBHOOK_TOKEN: !Ref TelegramHeaderWebhookTokenKeyParameter
+          SQS_QUEUE_TELEGRAM_UPDATES_NAME: !GetAtt LudusSMATelegramUpdatesSQSQueue.QueueName
+      Layers:
+        - !Ref LudusSMALambdaLayer
+      Events:
+        TelegramUpdateHandler:
+          Type: Api
+          Properties:
+            Path: /telegram-bot
+            Method: post
+
   LudusSMATelegramBotFunction:
     Type: AWS::Serverless::Function
+    Name: telegram-bot
     Properties:
       CodeUri: lambda_functions/telegram_bot/
       Handler: main.lambda_handler
       Runtime: python3.11
       Timeout: 300
-      MemorySize: 1024
+      MemorySize: 512
       Architectures:
         - x86_64
       Role: !GetAtt LudusSMALambdaRole.Arn
@@ -167,24 +202,49 @@ Resources:
         Variables:
           TELEGRAM_BOT_KEY: !Ref TelegramBotKeyParameter
           TELEGRAM_ALLOW_CHAT_IDS: !Ref TelegramAllowChatIdsKeyParameter
-          TELEGRAM_HEADER_WEBHOOK_TOKEN: !Ref TelegramHeaderWebhookTokenKeyParameter
+          SQS_QUEUE_TELEGRAM_UPDATES_NAME: !GetAtt LudusSMATelegramUpdatesSQSQueue.QueueName
           SQS_QUEUE_EVENTS_ARN: !GetAtt LudusSMAEventsSQSQueue.Arn
           DYNAMODB_TABLE_CHATS_HISTORY_NAME: !Ref LudusSMAChatsHistoryDynamoDBTable
-          DYNAMODB_TABLE_EVENTS_NAME: !Ref LudusSMAEventsDynamoDBTable
           IAM_ROLE_EVENT_SCHEDULER_ARN: !GetAtt LudusSMAEventSchedulerRole.Arn
       Layers:
         - !Ref LudusSMALambdaLayer
       Events:
-        HelloWorld:
-          Type: Api
+        TelegramUpdateHandler:
+          Type: SQS
           Properties:
-            Path: /telegram-bot
-            Method: post
+            Queue: !GetAtt LudusSMATelegramUpdatesSQSQueue.Arn
+            BatchSize: 1
+
+  LudusSMACreateIGStoriesFunction:
+    Type: AWS::Serverless::Function
+    Name: create-ig-stories
+    Properties:
+      CodeUri: lambda_functions/create_ig_stories/
+      Handler: main.lambda_handler
+      Runtime: python3.11
+      Timeout: 300
+      MemorySize: 512
+      Architectures:
+        - x86_64
+      Role: !GetAtt LudusSMALambdaRole.Arn
+      Environment:
+        Variables:
+          META_CLIENT_SECRET: !Ref MetaClientSecretKeyParameter
+          META_ACCESS_TOKEN: !Ref MetaAccessTokenKeyParameter
+      Layers:
+        - !Ref LudusSMALambdaLayer
+      Events:
+        ScheduledEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt LudusSMAEventsSQSQueue.Arn
+            BatchSize: 1      
 
 ### LAMBDA LAYER ###
 
   LudusSMALambdaLayer:
     Type: AWS::Serverless::LayerVersion
+    Name: lambda-utils-layer
     Properties:
       LayerName: LudusSMAUtilsLayer
       Description: LudusSMA Utils Lambda Layer
