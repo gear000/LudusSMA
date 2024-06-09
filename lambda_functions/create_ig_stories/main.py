@@ -35,7 +35,14 @@ def lambda_handler(event: dict, context):
 
     # provare su aws s3 a caricare un file e creare un url presigned
 
+    EVENT_TYPE = {
+        ""
+    }
+
+
     img_path = "test_img.png"
+
+
 
     edit_dict = {
         "title": {"text": "Torneo di Bang",
