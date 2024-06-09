@@ -69,30 +69,42 @@ Resources:
           - Effect: Allow
             Action:
               - 'logs:*'
-              - 'dynamodb:PutItem'
-              - 'dynamodb:UpdateItem'           
             Resource: '*'
           - Effect: Allow
             Action:
-              - 'ssm:GetParameter'
-            Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/telegram/*'
+              - 'dynamodb:GetItem'
+              - 'dynamodb:PutItem'
+              - 'dynamodb:UpdateItem'           
+            Resource: !GetAtt 'LudusSMAChatsHistoryDynamoDBTable.Arn'
           - Effect: Allow
             Action:
               - 'ssm:GetParameter'
-            Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/meta/*'            
+            Resource:
+              - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/telegram/*'
+              - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/meta/*'            
           - Effect: Allow
             Action:
               - 'sqs:ReceiveMessage'
               - 'sqs:DeleteMessage' 
               - 'sqs:GetQueueAttributes'             
-            Resource: !GetAtt 'LudusSMAEventsSQSQueue.Arn'
+            Resource:
+              - !GetAtt 'LudusSMAEventsSQSQueue.Arn'
+              - !GetAtt 'LudusSMATelegramUpdatesSQSQueue.Arn'
           - Effect: Allow
             Action:
-              - 'sqs:ReceiveMessage'
-              - 'sqs:DeleteMessage' 
-              - 'sqs:GetQueueAttributes'
               - 'sqs:SendMessage'
-            Resource: !GetAtt 'LudusSMATelegramUpdatesSQSQueue.Arn'                          
+            Resource: !GetAtt 'LudusSMATelegramUpdatesSQSQueue.Arn'
+          - Effect: Allow
+            Action:
+              - 's3:GetObject'
+              - 's3:PutObject'
+            Resource:
+              - !GetAtt 'LudusSMAImagesBucket.Arn'
+              - !Sub '${LudusSMAImagesBucket.Arn}/*'
+          - Effect: Allow
+            Action:
+              - 'bedrock:InvokeModel'
+            Resource: 'arn:aws:bedrock:*'
 
   LudusSMAEventSchedulerPolicy:
     Type: AWS::IAM::Policy
@@ -113,22 +125,15 @@ Resources:
   # Parameters cannot be created by Cloud Formation if they are of type SecureString
   # which is why they were created by hand inside the console
   # parameter keys are passed within the Lambda Function as environment variables.
-  
-  ### SECRET ###
 
-  LudusSMAMetaCredentialsSecret:
-    Type: AWS::SecretsManager::Secret
+  ### S3 BUCKET ###
+
+  LudusSMAImagesBucket:
+    Type: AWS::S3::Bucket
     Properties:
-      Name: meta-credentials
-      Description: Credential for Meta Account      
-      SecretString: initial_value
-  
-  LudusSMAImgurCredentialsSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: imgur-credentials
-      Description: Credential for Imgur Account
-      SecretString: initial_value
+      BucketName: ludussma-images
+      VersioningConfiguration:
+        Status: Enabled
 
   ### DYNAMODB TABLES ###
 
@@ -206,6 +211,7 @@ Resources:
           SQS_QUEUE_EVENTS_ARN: !GetAtt LudusSMAEventsSQSQueue.Arn
           DYNAMODB_TABLE_CHATS_HISTORY_NAME: !Ref LudusSMAChatsHistoryDynamoDBTable
           IAM_ROLE_EVENT_SCHEDULER_ARN: !GetAtt LudusSMAEventSchedulerRole.Arn
+          S3_BUCKET_IMAGES_NAME: !Ref LudusSMAImagesBucket
       Layers:
         - !Ref LudusSMALambdaLayer
       Events:

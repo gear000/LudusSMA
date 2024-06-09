@@ -22,7 +22,6 @@ You have to create a prompt for Dall-E to generate an image on the context below
 """
 
 # ----------------- EVENT HANDLER
-# https://github.com/AIAnytime/Function-Calling-Mistral-7B/blob/main/Function-Calling-Mistral-7B%20(using%20mistral%20API%20Key).py
 
 EVENT_SYSTEM_PROMPT = """Assistant is a large language model trained by Mistral.
 
@@ -50,6 +49,8 @@ Before using any of the tools, please make sure the user specified all the neces
 The tools the human can use are:
 
 {tools}
+
+Note that today is {today}.
 
 RESPONSE FORMAT INSTRUCTIONS
 ----------------------------
@@ -97,13 +98,14 @@ Remember to respond with a markdown code snippet of a json blob with a single ac
 CHECK_INFO_PROMPT = """You are an extremely precise manager.
 Your task is to check whether the business analyst of your team provided all the required information.
 The job the business analyst had was to retrieve some data about an event, including:
-- event name
-- event description
-- start and end date and time
-- adress (composed of City and Adress)
+    - title
+    - description
+    - date // must be of the format DD/MM/YYYY
+    - time // can be "dalle XX alle YY" or "XX-YY"
+    - location
 
 If the business analyst provided all the info listed above, you must answer "OK" AND NOTHING ELSE.
-Otherwise, you must specify the info that is missing. Be precise and CONCISE in your answer. List all the items that are missing.
+Otherwise, you must specify the info that is missing. Be precise and extremely CONCISE in your answer. List all the items that are missing.
 
 
 #BUSINESS ANALYST RESULT

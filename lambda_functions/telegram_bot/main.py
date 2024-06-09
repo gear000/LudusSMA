@@ -9,7 +9,7 @@ import utils.aws_utils as aws_utils
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
-from update_handler import start, event, help
+from update_handler import start, event, help, my_event_handler
 
 ### Setup Logging ###
 logger = logging.getLogger("SMA Logger")
@@ -34,7 +34,7 @@ app = Application.builder().token(TELEGRAM_TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("help", help))
 app.add_handler(CommandHandler("event", event))
-# app.add_handler(MessageHandler(filters.TEXT & ~(filters.COMMAND), event))
+app.add_handler(MessageHandler(filters.TEXT & ~(filters.COMMAND), my_event_handler))
 
 
 async def process_update(update: Update):
@@ -75,3 +75,11 @@ def lambda_handler(event: dict, context):
     asyncio.run(process_update(update))
 
     return {"statusCode": 200, "body": "Elaboration completed"}
+
+
+if __name__ == "__main__":
+    with open("test\\telegram_request.json", "r") as f:
+        text = f.read()
+    event = {"body": text}
+
+    lambda_handler(event, None)

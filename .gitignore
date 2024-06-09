@@ -172,3 +172,4 @@ cython_debug/
 
 # Lambda Layers
 utils.zip
+test.py

@@ -1,0 +1,28 @@
+{
+    "update_id": 36905338,
+    "message": {
+        "message_id": 640,
+        "from": {
+            "id": 143243107,
+            "is_bot": false,
+            "first_name": "Gear0",
+            "username": "HardStone00",
+            "language_code": "it"
+        },
+        "chat": {
+            "id": 143243107,
+            "first_name": "Gear0",
+            "username": "HardStone00",
+            "type": "private"
+        },
+        "date": 1717238289,
+        "text": "Torneo di warhammer",
+        "entities": [
+            {
+                "offset": 0,
+                "length": 6,
+                "type": "bot_command"
+            }
+        ]
+    }
+}
