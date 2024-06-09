@@ -1,3 +1,5 @@
+from datetime import datetime
+import json
 import boto3
 import logging
 from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
@@ -95,7 +97,7 @@ def decode_record(record):
 def insert_record_in_dynamo(
     table_name: str,
     record: dict,
-    dynamodb_client=boto3.client("dynamodb", region_name="eu-west-1"),
+    dynamodb_client=boto3.client("dynamodb"),
 ):
     try:
         converted_record = encode_record(record)
@@ -109,7 +111,7 @@ def get_record_from_dynamo(
     table_name: str,
     key_name: str,
     key_value: str,
-    dynamodb_client=boto3.client("dynamodb", region_name="eu-west-1"),
+    dynamodb_client=boto3.client("dynamodb"),
 ):
     """
     Retrieves a record from a DynamoDB table based on the provided table name, key name, and key value.
@@ -181,3 +183,36 @@ def delete_message_from_sqs_queue(
         logger.info("Message deleted successfully")
     except (NoCredentialsError, PartialCredentialsError) as e:
         logger.error("Error in saving record: ", e)
+
+
+### EventBridge Scheduler ###
+
+
+def create_scheduler(
+    name_schudeler: str,
+    schedule_expression: str,
+    target_arn: str,
+    role_arn: str,
+    input: dict,
+    start_date: datetime,
+    end_date: datetime,
+    scheduler_client=boto3.client("scheduler"),
+):
+    try:
+        scheduler_client.create_schedule(
+            ActionAfterCompletion="DELETE",
+            Name=name_schudeler,
+            ScheduleExpression=schedule_expression,
+            StartDate=start_date,
+            EndDate=end_date,
+            State="ENABLED",
+            FlexibleTimeWindow={"MaximumWindowInMinutes": 10, "Mode": "FLEXIBLE"},
+            Target={
+                "Arn": target_arn,
+                "RoleArn": role_arn,
+                "Input": json.dumps(input),
+            },
+        )
+    except Exception as e:
+        logger.error("Error in creating scheduler: ", e)
+        raise e
