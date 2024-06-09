@@ -95,7 +95,7 @@ The job the business analyst had was to retrieve some data about an event, inclu
     - description
     - date // must be of the format YYYY-MM-DD
     - time // can be "dalle XX alle YY" or "XX-YY"
-    - event_type // must be one of ["bang tournament", "warhammer tournament", "other"]
+    - event_type // must be one of {event_types}
     - location
 
 If the business analyst provided all the info listed above, you must answer "OK" AND NOTHING ELSE.

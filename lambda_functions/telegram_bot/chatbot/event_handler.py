@@ -7,6 +7,7 @@ from langchain_core.prompts.chat import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import AIMessage, HumanMessage, BaseMessage
+from langchain_core.tools import StructuredTool
 
 from langchain.agents.format_scratchpad import format_log_to_messages
 from langchain.agents.json_chat.prompt import TEMPLATE_TOOL_RESPONSE
@@ -16,12 +17,16 @@ from langchain.tools.render import render_text_description
 
 import logging
 import json
+import os
 from datetime import date, datetime
 
 from .prompts import EVENT_SYSTEM_PROMPT, EVENT_TOOLS_PROMPT, CHECK_INFO_PROMPT
 from .custom_parser import CustomJSONAgentOutputParser
 from .tools import create_schedulers
+from utils.aws_utils import list_s3_folders
 
+
+S3_BUCKET_IMAGES_NAME = os.getenv("S3_BUCKET_IMAGES_NAME", "")
 
 logger = logging.getLogger(__name__)
 
@@ -155,21 +160,13 @@ class EventHandler:
         self.cost = 0
 
     def _define_tools(self) -> list:
+        event_types = [
+            elem.strip("/").split("/")[-1]
+            for elem in list_s3_folders(S3_BUCKET_IMAGES_NAME, "clean-images/")
+        ]
 
-        @tool
         def create_event(specifics: str):
-            """
-            Creates the event. Syntax:
-            {
-                "title"
-                "description"
-                "date" // must be of the format YYYY-MM-DD
-                "time" // as the user input
-                "event_type" // must be one of ["bang tournament", "warhammer tournament", "other"]
-                "location"
-                "other_info" // optional
-            }
-            """
+            """Creates the event."""
 
             spec_dict: dict = json.loads(specifics)
 
@@ -200,7 +197,9 @@ class EventHandler:
                 )
                 | StrOutputParser()
             )
-            missing = check_info_chain.invoke({"input": json.dumps(spec_dict)})
+            missing = check_info_chain.invoke(
+                {"input": json.dumps(spec_dict), "event_types": event_types}
+            )
             if "OK" in missing:
                 event_date = datetime(event_date.year, event_date.month, event_date.day)
                 print(f"Create event with: {specifics}")
@@ -213,6 +212,24 @@ class EventHandler:
                     + "\nPlease ask the user the missing information."
                 )
 
+        description = f"""
+            Creates the event. Syntax:
+            {{
+                "title"
+                "description"
+                "date" // must be of the format YYYY-MM-DD
+                "time" // as the user input
+                "event_type" // must be one of {event_types}
+                "location"
+                "other_info" // optional
+            }}"""
+
+        event_tool = StructuredTool.from_function(
+            func=create_event,
+            name="create_event",
+            description=description,
+        )
+
         @tool
         def ask_for_info(message: str):
             """
@@ -220,7 +237,7 @@ class EventHandler:
             """
             pass
 
-        return [create_event, ask_for_info]
+        return [event_tool, ask_for_info]
 
     def run(self, message: str):
         return self.agent_executor.invoke(
