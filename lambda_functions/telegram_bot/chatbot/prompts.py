@@ -68,21 +68,14 @@ Markdown code snippet formatted in the following schema:
 }}
 ```
 
-**Option #2:**
-Use this if you want to respond directly to the human or TO ASK ADDITIONAL INFO. Markdown code snippet formatted \
-in the following schemas:
+**Option 2:**
+Use this if you want to respond directly to the human. Markdown code snippet formatted \
+in the following schema:
 
 ```json
 {{
     "action": "Final Answer",
     "action_input": string \ You should put what you want to say to the user here (in ITALIAN)
-}}
-```
-or
-```json
-{{
-    "action": "Ask for info",
-    "action_input": string \ You should put what you want to ask the user here (in ITALIAN)
 }}
 ```
 
@@ -100,8 +93,9 @@ Your task is to check whether the business analyst of your team provided all the
 The job the business analyst had was to retrieve some data about an event, including:
     - title
     - description
-    - date // must be of the format DD/MM/YYYY
+    - date // must be of the format YYYY-MM-DD
     - time // can be "dalle XX alle YY" or "XX-YY"
+    - event_type // must be one of ["bang tournament", "warhammer tournament", "other"]
     - location
 
 If the business analyst provided all the info listed above, you must answer "OK" AND NOTHING ELSE.

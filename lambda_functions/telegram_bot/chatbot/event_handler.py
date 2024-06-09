@@ -16,7 +16,7 @@ from langchain.tools.render import render_text_description
 
 import logging
 import json
-from datetime import date
+from datetime import date, datetime
 
 from .prompts import EVENT_SYSTEM_PROMPT, EVENT_TOOLS_PROMPT, CHECK_INFO_PROMPT
 from .custom_parser import CustomJSONAgentOutputParser
@@ -163,8 +163,9 @@ class EventHandler:
             {
                 "title"
                 "description"
-                "date" // must be of the format DD/MM/YYYY
+                "date" // must be of the format YYYY-MM-DD
                 "time" // as the user input
+                "event_type" // must be one of ["bang tournament", "warhammer tournament", "other"]
                 "location"
                 "other_info" // optional
             }
@@ -176,9 +177,16 @@ class EventHandler:
             if other_info is None or len(other_info) < 3:
                 spec_dict["other_info"] = None
 
-            event_date = spec_dict.get("date")
-            if event_date is not None and event_date[-4:] < str(date.today().year):
-                spec_dict["date"] = None
+            event_date = spec_dict.get("date", "")
+            if len(event_date) == 10:
+                event_date = datetime.strptime(event_date, "%Y-%m-%d").date()
+                if event_date < date.today():
+                    event_date = date(
+                        event_date.year + 1, event_date.month, event_date.day
+                    )
+            else:
+                event_date = None
+            spec_dict["date"] = event_date.strftime("%Y-%m-%d")
 
             spec_dict["title"] = spec_dict["title"].title()
             print(spec_dict)
@@ -193,9 +201,10 @@ class EventHandler:
                 | StrOutputParser()
             )
             missing = check_info_chain.invoke({"input": json.dumps(spec_dict)})
-            if missing.strip() == "OK":
+            if "OK" in missing:
+                event_date = datetime(event_date.year, event_date.month, event_date.day)
                 print(f"Create event with: {specifics}")
-                create_schedulers(spec_dict)
+                create_schedulers(spec_dict, event_date)
                 return "Event created"
             else:
                 return (
@@ -204,7 +213,14 @@ class EventHandler:
                     + "\nPlease ask the user the missing information."
                 )
 
-        return [create_event]
+        @tool
+        def ask_for_info(message: str):
+            """
+            Ask the user for additional info. Syntax: Message to the user in ITALIAN.
+            """
+            pass
+
+        return [create_event, ask_for_info]
 
     def run(self, message: str):
         return self.agent_executor.invoke(
