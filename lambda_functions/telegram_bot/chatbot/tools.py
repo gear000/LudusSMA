@@ -14,8 +14,6 @@ def create_schedulers(event_scheduler: dict, event_date: datetime = datetime.now
         {
             "cron": f"at({(event_date - timedelta(days=30)).strftime('%Y-%m-%dT10:00:00')})",
             "name": f"{event_id}-FistStoryBeforeEvent",
-            "start_date": max((event_date - timedelta(days=30)), now),
-            "end_date": max((event_date - timedelta(days=30)), now),
         },
         {
             "cron": "rate(7 days)",

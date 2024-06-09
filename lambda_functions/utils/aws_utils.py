@@ -199,20 +199,34 @@ def create_scheduler(
     scheduler_client=boto3.client("scheduler"),
 ):
     try:
-        scheduler_client.create_schedule(
-            ActionAfterCompletion="DELETE",
-            Name=name_schudeler,
-            ScheduleExpression=schedule_expression,
-            StartDate=start_date,
-            EndDate=end_date,
-            State="ENABLED",
-            FlexibleTimeWindow={"MaximumWindowInMinutes": 10, "Mode": "FLEXIBLE"},
-            Target={
-                "Arn": target_arn,
-                "RoleArn": role_arn,
-                "Input": json.dumps(input),
-            },
-        )
+        if start_date is None:
+            scheduler_client.create_schedule(
+                ActionAfterCompletion="DELETE",
+                Name=name_schudeler,
+                ScheduleExpression=schedule_expression,
+                State="ENABLED",
+                FlexibleTimeWindow={"MaximumWindowInMinutes": 10, "Mode": "FLEXIBLE"},
+                Target={
+                    "Arn": target_arn,
+                    "RoleArn": role_arn,
+                    "Input": json.dumps(input),
+                },
+            )
+        else:
+            scheduler_client.create_schedule(
+                ActionAfterCompletion="DELETE",
+                Name=name_schudeler,
+                ScheduleExpression=schedule_expression,
+                StartDate=start_date,
+                EndDate=end_date,
+                State="ENABLED",
+                FlexibleTimeWindow={"MaximumWindowInMinutes": 10, "Mode": "FLEXIBLE"},
+                Target={
+                    "Arn": target_arn,
+                    "RoleArn": role_arn,
+                    "Input": json.dumps(input),
+                },
+            )
     except Exception as e:
         logger.error("Error in creating scheduler: ", e)
         raise e
