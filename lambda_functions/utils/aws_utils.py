@@ -1,7 +1,8 @@
-from datetime import datetime
 import json
 import boto3
 import logging
+
+from datetime import datetime
 from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
 
 ### Logger ###
@@ -230,3 +231,19 @@ def create_scheduler(
     except Exception as e:
         logger.error("Error in creating scheduler: ", e)
         raise e
+
+
+### S3 Bucket ###
+
+
+def list_s3_folders(bucket_name, prefix, s3_client=boto3.client("s3")) -> list[str]:
+    paginator = s3_client.get_paginator("list_objects_v2")
+    result = paginator.paginate(Bucket=bucket_name, Prefix=prefix, Delimiter="/")
+
+    folders = []
+    for page in result:
+        if "CommonPrefixes" in page:
+            for common_prefix in page["CommonPrefixes"]:
+                folders.append(common_prefix["Prefix"])
+
+    return folders
