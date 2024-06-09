@@ -109,6 +109,10 @@ Resources:
             Resource: !Sub 'arn:aws:scheduler:${AWS::Region}:${AWS::AccountId}:schedule/*'
           - Effect: Allow
             Action:
+              - 'iam:PassRole'
+            Resource: !GetAtt 'LudusSMAEventSchedulerRole.Arn'
+          - Effect: Allow
+            Action:
               - 'bedrock:InvokeModel'
             Resource: 'arn:aws:bedrock:*'
 
