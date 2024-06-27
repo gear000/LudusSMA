@@ -39,6 +39,34 @@ def get_parameter(
         return None
 
 
+def get_s3_object(bucket_name: str, object_key: str, s3_client=boto3.client("s3")):
+    try:
+        response = s3_client.get_object(Bucket=bucket_name, Key=object_key)  # type: ignore  # noqa: E501
+        return response["Body"]#.read()#.decode("utf-8")
+    except ClientError as e:
+        logger.error(f"An error occurred: {e}")
+        return None
+
+def put_s3_object(bucket_name: str, object_key: str, body: str, s3_client=boto3.client("s3")):
+    try:
+        response = s3_client.put_object(Bucket=bucket_name, Key=object_key, Body=body)  # type: ignore  # noqa: E501
+        return response
+    except ClientError as e:
+        logger.error(f"An error occurred: {e}")
+        return None
+    
+def create_presigned_url(bucket_name, object_key, s3_client=boto3.client("s3"), expiration=3600):
+    try:
+        response = s3_client.generate_presigned_url('get_object', Params={'Bucket': bucket_name, 'Key': object_key})
+        return response
+    except ClientError as e:
+        logger.error(e)
+        return None
+
+    # The response contains the presigned URL
+    return response
+    
+
 ### Dynamo ###
 
 

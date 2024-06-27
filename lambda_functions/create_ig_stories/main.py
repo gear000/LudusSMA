@@ -1,21 +1,47 @@
+from utils import aws_utils # ricordati di spostare utils in lambda_functions
+import boto3
 from image_editing import image_edit
 from imgur_functions import load_imgur
 from meta_functions import publish_story
-import utils.aws_utils as aws_utils # ricordati di spostare utils in lambda_functions
+from PIL import Image
+from io import BytesIO
 
-META_CLIENT_SECRET = aws_utils.get_parameters(
-    parameter_name="/meta/client-secret", is_secure=True#, ssm_client=ssm_client
-)
+ssm_client = boto3.client("ssm")
+s3_client = boto3.client("s3")
 
-META_ACCESS_TOKEN = aws_utils.get_parameters(
-    parameter_name="/meta/access-token", is_secure=True#, ssm_client=ssm_client
-)
+
+
+
+
+
+
 
 def lambda_handler(event: dict, context):
     """
     event = {"event_id": "1234567890"}
     
     """
+    META_CLIENT_SECRET = aws_utils.get_parameter(
+        parameter_name="/meta/client-secret", is_secure=True, ssm_client=ssm_client
+    )
+
+    META_ACCESS_TOKEN = aws_utils.get_parameter(
+        parameter_name="/meta/access-token", is_secure=True, ssm_client=ssm_client
+    )
+
+    # fare 3 metodi
+    # - get_object -> def get_s3_object
+    # - put_object -> def put_s3_object wrappare le funzioni
+    # - creare funzione che restituisce presigned url -> def create_presigned_url()
+
+    img_from_s3 = aws_utils.get_s3_object(bucket_name="ludussma-images", 
+                            object_key="clean-images/bang-tournament/image-v1.png", 
+                            s3_client=s3_client)
+    im = Image.open(img_from_s3)
+    im.save('test_get_image.png')
+
+
+
     # ----------------------------
     # prendere da dynamo la riga corrispondente a event_id
     # event_info = {}
@@ -35,12 +61,13 @@ def lambda_handler(event: dict, context):
 
     # provare su aws s3 a caricare un file e creare un url presigned
 
-    EVENT_TYPE = {
-        ""
-    }
+    # EVENT_TYPE = {
+    #     ""
+    # }
 
 
-    img_path = "test_img.png"
+    # img_path = "bang.png"
+    img_path = "test_get_image.png"
 
 
 
@@ -68,17 +95,22 @@ def lambda_handler(event: dict, context):
     print("Editing immagine in corso.")
     img_path_edit = image_edit(img_path, edit_dict)
     # ----------------------------
+    # caricamento immagine su s3
 
-    # ----------------------------
-    # caricamento immagine su imgur per ottenere url
+    file_stream = BytesIO()
+    im = Image.open(img_path_edit)#Image.fromarray(img_array)
+    im.save(file_stream, format='png')
 
-    imgur_config = {
-                        "imgur_client_id": "a479ab6df29945b",
-                        "imgur_client_secret": "2683b21fc6bfc8705508a487ed04b169c8d092c0"
-                    } # da mettere nel gestore parametri
-    print("Caricamento immagine su imgur.")
-    img_url = load_imgur(imgur_config, img_path_edit)
-    print(img_url)
+    img_name = "test"
+    aws_utils.put_s3_object(bucket_name="ludussma-images",
+                  object_key=f"to-upload/{img_name}.png",
+                  body=file_stream.getvalue(),
+                  s3_client=s3_client)
+      # ----------------------------
+    # generazione presigned url
+    img_url = aws_utils.create_presigned_url(bucket_name="ludussma-images",
+                        object_key=f"to-upload/{img_name}.png",
+                        s3_client=s3_client)
     # ----------------------------
 
     # ----------------------------

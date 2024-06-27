@@ -6,11 +6,11 @@ import io
 # Global constants
 # ---
 # Textbox constants
-UPPER_BOXES_START_POINT = (50, 100)
+UPPER_BOXES_START_POINT = (50, 150)
 UPPER_BOXES_WIDTH = 550
 UPPER_SECTIONS = ["title", "description"]
 
-LOWER_BOXES_START_POINT = (50, 750)
+LOWER_BOXES_START_POINT = (70, 850)
 LOWER_BOXES_WIDTH = 500
 LOWER_SECTIONS = ["date", "time", "location", "cost"]
 LOWER_SECTIONS_ORDER = {"date":1,
@@ -256,7 +256,7 @@ def write_on_image(my_image, edit_dict):
                 # Effettuo update delle coordinate del prossimo lower textbox
                 lower_y_0 = lower_y_0+actual_size+BOX_MARGIN
     
-    my_image = write_contacts(my_image)
+    # my_image = write_contacts(my_image)
 
 
     return my_image
