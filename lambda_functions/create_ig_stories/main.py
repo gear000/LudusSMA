@@ -9,13 +9,6 @@ from io import BytesIO
 ssm_client = boto3.client("ssm")
 s3_client = boto3.client("s3")
 
-
-
-
-
-
-
-
 def lambda_handler(event: dict, context):
     """
     event = {"event_id": "1234567890"}
