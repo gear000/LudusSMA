@@ -1,7 +1,7 @@
 import uuid
 import os
 from datetime import datetime, timedelta
-from utils import aws_utils
+import aws_utils
 
 SQS_QUEUE_EVENTS_ARN = os.getenv("SQS_QUEUE_EVENTS_ARN", "")
 IAM_ROLE_EVENT_SCHEDULER_ARN = os.getenv("IAM_ROLE_EVENT_SCHEDULER_ARN", "")

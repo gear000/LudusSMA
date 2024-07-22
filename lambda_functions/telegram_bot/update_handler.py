@@ -1,3 +1,4 @@
+import os
 import telegram
 import logging
 from telegram.ext import ContextTypes
@@ -17,6 +18,9 @@ logger.setLevel(logging.INFO)
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 logger.addHandler(logging.StreamHandler())
 logger.handlers[0].setFormatter(formatter)
+
+### Environment Variables ###
+DYNAMODB_TABLE_CHATS_HISTORY_NAME = os.environ["DYNAMODB_TABLE_CHATS_HISTORY_NAME"]
 
 
 ### Handlers ###

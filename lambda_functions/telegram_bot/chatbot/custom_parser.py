@@ -26,19 +26,13 @@ class CustomJSONAgentOutputParser(AgentOutputParser):
     ```
 
     If the output signals that a final answer should be given,
-    should be in the below formats. This will result in an AgentFinish
+    should be in the below format. This will result in an AgentFinish
     being returned.
 
     ```
     {
       "action": "Final Answer",
       "action_input": "4"
-    }
-    ```
-    ```
-    {
-      "action": "Ask for info",
-      "action_input": "Can you provide more info?"
     }
     ```
     """
@@ -50,7 +44,7 @@ class CustomJSONAgentOutputParser(AgentOutputParser):
                 # gpt turbo frequently ignores the directive to emit a single action
                 logger.warning("Got multiple action responses: %s", response)
                 response = response[0]
-            if response["action"] in ("Final Answer", "Ask for info"):
+            if response["action"] in ("Final Answer", "ask_for_info"):
                 return AgentFinish({"output": response["action_input"]}, text)
             else:
                 return AgentAction(

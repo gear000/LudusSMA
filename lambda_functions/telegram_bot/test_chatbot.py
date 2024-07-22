@@ -1,5 +1,4 @@
 from chatbot.event_handler import EventHandler
-from aws_utils import get_record_from_dynamo
 
 bot = EventHandler([])
 answer = bot.run(
