@@ -25,7 +25,7 @@ logger.handlers[0].setFormatter(formatter)
 async def start(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Start the conversation and ask user for input."""
     user_id = update.effective_user.id
-    clear_history(table_name="ChatsHistory", user_id=str(user_id))
+    clear_history(table_name=DYNAMODB_TABLE_CHATS_HISTORY_NAME, user_id=str(user_id))
 
     await update.message.reply_text(
         "Ciao! Sono LudusSMA!\n"
@@ -36,7 +36,7 @@ async def start(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 async def help(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user_id = update.effective_user.id
-    clear_history(table_name="ChatsHistory", user_id=str(user_id))
+    clear_history(table_name=DYNAMODB_TABLE_CHATS_HISTORY_NAME, user_id=str(user_id))
 
     await update.message.reply_text(
         "Al momento sono in grado di fare molto, ma imparo in fretta e sto migliorando giorno dopo giorno!\n"
@@ -48,7 +48,7 @@ async def help(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE) -> i
 
 async def event(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user_id = update.effective_user.id
-    clear_history(table_name="ChatsHistory", user_id=str(user_id))
+    clear_history(table_name=DYNAMODB_TABLE_CHATS_HISTORY_NAME, user_id=str(user_id))
 
     await update.message.reply_text(
         "Grande! Creiamo un evento!\n"
@@ -69,39 +69,13 @@ async def my_event_handler(
     """
     user_id = update.effective_user.id
     st = str(datetime.now())
-    record = get_record_from_dynamo(
-        table_name="ChatsHistory", key_name="user_id", key_value=str(user_id)
-    )
-    chat_history = record.get("messages", [])
 
-    bot = EventHandler(chat_history=chat_history)
+    bot = EventHandler()
 
     try:
-        answer_dict = bot.run(update.message.text)
+        answer_dict = bot.run(update.message.text, user_id=str(user_id))
 
         reply_answer = await update.message.reply_text(answer_dict["output"])
-
-        insert_record_in_dynamo(
-            table_name="ChatsHistory",
-            record={
-                "user_id": str(user_id),
-                "chat_id": "dani_prova",
-                "chat_type": "event_creation",
-                "messages": [
-                    *chat_history,
-                    {
-                        "author": "user",
-                        "content": update.message.text,
-                        "timestamp": st,
-                    },
-                    {
-                        "author": "bot",
-                        "content": answer_dict["output"],
-                        "timestamp": str(datetime.now()),
-                    },
-                ],
-            },
-        )
         print(f"Reply Answer:\n {reply_answer}")
     except Exception as e:
         logger.error(e)

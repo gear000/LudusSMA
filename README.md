@@ -5,7 +5,7 @@
 To debug locally, follow these steps:
 
 1. Launch Docker.
-2. Open WSL terminal.
+2. Open Ubuntu WSL terminal.
 
     Do this step only if the `utils` folder has changed.
     1. Run `./scripts/lambda_layer_zipper.sh` in WSL.

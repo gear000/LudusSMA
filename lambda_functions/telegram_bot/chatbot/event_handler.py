@@ -8,6 +8,11 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import AIMessage, HumanMessage, BaseMessage
 from langchain_core.tools import StructuredTool
+from langchain_core.runnables.history import RunnableWithMessageHistory
+
+from langchain_community.chat_message_histories import (
+    DynamoDBChatMessageHistory,
+)
 
 from langchain.agents.format_scratchpad import format_log_to_messages
 from langchain.agents.json_chat.prompt import TEMPLATE_TOOL_RESPONSE
@@ -27,56 +32,9 @@ from utils.aws_utils import list_s3_folders
 
 
 S3_BUCKET_IMAGES_NAME = os.getenv("S3_BUCKET_IMAGES_NAME", "")
+DYNAMODB_TABLE_CHATS_HISTORY_NAME = os.getenv("DYNAMODB_TABLE_CHATS_HISTORY_NAME", "")
 
 logger = logging.getLogger(__name__)
-
-
-def history_to_str(chat: list) -> str:
-    """
-    chat = [
-        {
-            "content":"content",
-            "author":"bot"|"user",
-            "timestamp":str(datetime.now())
-        }
-    ]
-
-    Returns:
-        history (str)
-    """
-    chat = sorted(chat, lambda x: x["timestamp"])
-    history = ""
-    for msg in chat:
-        if msg["author"] == "user":
-            history += "[INST]" + msg["content"] + "[\INST]"
-        elif msg["author"] == "bot":
-            history += msg["content"]
-
-    return history
-
-
-def history_to_list(chat_history: list) -> list[BaseMessage]:
-    """
-    chat = [
-        {
-            "content":"content",
-            "author":"bot"|"user",
-            "timestamp":str(datetime.now())
-        }
-    ]
-
-    Returns:
-        history (list)
-    """
-    chat_history.sort(key=lambda x: x["timestamp"])
-    history = []
-    for msg in chat_history:
-        if msg["author"] == "user":
-            history.append(AIMessage(content=msg["content"]))
-        elif msg["author"] == "bot":
-            history.append(HumanMessage(content=msg["content"]))
-
-    return history
 
 
 def create_agent(prompt: str, tools: list):
@@ -87,7 +45,12 @@ def create_agent(prompt: str, tools: list):
         RunnablePassthrough.assign(
             agent_scratchpad=lambda x: format_log_to_messages(
                 x["intermediate_steps"], template_tool_response=TEMPLATE_TOOL_RESPONSE
-            )
+            ),
+            history=lambda session_id: DynamoDBChatMessageHistory(
+                table_name=DYNAMODB_TABLE_CHATS_HISTORY_NAME,
+                session_id=session_id,
+                primary_key_name="user_id",
+            ),
         )
         | prompt.partial(
             tools=render_text_description(list(tools)),
@@ -125,7 +88,7 @@ class EventHandler:
 
     def __init__(
         self,
-        chat_history: list = [],
+        user_id: str,
     ):
         """
         Create EventHandler Bot object.
@@ -140,6 +103,7 @@ class EventHandler:
                 }
             ]
         """
+
         prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", EVENT_SYSTEM_PROMPT),
@@ -153,8 +117,6 @@ class EventHandler:
 
         self.agent_executor = create_agent_executor(prompt, tools)
 
-        self.chat_history = history_to_list(chat_history)
-
         self.prompt_tokens = 0
         self.completion_tokens = 0
         self.cost = 0
@@ -163,7 +125,7 @@ class EventHandler:
         event_types = [
             elem.strip("/").split("/")[-1]
             for elem in list_s3_folders(S3_BUCKET_IMAGES_NAME, "clean-images/")
-        ]
+        ] + "other"
 
         def create_event(specifics: str):
             """Creates the event."""
@@ -187,6 +149,9 @@ class EventHandler:
 
             spec_dict["title"] = spec_dict["title"].title()
             print(spec_dict)
+
+            if spec_dict["event_type"] == "other":
+                return "Failed to create the event: no existing image for selected event type. Please ask the user to upload the image first."
 
             check_info_chain = (
                 PromptTemplate.from_template(CHECK_INFO_PROMPT)
@@ -239,11 +204,20 @@ class EventHandler:
 
         return [event_tool, ask_for_info]
 
-    def run(self, message: str):
-        return self.agent_executor.invoke(
+    def run(self, message: str, user_id: str):
+
+        result = self.agent_executor.invoke(
             {
                 "input": message,
-                "chat_history": self.chat_history,
                 "today": date.today().strftime("%d/%m/%Y"),
-            }
+            },
+            config={"configurable": {"session_id": user_id}},
         )
+
+        history = DynamoDBChatMessageHistory(
+            table_name=DYNAMODB_TABLE_CHATS_HISTORY_NAME,
+            session_id=user_id,
+            primary_key_name="user_id",
+        )
+        history.add_user_message(message)
+        history.add_ai_message(result["output"])
