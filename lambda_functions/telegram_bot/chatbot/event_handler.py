@@ -28,7 +28,7 @@ from datetime import date, datetime
 from .prompts import EVENT_SYSTEM_PROMPT, EVENT_TOOLS_PROMPT, CHECK_INFO_PROMPT
 from .custom_parser import CustomJSONAgentOutputParser
 from .tools import create_schedulers
-from aws_utils import list_s3_folders
+from utils.aws_utils import list_s3_folders
 
 
 S3_BUCKET_IMAGES_NAME = os.getenv("S3_BUCKET_IMAGES_NAME", "")
