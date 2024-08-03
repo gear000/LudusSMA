@@ -144,6 +144,13 @@ Resources:
       BucketName: ludussma-images
       VersioningConfiguration:
         Status: Enabled
+  
+  LudusSMAChatPersistenceBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: ludussma-chat-persistence
+      VersioningConfiguration:
+        Status: Enabled
 
   ### DYNAMODB TABLES ###
 
@@ -222,6 +229,7 @@ Resources:
           DYNAMODB_TABLE_CHATS_HISTORY_NAME: !Ref LudusSMAChatsHistoryDynamoDBTable
           IAM_ROLE_EVENT_SCHEDULER_ARN: !GetAtt LudusSMAEventSchedulerRole.Arn
           S3_BUCKET_IMAGES_NAME: !Ref LudusSMAImagesBucket
+          S3_BUCKET_CHAT_PERSISTENCE_NAME: !Ref LudusSMAChatPersistenceBucket
       Layers:
         - !Ref LudusSMALambdaLayer
       Events:
