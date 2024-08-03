@@ -122,7 +122,7 @@ async def done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return ConversationHandler.END
 
 
-def handler_with_state() -> None:
+def handler_with_state() -> ConversationHandler:
     """Run the bot."""
 
     # Add conversation handler with the states CHOOSING, TYPING_CHOICE and SUMMARY
