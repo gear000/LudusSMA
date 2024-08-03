@@ -46,11 +46,6 @@ def create_agent(prompt: str, tools: list):
             agent_scratchpad=lambda x: format_log_to_messages(
                 x["intermediate_steps"], template_tool_response=TEMPLATE_TOOL_RESPONSE
             ),
-            history=lambda session_id: DynamoDBChatMessageHistory(
-                table_name=DYNAMODB_TABLE_CHATS_HISTORY_NAME,
-                session_id=session_id,
-                primary_key_name="user_id",
-            ),
         )
         | prompt.partial(
             tools=render_text_description(list(tools)),
@@ -125,7 +120,7 @@ class EventHandler:
         event_types = [
             elem.strip("/").split("/")[-1]
             for elem in list_s3_folders(S3_BUCKET_IMAGES_NAME, "clean-images/")
-        ] + "other"
+        ] + ["other"]
 
         def create_event(specifics: str):
             """Creates the event."""
@@ -205,19 +200,20 @@ class EventHandler:
         return [event_tool, ask_for_info]
 
     def run(self, message: str, user_id: str):
-
-        result = self.agent_executor.invoke(
-            {
-                "input": message,
-                "today": date.today().strftime("%d/%m/%Y"),
-            },
-            config={"configurable": {"session_id": user_id}},
-        )
-
         history = DynamoDBChatMessageHistory(
             table_name=DYNAMODB_TABLE_CHATS_HISTORY_NAME,
             session_id=user_id,
             primary_key_name="user_id",
         )
+        result = self.agent_executor.invoke(
+            {
+                "input": message,
+                "today": date.today().strftime("%d/%m/%Y"),
+                "chat_history": history.messages,
+            },
+        )
+
         history.add_user_message(message)
         history.add_ai_message(result["output"])
+
+        return result
