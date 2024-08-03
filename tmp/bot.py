@@ -9,10 +9,9 @@ from telegram.ext import (
     ConversationHandler,
     MessageHandler,
     filters,
+    PicklePersistence,
 )
 
-from dotenv import load_dotenv
-from src.ludus_sma import LudusSMA
 import os
 
 
@@ -23,10 +22,6 @@ formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 logger.addHandler(logging.StreamHandler())
 logger.handlers[0].setFormatter(formatter)
 logger.info("Starting SMA Bot")
-
-
-load_dotenv()
-
 
 CHOOSING, SUMMARY, CONFIRMATION, CONCLUSION = range(4)
 CONTENT_TYPE = "Tipologia di contenuto"
@@ -115,6 +110,10 @@ async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 async def get_content(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Generate description based on user input."""
+
+    await update.message.reply_text("Che dici?")
+
+    return CONCLUSION
     user_data = context.user_data
     content_type = user_data[CONTENT_TYPE]
 
@@ -171,7 +170,9 @@ def main() -> None:
     if TOKEN is None:
         raise Exception("Telegram token not found")
 
-    application = Application.builder().token(TOKEN).build()
+    persistence = PicklePersistence(filepath="conversationbot")
+    print(persistence)
+    application = Application.builder().token(TOKEN).persistence(persistence).build()
 
     # Add conversation handler with the states CHOOSING, TYPING_CHOICE and SUMMARY
     conv_handler = ConversationHandler(
@@ -222,6 +223,8 @@ def main() -> None:
             MessageHandler(filters.Regex("^Done$"), done),
             CommandHandler("done", done),
         ],
+        persistent=True,
+        name="my_conversation",
     )
 
     application.add_handler(conv_handler)

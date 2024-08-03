@@ -1,10 +1,12 @@
 from langchain.prompts.prompt import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_openai import OpenAI
 from langchain_community.utilities.dalle_image_generator import DallEAPIWrapper
 from langchain_community.callbacks import get_openai_callback
 
-from .prompts import CREATE_IG_DECRIPTION, CREATE_DALLE_PROMPT
+from ..lambda_functions.telegram_bot.chatbot.prompts import (
+    CREATE_IG_DECRIPTION,
+    CREATE_DALLE_PROMPT,
+)
 
 
 class LudusSMA:

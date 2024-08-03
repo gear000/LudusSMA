@@ -12,12 +12,21 @@ formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 logger.addHandler(logging.StreamHandler())
 logger.handlers[0].setFormatter(formatter)
 
+# region AWS clients
+
+_S3_CLIENT = boto3.client("s3")
+_SSM_CLIENT = boto3.client("ssm")
+_SQS_CLIENT = boto3.client("sqs")
+_SCHEDULER_CLIENT = boto3.client("scheduler")
+
+# endregion
+
+# region SSM
+
 
 def get_parameter(
     parameter_name: str,
     is_secure: bool = False,
-    ssm_client=boto3.client("ssm"),
-    logger=logger,
 ) -> str | None:
     """
     Retrieve an encrypted parameter from AWS Systems Manager Parameter Store.
@@ -30,7 +39,7 @@ def get_parameter(
 
     try:
         # Get the parameter
-        response = ssm_client.get_parameter(
+        response = _SSM_CLIENT.get_parameter(
             Name=parameter_name, WithDecryption=is_secure
         )
         return response["Parameter"]["Value"]
@@ -39,35 +48,54 @@ def get_parameter(
         return None
 
 
-def get_s3_object(bucket_name: str, object_key: str, s3_client=boto3.client("s3")):
+# endregion
+
+# region S3
+
+
+def get_s3_object(bucket_name: str, object_key: str):
     try:
-        response = s3_client.get_object(Bucket=bucket_name, Key=object_key)  # type: ignore  # noqa: E501
-        return response["Body"]#.read()#.decode("utf-8")
+        response = _S3_CLIENT.get_object(Bucket=bucket_name, Key=object_key)  # type: ignore  # noqa: E501
+        return response["Body"]  # .read()#.decode("utf-8")
     except ClientError as e:
         logger.error(f"An error occurred: {e}")
         return None
 
-def put_s3_object(bucket_name: str, object_key: str, body: str, s3_client=boto3.client("s3")):
+
+def put_s3_object(bucket_name: str, object_key: str, body: str):
     try:
-        response = s3_client.put_object(Bucket=bucket_name, Key=object_key, Body=body)  # type: ignore  # noqa: E501
+        response = _S3_CLIENT.put_object(Bucket=bucket_name, Key=object_key, Body=body)
         return response
     except ClientError as e:
         logger.error(f"An error occurred: {e}")
         return None
-    
-def create_presigned_url(bucket_name, object_key, s3_client=boto3.client("s3"), expiration=3600):
+
+
+def create_presigned_url(bucket_name, object_key, expiration=3600):
     try:
-        response = s3_client.generate_presigned_url('get_object', Params={'Bucket': bucket_name, 'Key': object_key})
+        response = _S3_CLIENT.generate_presigned_url(
+            "get_object", Params={"Bucket": bucket_name, "Key": object_key}
+        )
         return response
     except ClientError as e:
         logger.error(e)
         return None
 
-    # The response contains the presigned URL
-    return response
-    
 
-### Dynamo ###
+def list_s3_folders(bucket_name, prefix) -> list[str]:
+    paginator = _S3_CLIENT.get_paginator("list_objects_v2")
+    result = paginator.paginate(Bucket=bucket_name, Prefix=prefix, Delimiter="/")
+
+    folders = []
+    for page in result:
+        if "CommonPrefixes" in page:
+            for common_prefix in page["CommonPrefixes"]:
+                folders.append(common_prefix["Prefix"])
+
+    return folders
+
+
+# region DynamoDB
 
 
 def encode_record(record):
@@ -185,36 +213,44 @@ def clear_history(
         print("Error in clearing history: ", e)
 
 
-### SQS QUEUES ###
+# endregion
+
+# region SQS
 
 
-def send_message_in_sqs_queue(
-    queue_name: str,
-    message: dict,
-    sqs_client=boto3.client("sqs"),
-    logger=logger,
-):
+def send_message_in_sqs_queue(queue_name: str, message: dict):
+    """
+    Sends a message in a SQS queue.
+
+    ### Args ###
+        `queue_name` (str): The name of the SQS queue.
+        `message` (dict): The message to send.
+    """
     try:
-        sqs_client.send_message(QueueUrl=queue_name, MessageBody=message)
+        _SQS_CLIENT.send_message(QueueUrl=queue_name, MessageBody=message)
         logger.info("Message sent successfully")
     except (NoCredentialsError, PartialCredentialsError) as e:
         logger.error("Error in saving record: ", e)
 
 
-def delete_message_from_sqs_queue(
-    queue_name: str,
-    receipt_handle: str,
-    sqs_client=boto3.client("sqs"),
-    logger=logger,
-):
+def delete_message_from_sqs_queue(queue_name: str, receipt_handle: str):
+    """
+    Deletes a message from a SQS queue.
+
+    ### Args ###
+        `queue_name` (str): The name of the SQS queue.
+        `receipt_handle` (str): The receipt handle of the message to delete.
+    """
     try:
-        sqs_client.delete_message(QueueUrl=queue_name, ReceiptHandle=receipt_handle)
+        _SQS_CLIENT.delete_message(QueueUrl=queue_name, ReceiptHandle=receipt_handle)
         logger.info("Message deleted successfully")
     except (NoCredentialsError, PartialCredentialsError) as e:
         logger.error("Error in saving record: ", e)
 
 
-### EventBridge Scheduler ###
+# endregion
+
+# region Scheduler
 
 
 def create_scheduler(
@@ -223,13 +259,12 @@ def create_scheduler(
     target_arn: str,
     role_arn: str,
     input: dict,
-    start_date: datetime,
+    start_date: datetime | None,
     end_date: datetime,
-    scheduler_client=boto3.client("scheduler"),
 ):
     try:
         if start_date is None:
-            scheduler_client.create_schedule(
+            _SCHEDULER_CLIENT.create_schedule(
                 ActionAfterCompletion="DELETE",
                 Name=name_schudeler,
                 ScheduleExpression=schedule_expression,
@@ -242,7 +277,7 @@ def create_scheduler(
                 },
             )
         else:
-            scheduler_client.create_schedule(
+            _SCHEDULER_CLIENT.create_schedule(
                 ActionAfterCompletion="DELETE",
                 Name=name_schudeler,
                 ScheduleExpression=schedule_expression,
@@ -261,17 +296,4 @@ def create_scheduler(
         raise e
 
 
-### S3 Bucket ###
-
-
-def list_s3_folders(bucket_name, prefix, s3_client=boto3.client("s3")) -> list[str]:
-    paginator = s3_client.get_paginator("list_objects_v2")
-    result = paginator.paginate(Bucket=bucket_name, Prefix=prefix, Delimiter="/")
-
-    folders = []
-    for page in result:
-        if "CommonPrefixes" in page:
-            for common_prefix in page["CommonPrefixes"]:
-                folders.append(common_prefix["Prefix"])
-
-    return folders
+# endregion
