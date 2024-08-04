@@ -34,12 +34,11 @@ def get_chat_persistence() -> PicklePersistence:
         telegram_chat_persistence_state = get_s3_object(
             _S3_BUCKET_CHAT_PERSISTENCE_NAME, _CHAT_PERSISTENCE_STATE
         ).read()
+        with open(f"/tmp/{_CHAT_PERSISTENCE_STATE}", "wb") as f:
+            f.write(telegram_chat_persistence_state)
+            return PicklePersistence(filepath=f"/tmp/{_CHAT_PERSISTENCE_STATE}")
     except AttributeError:
         logger.error("Telegram chat persistence not found. Creating new one.")
-        telegram_chat_persistence_state = b""
-
-    with open(f"/tmp/{_CHAT_PERSISTENCE_STATE}", "wb") as f:
-        f.write(telegram_chat_persistence_state)
         return PicklePersistence(filepath=f"/tmp/{_CHAT_PERSISTENCE_STATE}")
 
 
