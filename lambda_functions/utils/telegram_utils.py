@@ -2,7 +2,7 @@ import asyncio
 import os
 import telegram
 from telegram.ext import PicklePersistence
-from aws_utils import get_s3_object, put_s3_object
+from .aws_utils import get_s3_object, put_s3_object
 
 _S3_BUCKET_CHAT_PERSISTENCE_NAME = os.environ["S3_BUCKET_CHAT_PERSISTENCE_NAME"]
 
