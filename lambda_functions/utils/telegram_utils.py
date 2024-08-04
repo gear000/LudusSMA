@@ -31,7 +31,7 @@ def get_chat_persistence() -> PicklePersistence:
     with open(f"/tmp/{_CHAT_PERSISTENCE_STATE}", "wb") as f:
         f.write(
             get_s3_object(_S3_BUCKET_CHAT_PERSISTENCE_NAME, _CHAT_PERSISTENCE_STATE)
-            or ""
+            or b""
         )
         return PicklePersistence(filename="telegram_chat_persistence")
 
