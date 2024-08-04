@@ -1,16 +1,9 @@
 import json
 import boto3
-import logging
 
+from .logger_utils import *
 from datetime import datetime
 from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
-
-### Logger ###
-logger = logging.getLogger("AWS Utils Logger")
-logger.setLevel(logging.INFO)
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-logger.addHandler(logging.StreamHandler())
-logger.handlers[0].setFormatter(formatter)
 
 # region AWS clients
 

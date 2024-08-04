@@ -1,7 +1,9 @@
 import asyncio
 import os
 import telegram
+from .logger_utils import *
 from telegram.ext import PicklePersistence
+from botocore.exceptions import ClientError
 from .aws_utils import get_s3_object, put_s3_object
 
 _S3_BUCKET_CHAT_PERSISTENCE_NAME = os.environ["S3_BUCKET_CHAT_PERSISTENCE_NAME"]
@@ -28,12 +30,17 @@ def get_chat_persistence() -> PicklePersistence:
     ### Returns ###
         `PicklePersistence`: the chat persistence
     """
+    try:
+        telegram_chat_persistence_state = get_s3_object(
+            _S3_BUCKET_CHAT_PERSISTENCE_NAME, _CHAT_PERSISTENCE_STATE
+        ).read()
+    except AttributeError:
+        logger.error("Telegram chat persistence not found. Creating new one.")
+        telegram_chat_persistence_state = b""
+
     with open(f"/tmp/{_CHAT_PERSISTENCE_STATE}", "wb") as f:
-        f.write(
-            get_s3_object(_S3_BUCKET_CHAT_PERSISTENCE_NAME, _CHAT_PERSISTENCE_STATE)
-            or b""
-        )
-        return PicklePersistence(filepath="telegram_chat_persistence")
+        f.write(telegram_chat_persistence_state)
+        return PicklePersistence(filepath=f"/tmp/{_CHAT_PERSISTENCE_STATE}")
 
 
 def upload_chat_persistence() -> bool:
