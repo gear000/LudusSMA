@@ -4,7 +4,7 @@ import logging
 import os
 
 from test_handler_with_state import handler_with_state
-import utils.aws_utils as aws_utils
+from utils.aws_utils import get_parameter, delete_message_from_sqs_queue
 
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
@@ -20,9 +20,7 @@ logger.addHandler(logging.StreamHandler())
 logger.handlers[0].setFormatter(formatter)
 
 ### Constants ###
-TELEGRAM_TOKEN = aws_utils.get_parameter(
-    parameter_name="/telegram/bot-token", is_secure=True
-)
+TELEGRAM_TOKEN = get_parameter(parameter_name="/telegram/bot-token", is_secure=True)
 
 
 def initialize_app() -> Application:
@@ -72,7 +70,7 @@ def lambda_handler(event: dict, context):
     logger.info(f"Received event: {sqs_record.get('body')}")
 
     sqs_receipt_handle: str = sqs_record.get("receiptHandle")
-    aws_utils.delete_message_from_sqs_queue(
+    delete_message_from_sqs_queue(
         queue_name=os.getenv("SQS_QUEUE_TELEGRAM_UPDATES_NAME"),
         receipt_handle=sqs_receipt_handle,
     )
@@ -83,7 +81,7 @@ def lambda_handler(event: dict, context):
     chat_id = update.effective_chat.id
     ALLOWED_CHAT_IDS = [
         int(chat_id)
-        for chat_id in aws_utils.get_parameter(
+        for chat_id in get_parameter(
             parameter_name="/telegram/allow-chat-ids",
             is_secure=True,
         ).split(",")

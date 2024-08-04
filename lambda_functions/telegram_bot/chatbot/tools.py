@@ -1,7 +1,7 @@
 import uuid
 import os
 from datetime import datetime, timedelta
-import utils.aws_utils as aws_utils
+from utils.aws_utils import create_scheduler
 
 SQS_QUEUE_EVENTS_ARN = os.getenv("SQS_QUEUE_EVENTS_ARN", "")
 IAM_ROLE_EVENT_SCHEDULER_ARN = os.getenv("IAM_ROLE_EVENT_SCHEDULER_ARN", "")
@@ -10,7 +10,7 @@ IAM_ROLE_EVENT_SCHEDULER_ARN = os.getenv("IAM_ROLE_EVENT_SCHEDULER_ARN", "")
 def create_schedulers(event_scheduler: dict, event_date: datetime = datetime.now()):
     event_id = str(uuid.uuid4())
     now = datetime.now()
-    cron_expression: list[dict] = [
+    cron_expressions: list[dict] = [
         {
             "cron": f"at({(event_date - timedelta(days=30)).strftime('%Y-%m-%dT10:00:00')})",
             "name": f"{event_id}-FistStoryBeforeEvent",
@@ -37,10 +37,10 @@ def create_schedulers(event_scheduler: dict, event_date: datetime = datetime.now
         },
     ]
 
-    for ce in cron_expression:
+    for ce in cron_expressions:
         if ce.get("end_date") == now:
             continue
-        aws_utils.create_scheduler(
+        create_scheduler(
             name_schudeler=ce["name"],
             schedule_expression=ce["cron"],
             target_arn=SQS_QUEUE_EVENTS_ARN,
