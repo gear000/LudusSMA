@@ -28,7 +28,7 @@ def get_chat_persistence() -> PicklePersistence:
     ### Returns ###
         `PicklePersistence`: the chat persistence
     """
-    with open(f"./tmp/{_CHAT_PERSISTENCE_STATE}", "wb") as f:
+    with open(f"/tmp/{_CHAT_PERSISTENCE_STATE}", "wb") as f:
         f.write(
             get_s3_object(_S3_BUCKET_CHAT_PERSISTENCE_NAME, _CHAT_PERSISTENCE_STATE)
         )
@@ -39,7 +39,7 @@ def upload_chat_persistence() -> bool:
     """
     Upload the chat persistence file from local to S3.
     """
-    with open(f"./tmp/{_CHAT_PERSISTENCE_STATE}", "rb") as f:
+    with open(f"/tmp/{_CHAT_PERSISTENCE_STATE}", "rb") as f:
         put_s3_object(
             bucket_name=_S3_BUCKET_CHAT_PERSISTENCE_NAME,
             object_key=_CHAT_PERSISTENCE_STATE,
