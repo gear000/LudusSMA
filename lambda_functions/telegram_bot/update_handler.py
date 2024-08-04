@@ -1,5 +1,6 @@
 """In this file we will create the update handler for the bot."""
 
+from datetime import date
 from enum import Enum
 import os
 from typing import Dict
@@ -8,12 +9,11 @@ import logging
 from telegram.ext import ContextTypes, ConversationHandler
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 
-from utils.aws_utils import (
+from ..utils.aws_utils import (
     clear_history,
     list_s3_folders,
 )
-
-from datetime import datetime
+from .chatbot.event_handler import check_info_chain
 
 
 ### Setup Logging ###
@@ -127,15 +127,18 @@ async def llm_processing(update: telegram.Update, context: ContextTypes.DEFAULT_
     text = update.message.text
     context.user_data[CONTEXT] = text
 
-    # TODO
-    # add logic
+    response = check_info_chain.invoke({"input": text, "today": date.today()})
+    answer = ""
+    if response["clarification"]:
+        answer = "Mmhh, qualcosa non va...\n" + response["clarification"]
+    else:
+        answer = (
+            "Bene, allora creo un evento con queste informazioni:\n" + response["event"]
+        )
 
     await update.message.reply_text(
-        f"Questa è la risposta mokkata del bot",
+        answer,
         reply_markup=ReplyKeyboardRemove(),
-    )
-    await update.message.reply_text(
-        f"Ecco le informazioni che ho recuperato: {facts_to_str(context.user_data)}",
     )
 
     markup = ReplyKeyboardMarkup([["Vai con l'evento!", "No, aspetta..."]])

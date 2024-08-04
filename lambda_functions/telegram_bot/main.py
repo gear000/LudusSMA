@@ -5,11 +5,11 @@ import os
 from telegram import Update
 from telegram.ext import Application
 
-from utils.logger_utils import *
-from utils.aws_utils import get_parameter, delete_message_from_sqs_queue
-from utils.telegram_utils import get_chat_persistence, upload_chat_persistence
+from ..utils.logger_utils import *
+from ..utils.aws_utils import get_parameter, delete_message_from_sqs_queue
+from ..utils.telegram_utils import get_chat_persistence, upload_chat_persistence
 
-from conversation_handler import get_conversation_handler
+from .conversation_handler import get_conversation_handler
 
 
 ### Constants ###
@@ -77,7 +77,12 @@ def lambda_handler(event: dict, context):
         return {"statusCode": 200, "body": "You are not allowed to use this bot"}
 
     app.add_handler(get_conversation_handler())
-
     asyncio.run(process_update(app=app, update=update))
 
     return {"statusCode": 200, "body": "Elaboration completed"}
+
+
+if __name__ == "__main__":
+    app = Application.builder().token(TELEGRAM_TOKEN).build()
+    app.add_handler(get_conversation_handler())
+    app.run_polling(allowed_updates=Update.ALL_TYPES)

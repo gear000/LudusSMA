@@ -8,8 +8,8 @@ from telegram.ext import (
 )
 
 
-from utils.aws_utils import list_s3_folders, get_parameter
-from update_handler import (
+from ..utils.aws_utils import list_s3_folders, get_parameter
+from .update_handler import (
     ChatState,
     done,
     choose_event_type,
