@@ -103,6 +103,8 @@ Resources:
             Resource:
               - !GetAtt 'LudusSMAImagesBucket.Arn'
               - !Sub '${LudusSMAImagesBucket.Arn}/*'
+              - !GetAtt 'LudusSMAChatPersistenceBucket.Arn'
+              - !Sub '${LudusSMAChatPersistenceBucket.Arn}/*'
           - Effect: Allow
             Action:
               - 'scheduler:CreateSchedule'
