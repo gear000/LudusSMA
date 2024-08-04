@@ -33,7 +33,7 @@ def get_chat_persistence() -> PicklePersistence:
             get_s3_object(_S3_BUCKET_CHAT_PERSISTENCE_NAME, _CHAT_PERSISTENCE_STATE)
             or b""
         )
-        return PicklePersistence(filename="telegram_chat_persistence")
+        return PicklePersistence(filepath="telegram_chat_persistence")
 
 
 def upload_chat_persistence() -> bool:
