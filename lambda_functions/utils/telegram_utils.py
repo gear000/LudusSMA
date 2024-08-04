@@ -5,6 +5,7 @@ from telegram.ext import PicklePersistence
 from .aws_utils import get_s3_object, put_s3_object
 
 _S3_BUCKET_CHAT_PERSISTENCE_NAME = os.environ["S3_BUCKET_CHAT_PERSISTENCE_NAME"]
+_CHAT_PERSISTENCE_STATE = "telegram_chat_persistence_state"
 
 
 def send_telegram_message(token: str, chat_id: str, message: str) -> None:
@@ -27,9 +28,9 @@ def get_chat_persistence() -> PicklePersistence:
     ### Returns ###
         `PicklePersistence`: the chat persistence
     """
-    with open("telegram_chat_persistence", "wb") as f:
+    with open(f"./tmp/{_CHAT_PERSISTENCE_STATE}", "wb") as f:
         f.write(
-            get_s3_object(_S3_BUCKET_CHAT_PERSISTENCE_NAME, "telegram_chat_persistence")
+            get_s3_object(_S3_BUCKET_CHAT_PERSISTENCE_NAME, _CHAT_PERSISTENCE_STATE)
         )
         return PicklePersistence(filename="telegram_chat_persistence")
 
@@ -38,10 +39,10 @@ def upload_chat_persistence() -> bool:
     """
     Upload the chat persistence file from local to S3.
     """
-    with open("telegram_chat_persistence", "rb") as f:
+    with open(f"./tmp/{_CHAT_PERSISTENCE_STATE}", "rb") as f:
         put_s3_object(
             bucket_name=_S3_BUCKET_CHAT_PERSISTENCE_NAME,
-            object_key="telegram_chat_persistence",
+            object_key=_CHAT_PERSISTENCE_STATE,
             body=f.read(),
         )
         return True
