@@ -36,10 +36,10 @@ def get_chat_persistence() -> PicklePersistence:
         ).read()
         with open(f"/tmp/{_CHAT_PERSISTENCE_STATE}", "wb") as f:
             f.write(telegram_chat_persistence_state)
-            return PicklePersistence(filepath=f"/tmp/{_CHAT_PERSISTENCE_STATE}")
     except AttributeError:
         logger.error("Telegram chat persistence not found. Creating new one.")
-        return PicklePersistence(filepath=f"/tmp/{_CHAT_PERSISTENCE_STATE}")
+
+    return PicklePersistence(filepath=f"/tmp/{_CHAT_PERSISTENCE_STATE}")
 
 
 def upload_chat_persistence() -> bool:
