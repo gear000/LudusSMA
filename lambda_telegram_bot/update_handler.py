@@ -9,7 +9,7 @@ import logging
 from telegram.ext import ContextTypes, ConversationHandler
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 
-from ..utils.aws_utils import (
+from utils.aws_utils import (
     clear_history,
     list_s3_folders,
 )

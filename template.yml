@@ -190,7 +190,7 @@ Resources:
     Type: AWS::Serverless::Function    
     Name: auth-tg-requests
     Properties:
-      CodeUri: lambda_functions/auth_tg_requests/
+      CodeUri: lambda_auth_tg_requests/
       Handler: main.lambda_handler
       Runtime: python3.11
       Timeout: 60
@@ -214,7 +214,7 @@ Resources:
     Type: AWS::Serverless::Function
     Name: telegram-bot
     Properties:
-      CodeUri: lambda_functions/telegram_bot/
+      CodeUri: lambda_telegram_bot/
       Handler: main.lambda_handler
       Runtime: python3.11
       Timeout: 300
@@ -245,7 +245,7 @@ Resources:
     Type: AWS::Serverless::Function
     Name: create-ig-stories
     Properties:
-      CodeUri: lambda_functions/create_ig_stories/
+      CodeUri: lambda_create_ig_stories/
       Handler: main.lambda_handler
       Runtime: python3.11
       Timeout: 300
@@ -274,7 +274,7 @@ Resources:
     Properties:
       LayerName: LudusSMAUtilsLayer
       Description: LudusSMA Utils Lambda Layer
-      ContentUri: lambda_functions/utils.zip
+      ContentUri: utils.zip
       CompatibleRuntimes:
         - python3.11
 
