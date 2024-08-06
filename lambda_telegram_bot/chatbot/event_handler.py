@@ -3,26 +3,24 @@ from langchain_aws.chat_models.bedrock_converse import ChatBedrockConverse
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.prompts.chat import SystemMessagePromptTemplate
 
-from langchain.agents import tool
-
-from typing import TypedDict, Annotated, List, Union
-from langchain_core.agents import AgentAction, AgentFinish
-import operator
-
 import logging
 from datetime import datetime
 
 from .prompts import CHECK_INFO_PROMPT
 from .tools import create_schedulers
 
-# from utils.models.model_utils import output_parser
-
 # region UTILS
 
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field, field_validator, ValidationInfo
-from langchain_core.output_parsers import JsonOutputParser
+from pydantic import (
+    BaseModel,
+    Field,
+    field_validator,
+    ValidationInfo,
+    model_validator,
+)
+from langchain_core.output_parsers import PydanticOutputParser
 
 
 class Event(BaseModel):
@@ -48,25 +46,31 @@ class Event(BaseModel):
                 f"{info.field_name} must be a string in the format %Y-%m-%dT%H:%M:%S"
             )
 
+    @model_validator(mode="after")
+    @classmethod
+    def check_dates(cls, values):
+        start_date = values.start_date
+        end_date = values.end_date
+        if start_date and end_date:
+            if end_date <= start_date:
+                raise ValueError("`end_date` must be greater than `start_date`")
+            if end_date <= datetime.now():
+                raise ValueError("`end_date` must be in the future")
+        return values
+
 
 class OutputCreateEvent(BaseModel):
     clarification: Optional[str] = Field(description="Question to ask the user")
     event: Optional[Event] = Field(description="The event to be created")
 
 
-output_parser = JsonOutputParser(pydantic_object=OutputCreateEvent)
+output_parser = PydanticOutputParser(pydantic_object=OutputCreateEvent)
 
 
 # endregion
 
 
 logger = logging.getLogger(__name__)
-
-
-class AgentState(TypedDict):
-    input: str
-    agent_out: Union[AgentAction, AgentFinish, None]
-    intermediate_steps: Annotated[list[tuple[AgentAction, str]], operator.add]
 
 
 check_info_chain = (

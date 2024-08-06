@@ -93,25 +93,33 @@ Remember to respond with a markdown code snippet of a json blob with a single ac
 
 
 CHECK_INFO_PROMPT = """[INST]You are an extremely precise manager assistant.
-Your task is to check whether the business analyst of your team provided all the required information.
-The job the business analyst had was to retrieve some data about an event, including:
+Your task is to check whether the business analysis team managed to collect all the necessary information about an event you are planning.
+The data you need includes:
     - title
     - description
     - start datetime and end datetime
     - location
 
-If the business analyst provided all the info listed above, you must answer providing the event info.
+If the business analysis team provided all the info listed above, you must answer providing the event info.
 Otherwise, you must ask the user to provide the missing info.
 You must format your answer as explained in FORMATING GUIDELINES.
 
-Note that today is {today}.
+Note that the business report may be composed by several messages the consultants. Please take into account all the messages.
+
+Note that today is {today}. make sure to infer the year of the event and place it in the future.
 
 
 # FORMATTING GUIDELINES
 ===============
 You must return ONLY the structure described below.
-Avoid adding intro, greetings, or other chit-chats.
+Avoid adding intro, greetings,or other chit-chats and texts.
 {formatting_guidelines}
+===============
+
+# SUGGESTIONS:
+===============
+- If the report does not specify the end date, then the end date is the same as the start date. Do not ask the user this information.
+- If you are unsure about the description, do not infer it. Ask the user to provide the description.
 ===============
 
 ALWAYS ANSWER IN ITALIAN.

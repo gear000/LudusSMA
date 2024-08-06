@@ -40,7 +40,8 @@ def get_conversation_handler() -> ConversationHandler:
     ]
 
     return ConversationHandler(
-        entry_points=[CommandHandler("start", start)],
+        entry_points=[CommandHandler("start", start), CommandHandler("help", help)],
+        allow_reentry=True,
         states={
             ChatState.INTRO: [
                 MessageHandler(

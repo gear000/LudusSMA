@@ -8,13 +8,10 @@ import telegram
 import logging
 from telegram.ext import ContextTypes, ConversationHandler
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
+from telegram.constants import ParseMode
 
-from utils.aws_utils import (
-    clear_history,
-    list_s3_folders,
-)
-from .chatbot.event_handler import check_info_chain
-
+from utils.aws_utils import list_s3_folders, create_scheduler
+from .chatbot.event_handler import check_info_chain, OutputCreateEvent, Event
 
 ### Setup Logging ###
 logger = logging.getLogger("Update Handeler")
@@ -32,6 +29,17 @@ DYNAMODB_TABLE_CHATS_HISTORY_NAME = os.getenv(
 EVENT_TYPE = "Tipo di evento"
 CONTEXT = "Informazioni sull'evento"
 
+EVENT_KEYS = {
+    "title": "Titolo",
+    "description": "Descrizione",
+    "start_date": "Data di inizio",
+    "end_date": "Data di fine",
+    "start_time": "Ora di inizio",
+    "end_time": "Ora di fine",
+    "location": "Luogo",
+    "other_info": "Altre informazioni",
+}
+
 
 class ChatState(Enum):
     INTRO = 0
@@ -44,17 +52,30 @@ class ChatState(Enum):
     CONCLUSION = 7
 
 
-def facts_to_str(user_data: Dict[str, str]) -> str:
+def facts_to_str(event_data: Event) -> str:
     """Helper function for formatting the gathered user info."""
-    facts = [f"{key} - {value}" for key, value in user_data.items()]
-    return "\n".join(facts).join(["\n", "\n"])
+
+    event_data: dict = event_data.model_dump()
+
+    event_data["start_time"] = event_data["start_date"].time()
+    event_data["start_date"] = event_data["start_date"].date()
+
+    event_data["end_time"] = event_data["end_date"].time()
+    event_data["end_date"] = event_data["end_date"].date()
+
+    # event_data.start_time = event_data.start_date.split("T")[1]
+    # event_data.start_date = event_data.start_date.split("T")[0]
+
+    # event_data.end_time = event_data.end_date.split("T")[1]
+    # event_data.end_date = event_data.end_date.split("T")[0]
+
+    facts = [f"<b>{EVENT_KEYS[key]}</b>: {event_data[key]}" for key in EVENT_KEYS]
+    return "\n\n - " + "\n - ".join(facts)
 
 
 # region Commands
 async def start(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
     """Start the conversation and ask user for input."""
-    user_id = update.effective_user.id
-    clear_history(table_name=DYNAMODB_TABLE_CHATS_HISTORY_NAME, user_id=str(user_id))
 
     await update.message.reply_text(
         "Ciao! Sono LudusSMA!\n"
@@ -72,8 +93,6 @@ async def start(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def help(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    clear_history(table_name=DYNAMODB_TABLE_CHATS_HISTORY_NAME, user_id=str(user_id))
 
     await update.message.reply_text(
         "Al momento non sono in grado di fare molto... ma imparo in fretta e sto migliorando giorno dopo giorno!\n"
@@ -105,17 +124,23 @@ async def choose_event_type(
 async def event(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = update.message.text
-    context.user_data[EVENT_TYPE] = text
+    if not context.user_data.get(EVENT_TYPE):
+        context.user_data[EVENT_TYPE] = text
 
-    await update.message.reply_text(
-        "Perfetto! 😊\n"
-        "Per creare un evento ho bisogno di queste info:\n"
-        "  - il nome dell'evento;\n"
-        "  - una descrizione dell'evento;\n"
-        "  - quando sarà l'evento, cioè, data e ora di inizio e data e ora di fine;\n"
-        "  - dove si terrà l'evento, cioè il nome del posto o l'indirizzo.",
-        reply_markup=ReplyKeyboardRemove(),
-    )
+        await update.message.reply_text(
+            "Perfetto! 😊\n"
+            "Per creare un evento ho bisogno di queste info:\n"
+            "  - il nome dell'evento;\n"
+            "  - una descrizione dell'evento;\n"
+            "  - quando sarà l'evento, cioè, data e ora di inizio e data e ora di fine;\n"
+            "  - dove si terrà l'evento, cioè il nome del posto o l'indirizzo.",
+            reply_markup=ReplyKeyboardRemove(),
+        )
+    else:
+        await update.message.reply_text(
+            "Va bene, che informazione vuoi darmi?",
+            reply_markup=ReplyKeyboardRemove(),
+        )
 
     return ChatState.EVENT_INFO
 
@@ -125,26 +150,33 @@ async def llm_processing(update: telegram.Update, context: ContextTypes.DEFAULT_
     Instantiate the bot and get the answer
     """
     text = update.message.text
-    context.user_data[CONTEXT] = text
 
-    response = check_info_chain.invoke({"input": text, "today": date.today()})
-    answer = ""
-    if response["clarification"]:
-        answer = "Mmhh, qualcosa non va...\n" + response["clarification"]
+    if context.user_data.get(CONTEXT):
+        context.user_data[CONTEXT] += "\nAlice: " + text
     else:
-        answer = (
-            "Bene, allora creo un evento con queste informazioni:\n" + response["event"]
-        )
+        context.user_data[CONTEXT] = "Alice: " + text
 
-    await update.message.reply_text(
-        answer,
-        reply_markup=ReplyKeyboardRemove(),
+    response: OutputCreateEvent = check_info_chain.invoke(
+        {"input": context.user_data[CONTEXT], "today": date.today()}
     )
+    clarification = response.clarification
+    if clarification:
+        await update.message.reply_text(
+            "Mmhh, qualcosa non va...\n" + clarification,
+            reply_markup=ReplyKeyboardRemove(),
+        )
+        context.user_data[CONTEXT] += "\nBob: " + clarification
+    else:
 
-    markup = ReplyKeyboardMarkup([["Vai con l'evento!", "No, aspetta..."]])
-    await update.message.reply_text("Cosa facciamo?", reply_markup=markup)
+        await update.message.reply_text(
+            "Bene, allora creo un evento con queste informazioni:"
+            + facts_to_str(response.event),
+            parse_mode=ParseMode.HTML,
+        )
+        markup = ReplyKeyboardMarkup([["Vai con l'evento!", "No, aspetta..."]])
+        await update.message.reply_text("Cosa facciamo?", reply_markup=markup)
 
-    return ChatState.RECAP
+        return ChatState.RECAP
 
 
 async def add_image_first(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
@@ -166,6 +198,7 @@ async def schedule_event(update: telegram.Update, context: ContextTypes.DEFAULT_
 
     # TODO
     # add logic
+    # create_scheduler()
 
     await update.message.reply_text(
         f"Questa è la logica mokkata di aggiunta di un evento",
