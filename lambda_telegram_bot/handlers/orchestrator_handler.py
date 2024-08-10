@@ -8,7 +8,7 @@ from telegram.ext import (
 )
 
 
-from utils.aws_utils import list_s3_folders, get_parameter
+from utils.aws_utils import get_parameter
 from chat_state import ChatOrchestratorState
 from commands_handler import *
 from operations_handler import *
