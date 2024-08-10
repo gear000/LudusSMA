@@ -21,11 +21,11 @@ from telegram.ext import (
 
 from utils.models.model_utils import OutputCreateEvent
 
-from ..chatbot.tools import create_schedulers
-from ..chatbot.event_handler import check_info_chain
+from chatbot.tools import create_schedulers
+from chatbot.event_handler import check_info_chain
 
-from .chat_state import ChatOrchestratorState, ChatAddEventState
-from .commands_handler import *
+from chat_state import ChatOrchestratorState, ChatAddEventState
+from commands_handler import *
 
 __all__ = [
     "selecting_action_handler",
