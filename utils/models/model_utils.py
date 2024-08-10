@@ -1,9 +1,6 @@
 from datetime import datetime
-from email.policy import default
 from typing import Optional
-from unittest.mock import Base
 from pydantic import BaseModel, Field, field_validator, ValidationInfo, model_validator
-from langchain_core.output_parsers import JsonOutputParser
 
 
 class Event(BaseModel):

@@ -3,7 +3,6 @@ import os
 import telegram
 from .logger_utils import *
 from telegram.ext import PicklePersistence
-from botocore.exceptions import ClientError
 from .aws_utils import get_s3_object, put_s3_object
 
 _S3_BUCKET_CHAT_PERSISTENCE_NAME = os.environ["S3_BUCKET_CHAT_PERSISTENCE_NAME"]
