@@ -1,6 +1,5 @@
 import json
 import boto3
-from sympy import true
 
 from .logger_utils import *
 from utils.models.model_utils import Event
