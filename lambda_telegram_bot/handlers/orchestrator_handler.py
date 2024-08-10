@@ -9,9 +9,9 @@ from telegram.ext import (
 
 
 from utils.aws_utils import get_parameter
-from chat_state import ChatOrchestratorState
-from commands_handler import *
-from operations_handler import *
+from .chat_state import ChatOrchestratorState
+from .commands_handler import *
+from .operations_handler import *
 
 from telegram.ext import CallbackQueryHandler
 
