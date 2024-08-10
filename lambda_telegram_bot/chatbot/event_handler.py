@@ -6,7 +6,7 @@ from langchain_core.output_parsers import PydanticOutputParser
 
 from utils.models.model_utils import OutputCreateEvent
 from utils.logger_utils import *
-from prompts import CHECK_INFO_PROMPT
+from .prompts import CHECK_INFO_PROMPT
 
 
 output_parser = PydanticOutputParser(
