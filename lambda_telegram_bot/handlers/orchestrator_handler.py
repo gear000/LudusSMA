@@ -38,6 +38,8 @@ def get_orchestrator_handler() -> ConversationHandler:
             CommandHandler("create_post", create_post),
         ],
         allow_reentry=True,
+        name="orchestrator",
+        persistent=True,
         states={
             ChatOrchestratorState.SELECTING_ACTION: [
                 CallbackQueryHandler(selecting_action_handler)

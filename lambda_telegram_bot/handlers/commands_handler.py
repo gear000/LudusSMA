@@ -181,7 +181,13 @@ async def help(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def done(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
 
-    await update.message.reply_text(
-        "Ciao! A presto!", reply_markup=ReplyKeyboardRemove()
-    )
+    message = "Ciao! A presto!"
+    if update.message:
+        await update.message.reply_text(text=message)
+    elif update.callback_query:
+        await update.callback_query.answer()
+        await update.callback_query.edit_message_text(
+            text=message,
+            reply_markup=[[]],
+        )
     return ConversationHandler.END

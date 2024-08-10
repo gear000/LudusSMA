@@ -158,6 +158,8 @@ async def schedule_event(update: telegram.Update, context: ContextTypes.DEFAULT_
 
 add_event_handler = ConversationHandler(
     entry_points=[CallbackQueryHandler(set_event)],
+    name="add_event",
+    persistent=True,
     states={
         ChatAddEventState.EVENT_INFO: [
             MessageHandler(filters.TEXT & ~(filters.COMMAND), llm_processing)

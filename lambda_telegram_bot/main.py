@@ -84,8 +84,14 @@ def lambda_handler(event: dict, context):
 
 if __name__ == "__main__":
     import langchain
+    from telegram.ext import PicklePersistence
 
     langchain.debug = True
-    app = Application.builder().token(TELEGRAM_TOKEN).build()
+    app = (
+        Application.builder()
+        .token(TELEGRAM_TOKEN)
+        .persistence(PicklePersistence(filepath="telegram_chat_persistence_state"))
+        .build()
+    )
     app.add_handler(get_orchestrator_handler())
     app.run_polling(allowed_updates=Update.ALL_TYPES)
