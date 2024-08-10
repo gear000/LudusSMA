@@ -9,7 +9,7 @@ from utils.logger_utils import *
 from utils.aws_utils import get_parameter, delete_message_from_sqs_queue
 from utils.telegram_utils import get_chat_persistence, upload_chat_persistence
 
-from .handlers.orchestrator_handler import get_orchestrator_handler
+from handlers.orchestrator_handler import get_orchestrator_handler
 
 
 ### Constants ###

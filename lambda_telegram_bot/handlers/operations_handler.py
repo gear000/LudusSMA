@@ -1,15 +1,12 @@
 from datetime import date
 from enum import Enum
 import os
-import re
-from numpy import add
 import telegram
 
 from telegram.constants import ParseMode
 
 from telegram import (
     InlineKeyboardMarkup,
-    InlineKeyboardButton,
     ReplyKeyboardMarkup,
     ReplyKeyboardRemove,
 )
@@ -22,12 +19,12 @@ from telegram.ext import (
     filters,
 )
 
-from ..chatbot.tools import create_schedulers
-
-from .chat_state import ChatOrchestratorState, ChatAddEventState
 from utils.models.model_utils import OutputCreateEvent
 
+from ..chatbot.tools import create_schedulers
 from ..chatbot.event_handler import check_info_chain
+
+from .chat_state import ChatOrchestratorState, ChatAddEventState
 from .commands_handler import *
 
 __all__ = [
