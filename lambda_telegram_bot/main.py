@@ -9,7 +9,7 @@ from utils.logger_utils import *
 from utils.aws_utils import get_parameter, delete_message_from_sqs_queue
 from utils.telegram_utils import get_chat_persistence, upload_chat_persistence
 
-from .conversation_handler import get_conversation_handler
+from .handlers.orchestrator_handler import get_orchestrator_handler
 
 
 ### Constants ###
@@ -76,13 +76,16 @@ def lambda_handler(event: dict, context):
         asyncio.run(update.message.reply_text("You are not allowed to use this bot"))
         return {"statusCode": 200, "body": "You are not allowed to use this bot"}
 
-    app.add_handler(get_conversation_handler())
+    app.add_handler(get_orchestrator_handler())
     asyncio.run(process_update(app=app, update=update))
 
     return {"statusCode": 200, "body": "Elaboration completed"}
 
 
 if __name__ == "__main__":
+    import langchain
+
+    langchain.debug = True
     app = Application.builder().token(TELEGRAM_TOKEN).build()
-    app.add_handler(get_conversation_handler())
+    app.add_handler(get_orchestrator_handler())
     app.run_polling(allowed_updates=Update.ALL_TYPES)

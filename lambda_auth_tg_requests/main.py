@@ -1,14 +1,9 @@
+import imp
 import logging
 import os
 
 import utils.aws_utils as aws_utils
-
-### Setup Logging ###
-logger = logging.getLogger("Auth Tg Request Logger")
-logger.setLevel(logging.INFO)
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-logger.addHandler(logging.StreamHandler())
-logger.handlers[0].setFormatter(formatter)
+from utils.logger_utils import *
 
 
 def lambda_handler(event: dict, context):

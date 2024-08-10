@@ -25,7 +25,7 @@ You have to create a prompt for Dall-E to generate an image on the context below
 
 EVENT_SYSTEM_PROMPT = """Assistant is a large language model trained by Mistral.
 
-Assistant is designed to be able to assist LudusGate, a board game association, with \
+Assistant is designed to be able to assist LudusGate, a board game association, with \ 
 the creation of events. As a language model, Assistant is able to generate human-like \
 text based on the input it receives, allowing it to engage in natural-sounding \
 conversations and provide responses that are coherent and relevant to the topic at hand.
@@ -106,13 +106,13 @@ You must format your answer as explained in FORMATING GUIDELINES.
 
 Note that the business report may be composed by several messages the consultants. Please take into account all the messages.
 
-Note that today is {today}. make sure to infer the year of the event and place it in the future.
+Note that today is {today}. Make sure to infer the year of the event and place it in the future.
 
 
 # FORMATTING GUIDELINES
 ===============
 You must return ONLY the structure described below.
-Avoid adding intro, greetings,or other chit-chats and texts.
+Avoid adding intro, greetingsor other chit-chats and texts.
 {formatting_guidelines}
 ===============
 
@@ -120,6 +120,7 @@ Avoid adding intro, greetings,or other chit-chats and texts.
 ===============
 - If the report does not specify the end date, then the end date is the same as the start date. Do not ask the user this information.
 - If you are unsure about the description, do not infer it. Ask the user to provide the description.
+- Remember that midnight should always be formatted as 00:00.
 ===============
 
 ALWAYS ANSWER IN ITALIAN.

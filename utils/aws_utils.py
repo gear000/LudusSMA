@@ -1,8 +1,9 @@
 import json
 import boto3
+from sympy import true
 
 from .logger_utils import *
-from datetime import datetime
+from utils.models.model_utils import Event
 from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
 
 # region AWS clients
@@ -251,39 +252,23 @@ def create_scheduler(
     schedule_expression: str,
     target_arn: str,
     role_arn: str,
-    input: dict,
-    start_date: datetime | None,
-    end_date: datetime,
+    event: Event,
 ):
     try:
-        if start_date is None:
-            _SCHEDULER_CLIENT.create_schedule(
-                ActionAfterCompletion="DELETE",
-                Name=name_schudeler,
-                ScheduleExpression=schedule_expression,
-                State="ENABLED",
-                FlexibleTimeWindow={"MaximumWindowInMinutes": 10, "Mode": "FLEXIBLE"},
-                Target={
-                    "Arn": target_arn,
-                    "RoleArn": role_arn,
-                    "Input": json.dumps(input),
-                },
-            )
-        else:
-            _SCHEDULER_CLIENT.create_schedule(
-                ActionAfterCompletion="DELETE",
-                Name=name_schudeler,
-                ScheduleExpression=schedule_expression,
-                StartDate=start_date,
-                EndDate=end_date,
-                State="ENABLED",
-                FlexibleTimeWindow={"MaximumWindowInMinutes": 10, "Mode": "FLEXIBLE"},
-                Target={
-                    "Arn": target_arn,
-                    "RoleArn": role_arn,
-                    "Input": json.dumps(input),
-                },
-            )
+        _SCHEDULER_CLIENT.create_schedule(
+            ActionAfterCompletion="DELETE",
+            Name=name_schudeler,
+            ScheduleExpression=schedule_expression,
+            StartDate=event.start_date,
+            EndDate=event.end_date,
+            State="ENABLED",
+            FlexibleTimeWindow={"MaximumWindowInMinutes": 10, "Mode": "FLEXIBLE"},
+            Target={
+                "Arn": target_arn,
+                "RoleArn": role_arn,
+                "Input": event.model_dump_json(exclude_none=True),
+            },
+        )
     except Exception as e:
         logger.error("Error in creating scheduler: ", e)
         raise e
