@@ -1,8 +1,8 @@
 import boto3
 
-from .logger_utils import *
-from utils.models.model_utils import Event
 from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
+from .logger_utils import *
+from .models.model_utils import Event
 
 # region AWS clients
 

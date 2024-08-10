@@ -1,9 +1,11 @@
 import asyncio
 import os
 import telegram
+
 from .logger_utils import *
-from telegram.ext import PicklePersistence
 from .aws_utils import get_s3_object, put_s3_object
+
+from telegram.ext import PicklePersistence
 
 _S3_BUCKET_CHAT_PERSISTENCE_NAME = os.getenv("S3_BUCKET_CHAT_PERSISTENCE_NAME")
 _CHAT_PERSISTENCE_STATE = "telegram_chat_persistence_state"
