@@ -26,8 +26,8 @@ check_info_chain = (
         ]
     )
     | ChatBedrockConverse(
-        model="meta.llama3-70b-instruct-v1:0",
-        region_name="us-east-1",
+        model="meta.llama3-1-405b-instruct-v1:0",
+        region_name="us-west-2",
     )
     | output_parser
 )

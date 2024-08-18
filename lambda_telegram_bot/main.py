@@ -10,6 +10,7 @@ from utils.aws_utils import get_parameter, delete_message_from_sqs_queue
 from utils.telegram_utils import get_chat_persistence, upload_chat_persistence
 
 from handlers.orchestrator_handler import get_orchestrator_handler
+from handlers.operations_handler import error_handler
 
 
 ### Constants ###
@@ -55,10 +56,6 @@ def lambda_handler(event: dict, context):
     logger.info(f"Received event: {sqs_record.get('body')}")
 
     sqs_receipt_handle: str = sqs_record.get("receiptHandle")
-    delete_message_from_sqs_queue(
-        queue_name=os.getenv("SQS_QUEUE_TELEGRAM_UPDATES_NAME"),
-        receipt_handle=sqs_receipt_handle,
-    )
 
     app = initialize_app()
 
@@ -77,7 +74,13 @@ def lambda_handler(event: dict, context):
         return {"statusCode": 200, "body": "You are not allowed to use this bot"}
 
     app.add_handler(get_orchestrator_handler())
+    app.add_error_handler(error_handler)
     asyncio.run(process_update(app=app, update=update))
+
+    delete_message_from_sqs_queue(
+        queue_name=os.getenv("SQS_QUEUE_TELEGRAM_UPDATES_NAME"),
+        receipt_handle=sqs_receipt_handle,
+    )
 
     return {"statusCode": 200, "body": "Elaboration completed"}
 
@@ -94,4 +97,5 @@ if __name__ == "__main__":
         .build()
     )
     app.add_handler(get_orchestrator_handler())
+    app.add_error_handler(error_handler)
     app.run_polling(allowed_updates=Update.ALL_TYPES)

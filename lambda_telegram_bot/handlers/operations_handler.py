@@ -19,6 +19,7 @@ from telegram.ext import (
     filters,
 )
 
+from utils.logger_utils import *
 from utils.models.model_utils import OutputCreateEvent
 
 from chatbot.tools import create_schedulers
@@ -34,6 +35,7 @@ __all__ = [
     "manage_event_images_handler",
     "create_story_handler",
     "create_post_handler",
+    "error_handler",
 ]
 
 
@@ -160,6 +162,7 @@ add_event_handler = ConversationHandler(
     entry_points=[CallbackQueryHandler(set_event)],
     name="add_event",
     persistent=True,
+    allow_reentry=True,
     states={
         ChatAddEventState.EVENT_INFO: [
             MessageHandler(filters.TEXT & ~(filters.COMMAND), llm_processing)
@@ -193,3 +196,18 @@ create_story_handler = ConversationHandler(entry_points=[], states={}, fallbacks
 create_post_handler = ConversationHandler(entry_points=[], states={}, fallbacks=[])
 
 # endregion
+
+
+async def error_handler(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
+    """Log Errors caused by Updates."""
+    logger.error(
+        "Update '%s' caused error '%s'",
+        update,
+        context.error,
+    )
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="C'è stato un errore nell'elaborazione del mesaggio.\nProva a resettare il bot con il comando /done o contatta un amministratore se l'errore persiste.",
+    )
+
+    raise context.error

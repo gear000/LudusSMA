@@ -1,3 +1,4 @@
+import random
 import uuid
 import os
 from datetime import datetime, timedelta
@@ -13,7 +14,7 @@ def create_schedulers(event: Event):
     now = datetime.now()
     cron_expressions: list[dict] = [
         {
-            "cron": f"at({(event.start_date - timedelta(days=30)).strftime('%Y-%m-%dT10:00:00')})",
+            "cron": f"at({(event.start_date - timedelta(days=30)).strftime('%Y-%m-%dT10:{0}:00').format(str(random.randint(0, 59)).zfill(2))})",
             "name": f"{event_id}-FirstStoryBeforeEvent",
             # l'end_date serve solo a evitare di creare un scheduler che non avrà esecuzione.
             # In ogni caso questo campo non viene usato nello scheduler
@@ -22,13 +23,23 @@ def create_schedulers(event: Event):
         {
             "cron": "rate(7 days)",
             "name": f"{event_id}-EvenStoriesBeforeEvent",
-            "start_date": max((event.start_date - timedelta(days=25)), now),
+            "start_date": max(
+                (event.start_date - timedelta(days=25)).replace(
+                    hour=11, minute=random.randint(0, 59)
+                ),
+                now,
+            ),
             "end_date": max((event.start_date - timedelta(days=4)), now),
         },
         {
             "cron": "rate(7 days)",
             "name": f"{event_id}-OddStoriesBeforeEvent",
-            "start_date": max((event.start_date - timedelta(days=22)), now),
+            "start_date": max(
+                (event.start_date - timedelta(days=22)).replace(
+                    hour=11, minute=random.randint(0, 59)
+                ),
+                now,
+            ),
             "end_date": max((event.start_date - timedelta(days=8)), now),
         },
         {

@@ -120,7 +120,7 @@ Avoid adding intro, greetingsor other chit-chats and texts.
 ===============
 - If the report does not specify the end date, then the end date is the same as the start date. Do not ask the user this information.
 - If you are unsure about the description, do not infer it. Ask the user to provide the description.
-- Remember that midnight should always be formatted as 00:00.
+- Remember that midnight should always be formatted as 00:00, instead of 24:00.
 ===============
 
 ALWAYS ANSWER IN ITALIAN.
