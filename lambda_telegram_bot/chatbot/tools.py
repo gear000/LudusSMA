@@ -49,7 +49,7 @@ def create_schedulers(event: Event):
             schedule_expression=ce["cron"],
             target_arn=SQS_QUEUE_EVENTS_ARN,
             role_arn=IAM_ROLE_EVENT_SCHEDULER_ARN,
-            start_date=ce.get("start_date", datetime.min),
+            start_date=ce.get("start_date", datetime.now()),
             end_date=ce.get("end_date", datetime.max),
             event=event,
         )
