@@ -268,10 +268,6 @@ def create_scheduler(
                 "Arn": target_arn,
                 "RoleArn": role_arn,
                 "Input": event.model_dump_json(exclude_none=True),
-                "RetryPolicy": {
-                    "MaximumRetryAttempts": 0,
-                    "MaximumEventAgeInSeconds": 0,
-                },
             },
         )
     except Exception as e:
