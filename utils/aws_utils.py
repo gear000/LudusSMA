@@ -251,8 +251,8 @@ def create_scheduler(
     schedule_expression: str,
     target_arn: str,
     role_arn: str,
-    start_date: datetime | str,
-    end_date: datetime | str,
+    start_date: datetime,
+    end_date: datetime,
     event: Event,
 ):
     try:
