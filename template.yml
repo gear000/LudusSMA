@@ -188,8 +188,8 @@ Resources:
 
   LudusSMAAuthTgRequestsFunction:
     Type: AWS::Serverless::Function    
-    Name: auth-tg-requests
     Properties:
+      FunctionName: auth-tg-requests
       CodeUri: lambda_auth_tg_requests/
       Handler: main.lambda_handler
       Runtime: python3.11
@@ -212,8 +212,8 @@ Resources:
 
   LudusSMATelegramBotFunction:
     Type: AWS::Serverless::Function
-    Name: telegram-bot
     Properties:
+      FunctionName: telegram-bot
       CodeUri: lambda_telegram_bot/
       Handler: main.lambda_handler
       Runtime: python3.11
@@ -243,8 +243,8 @@ Resources:
 
   LudusSMACreateIGStoriesFunction:
     Type: AWS::Serverless::Function
-    Name: create-ig-stories
     Properties:
+      FunctionName: create-ig-stories
       CodeUri: lambda_create_ig_stories/
       Handler: main.lambda_handler
       Runtime: python3.11

@@ -1,5 +1,6 @@
 import boto3
 
+from datetime import datetime
 from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
 from .logger_utils import *
 from .models.model_utils import Event
@@ -250,6 +251,8 @@ def create_scheduler(
     schedule_expression: str,
     target_arn: str,
     role_arn: str,
+    start_date: datetime | str,
+    end_date: datetime | str,
     event: Event,
 ):
     try:
@@ -257,14 +260,18 @@ def create_scheduler(
             ActionAfterCompletion="DELETE",
             Name=name_schudeler,
             ScheduleExpression=schedule_expression,
-            StartDate=event.start_date,
-            EndDate=event.end_date,
+            StartDate=start_date,
+            EndDate=end_date,
             State="ENABLED",
             FlexibleTimeWindow={"MaximumWindowInMinutes": 10, "Mode": "FLEXIBLE"},
             Target={
                 "Arn": target_arn,
                 "RoleArn": role_arn,
                 "Input": event.model_dump_json(exclude_none=True),
+                "RetryPolicy": {
+                    "MaximumRetryAttempts": 0,
+                    "MaximumEventAgeInSeconds": 0,
+                },
             },
         )
     except Exception as e:
