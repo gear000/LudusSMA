@@ -7,7 +7,10 @@ from telegram.ext import Application
 
 from utils.logger_utils import *
 from utils.aws_utils import get_parameter, delete_message_from_sqs_queue
-from utils.telegram_utils import get_chat_persistence, upload_chat_persistence
+from utils.telegram_utils import (
+    initialize_app,
+    upload_chat_persistence,
+)
 
 from handlers.orchestrator_handler import get_orchestrator_handler
 from handlers.operations_handler import error_handler
@@ -16,21 +19,6 @@ from handlers.operations_handler import error_handler
 ### Constants ###
 
 S3_BUCKET_IMAGES_NAME = os.environ["S3_BUCKET_IMAGES_NAME"]
-TELEGRAM_TOKEN = get_parameter(parameter_name="/telegram/bot-token", is_secure=True)
-
-
-def initialize_app() -> Application:
-    """
-    Initialize the Telegram bot app
-    """
-    chat_percistence_state = get_chat_persistence()
-    app = (
-        Application.builder()
-        .token(TELEGRAM_TOKEN)
-        .persistence(chat_percistence_state)
-        .build()
-    )
-    return app
 
 
 async def process_update(app: Application, update: Update):
@@ -55,8 +43,6 @@ def lambda_handler(event: dict, context):
     sqs_record: dict = event.get("Records")[0]
     logger.info(f"Received event: {sqs_record.get('body')}")
 
-    sqs_receipt_handle: str = sqs_record.get("receiptHandle")
-
     app = initialize_app()
 
     update = Update.de_json(json.loads(sqs_record.get("body")), app.bot)
@@ -77,11 +63,6 @@ def lambda_handler(event: dict, context):
     app.add_error_handler(error_handler)
     asyncio.run(process_update(app=app, update=update))
 
-    delete_message_from_sqs_queue(
-        queue_name=os.getenv("SQS_QUEUE_TELEGRAM_UPDATES_NAME"),
-        receipt_handle=sqs_receipt_handle,
-    )
-
     return {"statusCode": 200, "body": "Elaboration completed"}
 
 
@@ -90,6 +71,9 @@ if __name__ == "__main__":
     from telegram.ext import PicklePersistence
 
     langchain.debug = True
+
+    TELEGRAM_TOKEN = get_parameter(parameter_name="/telegram/bot-token", is_secure=True)
+
     app = (
         Application.builder()
         .token(TELEGRAM_TOKEN)

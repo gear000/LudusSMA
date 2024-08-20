@@ -1,3 +1,4 @@
+import uuid
 import boto3
 
 from datetime import datetime
@@ -211,7 +212,12 @@ def clear_history(
 # region SQS
 
 
-def send_message_in_sqs_queue(queue_name: str, message: dict):
+def send_message_in_sqs_queue(
+    queue_name: str,
+    message: dict,
+    message_deduplication_id: str = uuid.uuid4().hex(),
+    message_group_id: str = "default",
+):
     """
     Sends a message in a SQS queue.
 
@@ -220,7 +226,12 @@ def send_message_in_sqs_queue(queue_name: str, message: dict):
         `message` (dict): The message to send.
     """
     try:
-        _SQS_CLIENT.send_message(QueueUrl=queue_name, MessageBody=message)
+        _SQS_CLIENT.send_message(
+            QueueUrl=queue_name,
+            MessageBody=message,
+            MessageDeduplicationId=message_deduplication_id,
+            MessageGroupId=message_group_id,
+        )
         logger.info("Message sent successfully")
     except (NoCredentialsError, PartialCredentialsError) as e:
         logger.error("Error in saving record: ", e)

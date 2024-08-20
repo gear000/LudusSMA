@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 
 Description: AWS CodePipeline for a Serverless Application
@@ -23,38 +23,50 @@ Parameters:
   MetaAccessTokenKeyParameter:
     Type: String
     Default: /meta/access-token
-    Description: The key of SSM parameter that contains the Access Token of Meta Account    
+    Description: The key of SSM parameter that contains the Access Token of Meta Account
 
 Resources:
-
   ### IAM ROLE ###
 
   LudusSMALambdaRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
             Action:
-              - 'sts:AssumeRole'
-  
+              - "sts:AssumeRole"
+
   LudusSMAEventSchedulerRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
               Service:
                 - scheduler.amazonaws.com
             Action:
-              - 'sts:AssumeRole'
-              
+              - "sts:AssumeRole"
+
+  LudusSMAPipeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - pipes.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
   ### IAM POLICY ###
 
   LudusSMALambdaPolicy:
@@ -64,59 +76,59 @@ Resources:
       Roles:
         - !Ref LudusSMALambdaRole
       PolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Action:
-              - 'logs:*'
-            Resource: '*'
+              - "logs:*"
+            Resource: "*"
           - Effect: Allow
             Action:
-              - 'dynamodb:GetItem'
-              - 'dynamodb:PutItem'
-              - 'dynamodb:UpdateItem'           
-            Resource: !GetAtt 'LudusSMAChatsHistoryDynamoDBTable.Arn'
+              - "dynamodb:GetItem"
+              - "dynamodb:PutItem"
+              - "dynamodb:UpdateItem"
+            Resource: !GetAtt "LudusSMAChatsHistoryDynamoDBTable.Arn"
           - Effect: Allow
             Action:
-              - 'ssm:GetParameter'
+              - "ssm:GetParameter"
             Resource:
-              - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/telegram/*'
-              - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/meta/*'            
+              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/telegram/*"
+              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/meta/*"
           - Effect: Allow
             Action:
-              - 'sqs:ReceiveMessage'
-              - 'sqs:DeleteMessage' 
-              - 'sqs:GetQueueAttributes'             
+              - "sqs:ReceiveMessage"
+              - "sqs:DeleteMessage"
+              - "sqs:GetQueueAttributes"
             Resource:
-              - !GetAtt 'LudusSMAEventsSQSQueue.Arn'
-              - !GetAtt 'LudusSMATelegramUpdatesSQSQueue.Arn'
+              - !GetAtt "LudusSMAEventsSQSQueue.Arn"
+              - !GetAtt "LudusSMATelegramUpdatesSQSQueue.Arn"
           - Effect: Allow
             Action:
-              - 'sqs:SendMessage'
-            Resource: !GetAtt 'LudusSMATelegramUpdatesSQSQueue.Arn'
+              - "sqs:SendMessage"
+            Resource: !GetAtt "LudusSMATelegramUpdatesSQSQueue.Arn"
           - Effect: Allow
             Action:
-              - 's3:GetObject'
-              - 's3:PutObject'
-              - 's3:ListBucket'
-              - 's3:ListObjects'
+              - "s3:GetObject"
+              - "s3:PutObject"
+              - "s3:ListBucket"
+              - "s3:ListObjects"
             Resource:
-              - !GetAtt 'LudusSMAImagesBucket.Arn'
-              - !Sub '${LudusSMAImagesBucket.Arn}/*'
-              - !GetAtt 'LudusSMAChatPersistenceBucket.Arn'
-              - !Sub '${LudusSMAChatPersistenceBucket.Arn}/*'
+              - !GetAtt "LudusSMAImagesBucket.Arn"
+              - !Sub "${LudusSMAImagesBucket.Arn}/*"
+              - !GetAtt "LudusSMAChatPersistenceBucket.Arn"
+              - !Sub "${LudusSMAChatPersistenceBucket.Arn}/*"
           - Effect: Allow
             Action:
-              - 'scheduler:CreateSchedule'
-            Resource: !Sub 'arn:aws:scheduler:${AWS::Region}:${AWS::AccountId}:schedule/*'
+              - "scheduler:CreateSchedule"
+            Resource: !Sub "arn:aws:scheduler:${AWS::Region}:${AWS::AccountId}:schedule/*"
           - Effect: Allow
             Action:
-              - 'iam:PassRole'
-            Resource: !GetAtt 'LudusSMAEventSchedulerRole.Arn'
+              - "iam:PassRole"
+            Resource: !GetAtt "LudusSMAEventSchedulerRole.Arn"
           - Effect: Allow
             Action:
-              - 'bedrock:InvokeModel'
-            Resource: 'arn:aws:bedrock:*'
+              - "bedrock:InvokeModel"
+            Resource: "arn:aws:bedrock:*"
 
   LudusSMAEventSchedulerPolicy:
     Type: AWS::IAM::Policy
@@ -125,12 +137,33 @@ Resources:
       Roles:
         - !Ref LudusSMAEventSchedulerRole
       PolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Action:
-              - 'sqs:SendMessage'
-            Resource: !GetAtt 'LudusSMAEventsSQSQueue.Arn'
+              - "sqs:SendMessage"
+            Resource: !GetAtt "LudusSMAEventsSQSQueue.Arn"
+
+  LudusSMAPipePolicy:
+    Type: AWS::IAM::RolePolicy
+    Properties:
+      PolicyName: LudusSMAPipePolicy
+      RoleName:
+        Ref: LudusSMAPipeRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "sqs:ReceiveMessage"
+              - "sqs:DeleteMessage"
+              - "sqs:GetQueueAttributes"
+            Resource:
+              - !GetAtt "LudusSMAErrorNotificationSQSQueue.Arn"
+          - Effect: Allow
+            Action:
+              - sns:Publish
+            Resource: !Ref LudusSMAErrorSNSTopic
 
   ### PARAMETER ###
 
@@ -146,7 +179,7 @@ Resources:
       BucketName: ludussma-images
       VersioningConfiguration:
         Status: Enabled
-  
+
   LudusSMAChatPersistenceBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -170,7 +203,7 @@ Resources:
         - AttributeName: user_id
           KeyType: HASH
 
-### SQS QUEUE ###
+  ### SQS QUEUE ###
 
   LudusSMAEventsSQSQueue:
     Type: AWS::SQS::Queue
@@ -181,13 +214,64 @@ Resources:
   LudusSMATelegramUpdatesSQSQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: TelegramUpdates
+      QueueName: TelegramUpdates.fifo
+      FifoQueue: true
+      ContentBasedDeduplication: true
+      FifoThroughputLimit: perMessageGroupId
+      DeduplicationScope: messageGroup
       VisibilityTimeout: 300
-        
-### LAMBDA FUNCTIONS ###
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt LudusSMAErrorNotificationSQSQueue.Arn
+        maxReceiveCount: 1
+
+  LudusSMAErrorNotificationSQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: ErrorNotification.fifo
+      RedriveAllowPolicy:
+        redrivePermission: byQueue
+        queue: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:*.fifo
+
+  ### SNS TOPIC ###
+
+  LudusSMAErrorSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: error-notification
+      DisplayName: Error Notification
+
+  LudusSMAErrorSNSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref LudusSMAErrorSNSTopic
+      Protocol: email
+      Endpoint: d.franzoni.97@gmail.com
+
+  ### EVENTBRIDGE PIPE ###
+
+  LudusSMAPipeErrorNotification:
+    Type: AWS::Pipes::Pipe
+    Properties:
+      RoleArn: !GetAtt LudusSMAPipeRole.Arn
+      Name: error-notification
+      DesiredState: RUNNING
+      Source: !GetAtt LudusSMAErrorNotificationSQSQueue.Arn
+      SourceParameters:
+        SqsQueueParameters:
+          BatchSize: 5
+          MaximumBatchingWindowInSeconds: 30
+      TargetParameters:
+        InputTemplate: |-
+          {
+            "body": <$.body>,
+            "eventSourceARN": <$.eventSourceARN>
+          }
+      Target: !Ref LudusSMAErrorSNSTopic
+
+  ### LAMBDA FUNCTIONS ###
 
   LudusSMAAuthTgRequestsFunction:
-    Type: AWS::Serverless::Function    
+    Type: AWS::Serverless::Function
     Properties:
       FunctionName: auth-tg-requests
       CodeUri: lambda_auth_tg_requests/
@@ -264,9 +348,9 @@ Resources:
           Type: SQS
           Properties:
             Queue: !GetAtt LudusSMAEventsSQSQueue.Arn
-            BatchSize: 1      
+            BatchSize: 1
 
-### LAMBDA LAYER ###
+  ### LAMBDA LAYER ###
 
   LudusSMALambdaLayer:
     Type: AWS::Serverless::LayerVersion
@@ -277,4 +361,3 @@ Resources:
       ContentUri: utils.zip
       CompatibleRuntimes:
         - python3.11
-

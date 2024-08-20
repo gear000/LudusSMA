@@ -3,10 +3,11 @@ import os
 import telegram
 
 from .logger_utils import *
-from .aws_utils import get_s3_object, put_s3_object
+from .aws_utils import get_parameter, get_s3_object, put_s3_object
 
-from telegram.ext import PicklePersistence
+from telegram.ext import PicklePersistence, Application
 
+TELEGRAM_TOKEN = get_parameter(parameter_name="/telegram/bot-token", is_secure=True)
 _S3_BUCKET_CHAT_PERSISTENCE_NAME = os.getenv("S3_BUCKET_CHAT_PERSISTENCE_NAME")
 _CHAT_PERSISTENCE_STATE = "telegram_chat_persistence_state"
 
@@ -54,3 +55,17 @@ def upload_chat_persistence() -> bool:
             body=f.read(),
         )
         return True
+
+
+def initialize_app() -> Application:
+    """
+    Initialize the Telegram bot app
+    """
+    chat_percistence_state = get_chat_persistence()
+    app = (
+        Application.builder()
+        .token(TELEGRAM_TOKEN)
+        .persistence(chat_percistence_state)
+        .build()
+    )
+    return app
