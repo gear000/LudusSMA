@@ -24,6 +24,10 @@ Parameters:
     Type: String
     Default: /meta/access-token
     Description: The key of SSM parameter that contains the Access Token of Meta Account
+  SQSTelegramUpdatesName:
+    Type: String
+    Default: TelegramUpdates.fifo
+    Description: The name of SQS queue that contains Telegram updates
 
 Resources:
   ### IAM ROLE ###
@@ -214,7 +218,7 @@ Resources:
   LudusSMATelegramUpdatesSQSQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: TelegramUpdates2.fifo
+      QueueName: !Ref SQSTelegramUpdatesName
       FifoQueue: true
       ContentBasedDeduplication: true
       FifoThroughputLimit: perMessageGroupId
@@ -232,7 +236,7 @@ Resources:
       RedriveAllowPolicy: !Sub |-
         {
           "redrivePermission": "byQueue",
-          "sourceQueueArns": ["arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:*.fifo"]
+          "sourceQueueArns": ["arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${SQSTelegramUpdatesName}"]
         }
 
   ### SNS TOPIC ###
