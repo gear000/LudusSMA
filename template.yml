@@ -232,7 +232,7 @@ Resources:
       RedriveAllowPolicy: !Sub |-
         {
           "redrivePermission": "byQueue",
-          "queue": [arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:*.fifo]
+          "sourceQueueArns": [arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:*.fifo]
         }
 
   ### SNS TOPIC ###
