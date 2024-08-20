@@ -228,9 +228,12 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: ErrorNotification
-      RedriveAllowPolicy:
-        redrivePermission: byQueue
-        queue: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:*.fifo
+      FifoQueue: true
+      RedriveAllowPolicy: !Sub |-
+        {
+          "redrivePermission": "byQueue",
+          "queue": [arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:*.fifo]
+        }
 
   ### SNS TOPIC ###
 
