@@ -263,10 +263,6 @@ Resources:
       Name: error-notification
       DesiredState: RUNNING
       Source: !GetAtt LudusSMAErrorNotificationSQSQueue.Arn
-      SourceParameters:
-        SqsQueueParameters:
-          BatchSize: 5
-          MaximumBatchingWindowInSeconds: 30
       TargetParameters:
         InputTemplate: |-
           {
