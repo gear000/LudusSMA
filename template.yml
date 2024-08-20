@@ -214,7 +214,7 @@ Resources:
   LudusSMATelegramUpdatesSQSQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: TelegramUpdates.fifo
+      QueueName: TelegramUpdates2
       FifoQueue: true
       ContentBasedDeduplication: true
       FifoThroughputLimit: perMessageGroupId
@@ -227,7 +227,7 @@ Resources:
   LudusSMAErrorNotificationSQSQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: ErrorNotification.fifo
+      QueueName: ErrorNotification
       RedriveAllowPolicy:
         redrivePermission: byQueue
         queue: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:*.fifo
