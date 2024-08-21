@@ -148,26 +148,26 @@ Resources:
               - "sqs:SendMessage"
             Resource: !GetAtt "LudusSMAEventsSQSQueue.Arn"
 
-  # LudusSMAPipePolicy:
-  #   Type: AWS::IAM::RolePolicy
-  #   Properties:
-  #     PolicyName: LudusSMAPipePolicy
-  #     RoleName:
-  #       Ref: LudusSMAPipeRole
-  #     PolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Effect: Allow
-  #           Action:
-  #             - "sqs:ReceiveMessage"
-  #             - "sqs:DeleteMessage"
-  #             - "sqs:GetQueueAttributes"
-  #           Resource:
-  #             - !GetAtt "LudusSMAErrorNotificationSQSQueue.Arn"
-  #         - Effect: Allow
-  #           Action:
-  #             - sns:Publish
-  #           Resource: !Ref LudusSMAErrorSNSTopic
+  LudusSMAPipePolicy:
+    Type: AWS::IAM::RolePolicy
+    Properties:
+      PolicyName: LudusSMAPipePolicy
+      RoleName:
+        Ref: LudusSMAPipeRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "sqs:ReceiveMessage"
+              - "sqs:DeleteMessage"
+              - "sqs:GetQueueAttributes"
+            Resource:
+              - !GetAtt "LudusSMAErrorNotificationSQSQueue.Arn"
+          - Effect: Allow
+            Action:
+              - sns:Publish
+            Resource: !Ref LudusSMAErrorSNSTopic
 
   ### PARAMETER ###
 
@@ -241,35 +241,35 @@ Resources:
 
   ### SNS TOPIC ###
 
-  # LudusSMAErrorSNSTopic:
-  #   Type: AWS::SNS::Topic
-  #   Properties:
-  #     TopicName: error-notification
-  #     DisplayName: Error Notification
+  LudusSMAErrorSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: error-notification
+      DisplayName: Error Notification
 
-  # LudusSMAErrorSNSSubscription:
-  #   Type: AWS::SNS::Subscription
-  #   Properties:
-  #     TopicArn: !Ref LudusSMAErrorSNSTopic
-  #     Protocol: email
-  #     Endpoint: d.franzoni.97@gmail.com
+  LudusSMAErrorSNSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref LudusSMAErrorSNSTopic
+      Protocol: email
+      Endpoint: d.franzoni.97@gmail.com
 
   ### EVENTBRIDGE PIPE ###
 
-  # LudusSMAPipeErrorNotification:
-  #   Type: AWS::Pipes::Pipe
-  #   Properties:
-  #     RoleArn: !GetAtt LudusSMAPipeRole.Arn
-  #     Name: error-notification
-  #     DesiredState: RUNNING
-  #     Source: !GetAtt LudusSMAErrorNotificationSQSQueue.Arn
-  #     TargetParameters:
-  #       InputTemplate: |-
-  #         {
-  #           "body": <$.body>,
-  #           "eventSourceARN": <$.eventSourceARN>
-  #         }
-  #     Target: !Ref LudusSMAErrorSNSTopic
+  LudusSMAPipeErrorNotification:
+    Type: AWS::Pipes::Pipe
+    Properties:
+      RoleArn: !GetAtt LudusSMAPipeRole.Arn
+      Name: error-notification
+      DesiredState: RUNNING
+      Source: !GetAtt LudusSMAErrorNotificationSQSQueue.Arn
+      TargetParameters:
+        InputTemplate: |-
+          {
+            "body": <$.body>,
+            "eventSourceARN": <$.eventSourceARN>
+          }
+      Target: !Ref LudusSMAErrorSNSTopic
 
   ### LAMBDA FUNCTIONS ###
 
@@ -288,6 +288,7 @@ Resources:
         Variables:
           TELEGRAM_HEADER_WEBHOOK_TOKEN: !Ref TelegramHeaderWebhookTokenKeyParameter
           SQS_QUEUE_TELEGRAM_UPDATES_NAME: !GetAtt LudusSMATelegramUpdatesSQSQueue.QueueName
+          S3_BUCKET_CHAT_PERSISTENCE_NAME: !Ref LudusSMAChatPersistenceBucket
       Layers:
         - !Ref LudusSMALambdaLayer
       Events:
