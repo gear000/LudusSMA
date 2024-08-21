@@ -215,7 +215,7 @@ def clear_history(
 def send_message_in_sqs_queue(
     queue_name: str,
     message: dict,
-    message_deduplication_id: str = uuid.uuid4().hex(),
+    message_deduplication_id: str = uuid.uuid4().hex,
     message_group_id: str = "default",
 ):
     """
