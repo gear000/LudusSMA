@@ -43,11 +43,13 @@ def lambda_handler(event: dict, context):
     sqs_record: dict = event.get("Records")[0]
     logger.info(f"Received event: {sqs_record.get('body')}")
 
-    update = Update.de_json(json.loads(sqs_record.get("body")))
+    update_json = json.loads(sqs_record.get("body"))
+
+    update = Update.de_json(update_json)
     chat_id = update.effective_chat.id
 
     app = initialize_app(str(chat_id))
-    update.effective_chat.set_bot(app.bot)
+    update = Update.de_json(data=update_json, bot=app.bot)
 
     try:
         logger.info(f"Is bot well set?: {update.message.get_bot()}")
