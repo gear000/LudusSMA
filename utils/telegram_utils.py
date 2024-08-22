@@ -49,13 +49,19 @@ def upload_chat_persistence(chat_id: str) -> bool:
     """
     Upload the chat persistence file from local to S3.
     """
-    with open(f"/tmp/{_CHAT_PERSISTENCE_STATE}", "rb") as f:
-        put_s3_object(
-            bucket_name=_S3_BUCKET_CHAT_PERSISTENCE_NAME,
-            object_key="/".join([chat_id, _CHAT_PERSISTENCE_STATE]),
-            body=f.read(),
-        )
+    try:
+        with open(f"/tmp/{_CHAT_PERSISTENCE_STATE}", "rb") as f:
+            put_s3_object(
+                bucket_name=_S3_BUCKET_CHAT_PERSISTENCE_NAME,
+                object_key="/".join([chat_id, _CHAT_PERSISTENCE_STATE]),
+                body=f.read(),
+            )
         return True
+    except FileNotFoundError:
+        logger.error(
+            "Probably there was an error in update elaboration. No chat persistence was created."
+        )
+        return False
 
 
 def initialize_app(chat_id: str = "default") -> Application:
