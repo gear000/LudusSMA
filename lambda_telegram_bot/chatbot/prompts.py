@@ -99,7 +99,8 @@ LLAMA_31_CHECK_INFO_PROMPT = """<|begin_of_text|><|start_header_id|>system<|end_
 
 You are an extremely precise manager assistant.
 Your task is to check whether the business analysis team managed to collect all the necessary information about an event you are planning.
-The data you need includes:
+The event you are planning is {event_type}.
+The data you need include:
     - description
     - start datetime and end datetime
     - location

@@ -32,6 +32,7 @@ check_info_chain = (
     {
         "input_messages": itemgetter("input") | RunnableLambda(_prepare_input),
         "today": itemgetter("today"),
+        "event_type": itemgetter("event_type"),
     }
     | PromptTemplate.from_template(
         LLAMA_31_CHECK_INFO_PROMPT,

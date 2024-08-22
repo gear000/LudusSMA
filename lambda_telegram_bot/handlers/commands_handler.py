@@ -27,27 +27,27 @@ async def start(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
         [
             InlineKeyboardButton(
                 text="Aggiungere un evento",
-                callback_data=str(ChatOrchestratorState.ADD_EVENT.value),
+                callback_data=str(ChatOrchestratorState.ADD_EVENT),
             ),
             InlineKeyboardButton(
                 text="Cancellare un evento",
-                callback_data=str(ChatOrchestratorState.DELETE_EVENT.value),
+                callback_data=str(ChatOrchestratorState.DELETE_EVENT),
             ),
         ],
         [
             InlineKeyboardButton(
                 text="Aggiorna il tipo di eventi",
-                callback_data=str(ChatOrchestratorState.MANAGE_EVENT_TYPE.value),
+                callback_data=str(ChatOrchestratorState.MANAGE_EVENT_TYPE),
             ),
         ],
         [
             InlineKeyboardButton(
                 text="Creare una storia",
-                callback_data=str(ChatOrchestratorState.CREATE_STORY.value),
+                callback_data=str(ChatOrchestratorState.CREATE_STORY),
             ),
             InlineKeyboardButton(
                 text="Creare un post",
-                callback_data=str(ChatOrchestratorState.CREATE_POST.value),
+                callback_data=str(ChatOrchestratorState.CREATE_POST),
             ),
         ],
     ]

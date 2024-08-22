@@ -120,7 +120,11 @@ async def llm_processing(update: telegram.Update, context: ContextTypes.DEFAULT_
         context.user_data[ContextKeys.CONTEXT] = [("user", text)]
 
     response: OutputCreateEvent = check_info_chain.invoke(
-        {"input": context.user_data[ContextKeys.CONTEXT], "today": date.today()}
+        {
+            "input": context.user_data[ContextKeys.CONTEXT],
+            "today": date.today(),
+            "event_type": context.user_data[ContextKeys.EVENT_TYPE],
+        }
     )
     clarification = response.clarification
     if clarification:
