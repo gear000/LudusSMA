@@ -33,7 +33,7 @@ def get_orchestrator_handler() -> ConversationHandler:
             CommandHandler("help", help),
             CommandHandler("add_event", add_event),
             CommandHandler("delete_event", delete_event),
-            CommandHandler("manage_event_images", manage_event_images),
+            CommandHandler("manage_event_type", manage_event_type),
             CommandHandler("create_story", create_story),
             CommandHandler("create_post", create_post),
         ],
@@ -42,9 +42,10 @@ def get_orchestrator_handler() -> ConversationHandler:
         persistent=True,
         states={
             ChatOrchestratorState.SELECTING_ACTION: [
-                CallbackQueryHandler(selecting_action_handler)
+                CallbackQueryHandler(selecting_action_handler, pattern="^.*$")
             ],
             ChatOrchestratorState.ADD_EVENT: [add_event_handler],
+            ChatOrchestratorState.MANAGE_EVENT_TYPE: [manage_event_type_handler],
         },
         fallbacks=[
             MessageHandler(filters.Regex("^Done$"), done),

@@ -4,7 +4,6 @@ from telegram import Update
 
 import utils.aws_utils as aws_utils
 from utils.logger_utils import *
-from utils.telegram_utils import initialize_app
 
 
 def lambda_handler(event: dict, context):
@@ -20,9 +19,7 @@ def lambda_handler(event: dict, context):
     if client_secret != SECRET_TOKEN:
         return {"statusCode": 401, "body": "Unauthorized"}
     else:
-        app = initialize_app()
-
-        update = Update.de_json(json.loads(event.get("body")), app.bot)
+        update = Update.de_json(data=json.loads(event.get("body")))
         aws_utils.send_message_in_sqs_queue(
             queue_name=os.getenv("SQS_QUEUE_TELEGRAM_UPDATES_NAME"),
             message=event.get("body", {}),

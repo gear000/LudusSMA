@@ -11,7 +11,7 @@ __all__ = [
     "help",
     "add_event",
     "delete_event",
-    "manage_event_images",
+    "manage_event_type",
     "create_story",
     "create_post",
     "done",
@@ -36,7 +36,7 @@ async def start(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
         ],
         [
             InlineKeyboardButton(
-                text="Aggiorna le immagini degli eventi",
+                text="Aggiorna il tipo di eventi",
                 callback_data=str(ChatOrchestratorState.MANAGE_EVENT_IMAGES.value),
             ),
         ],
@@ -64,23 +64,12 @@ async def start(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
     return ChatOrchestratorState.SELECTING_ACTION
 
 
-async def help(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
-
-    await update.message.reply_text(
-        "Al momento non sono in grado di fare molto... ma imparo in fretta e sto migliorando giorno dopo giorno!\n"
-        "Ecco i comandi che al momento sono disponibili e cosa posso fare:\n"
-        "  - /start: il comando con cui mi presento.\n"
-        "  - /event: ti guido nella creazione di un evento, sulla base di questo verranno create delle storie su Instagram."
-    )
-    return ConversationHandler.END
-
-
 async def add_event(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
 
     event_types = [
         elem.strip("/").split("/")[-1].title()
         for elem in list_s3_folders(S3_BUCKET_IMAGES_NAME, "clean-images/")
-    ] + ["Altro"]
+    ]
 
     inline_keyboard_buttons = [
         InlineKeyboardButton(text=even_type, callback_data=even_type)
@@ -93,7 +82,7 @@ async def add_event(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE)
     ]
 
     markup = InlineKeyboardMarkup(buttons)
-    message = "Ottimo! che tipo di evento vuoi creare?"
+    message = "Ottimo! Che tipo di evento vuoi creare?\nSe non trovi il tipo di evento puoi aggiungerlo con il comando /manage_event_type."
 
     if update.message:
         await update.message.reply_text(
@@ -124,20 +113,37 @@ async def delete_event(update: telegram.Update, context: ContextTypes.DEFAULT_TY
     return ConversationHandler.END
 
 
-async def manage_event_images(
+async def manage_event_type(
     update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
 ):
 
-    message = "Questo comando non è ancora stato implementato."
-    if update.message:
-        await update.message.reply_text(text=message)
-    elif update.callback_query:
-        await update.callback_query.answer()
-        await update.callback_query.edit_message_text(
-            text=message,
-            reply_markup=[[]],
-        )
-    return ConversationHandler.END
+    buttons = [
+        [
+            InlineKeyboardButton(
+                text="Aggiungi un tipo di evento", callback_data="add_event_type"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Aggiorna un tipo di evento", callback_data="update_event_type"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Cancella un tipo di evento", callback_data="delete_event_type"
+            )
+        ],
+    ]
+
+    markup = InlineKeyboardMarkup(buttons)
+    message = "Va bene. Cosa vuoi fare? "
+
+    await update.message.reply_text(
+        text=message,
+        reply_markup=markup,
+    )
+
+    return ChatOrchestratorState.MANAGE_EVENT_TYPE
 
 
 async def create_story(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
@@ -172,9 +178,13 @@ async def help(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         "Ecco i comandi che al momento sono disponibili e cosa posso fare:\n"
-        "  - /start: il comando con cui mi presento e ti fornisco la lista delle funzionalità.\n"
-        "  - /add_event: ti guido nella creazione di un evento, sulla base di questo verranno create delle storie su Instagram."
+        "  - /start: Il comando con cui mi presento e ti fornisco la lista delle funzionalità.\n"
         "  - /done: Per resettare il processo e iniziare da capo.\n"
+        "  - /add_event: Ti guido nella creazione di un evento, sulla base di questo verranno create delle storie su Instagram.\n"
+        "  - /delete_event: questo comando non è ancora stato implementato.\n"
+        "  - /manage_event_type: Questo comando ti consente di aggiungere, aggiornare o cancellare un tipo di evento.\n"
+        "  - /create_story: questo comando non è ancora stato implementato.\n"
+        "  - /create_post: questo comando non è ancora stato implementato.\n",
     )
     return ConversationHandler.END
 

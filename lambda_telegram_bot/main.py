@@ -34,7 +34,7 @@ async def process_update(app: Application, update: Update):
     await app.process_update(update)
     await app.shutdown()
 
-    upload_chat_persistence()
+    upload_chat_persistence(str(update.effective_chat.id))
 
 
 def lambda_handler(event: dict, context):
@@ -43,10 +43,12 @@ def lambda_handler(event: dict, context):
     sqs_record: dict = event.get("Records")[0]
     logger.info(f"Received event: {sqs_record.get('body')}")
 
-    app = initialize_app()
-
-    update = Update.de_json(json.loads(sqs_record.get("body")), app.bot)
+    update = Update.de_json(json.loads(sqs_record.get("body")))
     chat_id = update.effective_chat.id
+
+    app = initialize_app(str(chat_id))
+    update.set_bot(app.bot)
+
     ALLOWED_CHAT_IDS = [
         int(chat_id)
         for chat_id in get_parameter(

@@ -25,7 +25,7 @@ def send_telegram_message(token: str, chat_id: str, message: str) -> None:
     asyncio.run(bot.send_message(chat_id=chat_id, text=message))
 
 
-def get_chat_persistence() -> PicklePersistence:
+def get_chat_persistence(chat_id: str) -> PicklePersistence:
     """
     Get the chat persistence from S3.
 
@@ -34,7 +34,8 @@ def get_chat_persistence() -> PicklePersistence:
     """
     try:
         telegram_chat_persistence_state = get_s3_object(
-            _S3_BUCKET_CHAT_PERSISTENCE_NAME, _CHAT_PERSISTENCE_STATE
+            _S3_BUCKET_CHAT_PERSISTENCE_NAME,
+            "/".join([chat_id, _CHAT_PERSISTENCE_STATE]),
         ).read()
         with open(f"/tmp/{_CHAT_PERSISTENCE_STATE}", "wb") as f:
             f.write(telegram_chat_persistence_state)
@@ -44,24 +45,24 @@ def get_chat_persistence() -> PicklePersistence:
     return PicklePersistence(filepath=f"/tmp/{_CHAT_PERSISTENCE_STATE}")
 
 
-def upload_chat_persistence() -> bool:
+def upload_chat_persistence(chat_id: str) -> bool:
     """
     Upload the chat persistence file from local to S3.
     """
     with open(f"/tmp/{_CHAT_PERSISTENCE_STATE}", "rb") as f:
         put_s3_object(
             bucket_name=_S3_BUCKET_CHAT_PERSISTENCE_NAME,
-            object_key=_CHAT_PERSISTENCE_STATE,
+            object_key="/".join([chat_id, _CHAT_PERSISTENCE_STATE]),
             body=f.read(),
         )
         return True
 
 
-def initialize_app() -> Application:
+def initialize_app(chat_id: str = "default") -> Application:
     """
     Initialize the Telegram bot app
     """
-    chat_percistence_state = get_chat_persistence()
+    chat_percistence_state = get_chat_persistence(chat_id)
     app = (
         Application.builder()
         .token(TELEGRAM_TOKEN)
