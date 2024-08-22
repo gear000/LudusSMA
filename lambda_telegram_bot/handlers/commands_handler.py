@@ -147,7 +147,7 @@ async def manage_event_type(
         await update.callback_query.answer()
         await update.callback_query.edit_message_text(
             text=message,
-            reply_markup=[[]],
+            reply_markup=markup,
         )
     return ChatOrchestratorState.MANAGE_EVENT_TYPE
 
@@ -198,6 +198,7 @@ async def help(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
 async def done(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
 
     message = "Ciao! A presto!"
+    context.user_data.clear()
     if update.message:
         await update.message.reply_text(
             text=message,

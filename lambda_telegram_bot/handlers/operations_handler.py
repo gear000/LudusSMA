@@ -42,18 +42,6 @@ __all__ = [
 S3_BUCKET_IMAGES_NAME = os.environ["S3_BUCKET_IMAGES_NAME"]
 
 
-async def done(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """End the conversation."""
-
-    await update.message.reply_text(
-        f"Lieto di esserti stato utile!",
-        reply_markup=ReplyKeyboardRemove(),
-    )
-
-    context.user_data.clear()
-    return ConversationHandler.END
-
-
 async def selecting_action_handler(
     update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
 ):
@@ -158,10 +146,8 @@ async def schedule_event(update: telegram.Update, context: ContextTypes.DEFAULT_
     await update.message.reply_text(
         f"Ho creato l'evento!",
     )
-    await done(update, context)
 
-    context.user_data.clear()
-    return ConversationHandler.END
+    return await done(update, context)
 
 
 add_event_handler = ConversationHandler(
