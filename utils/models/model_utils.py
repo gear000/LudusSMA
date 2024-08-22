@@ -4,26 +4,20 @@ from pydantic import BaseModel, Field, field_validator, ValidationInfo, model_va
 
 
 class Event(BaseModel):
-    title: str = Field(description="Title of the event", title="Titolo")
     description: str = Field(
-        description="Description of the event. It should't contain references to location or time and should be long 5/6 words or less",
-        title="Descrizione",
+        description="Description of the event. It must not contain references to location or time and must be 3 to 6 words long",
+        min_length=10,
     )
     start_date: datetime = Field(
         description="Start date of the event. Must be in the format %Y-%m-%dT%H:%M:%S",
-        title="Data di inizio",
     )
     end_date: datetime = Field(
         description="End date of the event. Must be in the format %Y-%m-%dT%H:%M:%S and must be after `start_date`",
-        title="Data di fine",
     )
-    location: str = Field(description="Location of the event", title="Luogo")
-    other_info: Optional[str] = Field(
-        description="Other information about the event", title="Altre informazioni"
-    )
+    location: str = Field(description="Location of the event")
+    other_info: Optional[str] = Field(description="Other information about the event")
     event_type: Optional[str] = Field(
         description="The type of event organised, such as tournaments or special evenings",
-        title="Tipo di evento",
     )
 
     def format_for_tg_message(self) -> str:
@@ -36,7 +30,7 @@ class Event(BaseModel):
         ### Output Example ###
 
         ```
-         - <b>Titolo</b>: <value>
+         - <b>Tipo di evento</b>: <value>
          - <b>Descrizione</b>: <value>
          - <b>Data di inizio</b>: <value>
          - <b>Data di fine</b>: <value>
@@ -48,7 +42,7 @@ class Event(BaseModel):
         """
 
         EVENT_KEYS = {
-            "title": "Titolo",
+            "event_type": "Tipo di evento",
             "description": "Descrizione",
             "start_date": "Data di inizio",
             "end_date": "Data di fine",
@@ -66,7 +60,12 @@ class Event(BaseModel):
         event_data["end_time"] = event_data["end_date"].time()
         event_data["end_date"] = event_data["end_date"].date()
 
-        facts = [f"<b>{EVENT_KEYS[key]}</b>: {event_data[key]}" for key in EVENT_KEYS]
+        facts = [
+            f"<b>{EVENT_KEYS[key]}</b>: {event_data[key]}"
+            for key in EVENT_KEYS
+            if event_data[key] is not None
+        ]
+
         return "\n\n - " + "\n - ".join(facts)
 
     def format_for_tg_message_(self) -> str:

@@ -21,7 +21,7 @@ from telegram.ext import (
 
 from utils.aws_utils import list_s3_folders
 from utils.logger_utils import *
-from utils.models.model_utils import OutputCreateEvent
+from utils.models.model_utils import Event, OutputCreateEvent
 
 from chatbot.tools import create_schedulers
 from chatbot.event_handler import check_info_chain
@@ -94,7 +94,6 @@ async def set_event(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE)
         await update.callback_query.edit_message_text(
             "Perfetto! 😊\n"
             "Per creare un evento ho bisogno di queste info:\n"
-            "  - il nome dell'evento;\n"
             "  - una descrizione dell'evento;\n"
             "  - quando sarà l'evento, cioè, data e ora di inizio e data e ora di fine;\n"
             "  - dove si terrà l'evento, cioè il nome del posto o l'indirizzo.",
@@ -116,9 +115,9 @@ async def llm_processing(update: telegram.Update, context: ContextTypes.DEFAULT_
     text = update.message.text
 
     if context.user_data.get(ContextKeys.CONTEXT):
-        context.user_data[ContextKeys.CONTEXT] += "\nAlice: " + text
+        context.user_data[ContextKeys.CONTEXT].append(("user", text))
     else:
-        context.user_data[ContextKeys.CONTEXT] = "Alice: " + text
+        context.user_data[ContextKeys.CONTEXT] = [("user", text)]
 
     response: OutputCreateEvent = check_info_chain.invoke(
         {"input": context.user_data[ContextKeys.CONTEXT], "today": date.today()}
@@ -129,16 +128,18 @@ async def llm_processing(update: telegram.Update, context: ContextTypes.DEFAULT_
             "Mmhh, qualcosa non va...\n" + clarification,
             reply_markup=ReplyKeyboardRemove(),
         )
-        context.user_data[ContextKeys.CONTEXT] += "\nBob: " + clarification
+        context.user_data[ContextKeys.CONTEXT].append(("assistant", clarification))
         return ChatAddEventState.EVENT_INFO
     else:
 
+        event: Event = response.event
+        event.event_type = context.user_data[ContextKeys.EVENT_TYPE]
         await update.message.reply_text(
-            "Bene, allora creo un evento con queste informazioni:"
-            + response.event.format_for_tg_message(),
+            "Bene, allora queste sono le informazioni che ho recuperato:"
+            + event.format_for_tg_message(),
             parse_mode=ParseMode.HTML,
         )
-        context.user_data[ContextKeys.EVENT] = response.event
+        context.user_data[ContextKeys.EVENT] = event
         markup = ReplyKeyboardMarkup([["Vai con l'evento!", "No, aspetta..."]])
         await update.message.reply_text("Cosa facciamo?", reply_markup=markup)
 

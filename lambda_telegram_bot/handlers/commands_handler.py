@@ -37,7 +37,7 @@ async def start(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
         [
             InlineKeyboardButton(
                 text="Aggiorna il tipo di eventi",
-                callback_data=str(ChatOrchestratorState.MANAGE_EVENT_IMAGES.value),
+                callback_data=str(ChatOrchestratorState.MANAGE_EVENT_TYPE.value),
             ),
         ],
         [
@@ -193,7 +193,10 @@ async def done(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
 
     message = "Ciao! A presto!"
     if update.message:
-        await update.message.reply_text(text=message)
+        await update.message.reply_text(
+            text=message,
+            reply_markup=ReplyKeyboardRemove(),
+        )
     elif update.callback_query:
         await update.callback_query.answer()
         await update.callback_query.edit_message_text(
