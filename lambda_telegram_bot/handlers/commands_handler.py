@@ -27,27 +27,27 @@ async def start(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
         [
             InlineKeyboardButton(
                 text="Aggiungere un evento",
-                callback_data=str(ChatOrchestratorState.ADD_EVENT),
+                callback_data=str(ChatOrchestratorState.ADD_EVENT.value),
             ),
             InlineKeyboardButton(
                 text="Cancellare un evento",
-                callback_data=str(ChatOrchestratorState.DELETE_EVENT),
+                callback_data=str(ChatOrchestratorState.DELETE_EVENT.value),
             ),
         ],
         [
             InlineKeyboardButton(
                 text="Aggiorna il tipo di eventi",
-                callback_data=str(ChatOrchestratorState.MANAGE_EVENT_TYPE),
+                callback_data=str(ChatOrchestratorState.MANAGE_EVENT_TYPE.value),
             ),
         ],
         [
             InlineKeyboardButton(
                 text="Creare una storia",
-                callback_data=str(ChatOrchestratorState.CREATE_STORY),
+                callback_data=str(ChatOrchestratorState.CREATE_STORY.value),
             ),
             InlineKeyboardButton(
                 text="Creare un post",
-                callback_data=str(ChatOrchestratorState.CREATE_POST),
+                callback_data=str(ChatOrchestratorState.CREATE_POST.value),
             ),
         ],
     ]
@@ -138,7 +138,7 @@ async def manage_event_type(
     markup = InlineKeyboardMarkup(buttons)
     message = "Va bene. Cosa vuoi fare? "
 
-    await update.message.reply_text(
+    await update.callback_query.edit_message_text(
         text=message,
         reply_markup=markup,
     )
