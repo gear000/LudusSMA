@@ -88,12 +88,6 @@ Resources:
             Resource: "*"
           - Effect: Allow
             Action:
-              - "dynamodb:GetItem"
-              - "dynamodb:PutItem"
-              - "dynamodb:UpdateItem"
-            Resource: !GetAtt "LudusSMAChatsHistoryDynamoDBTable.Arn"
-          - Effect: Allow
-            Action:
               - "ssm:GetParameter"
             Resource:
               - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/telegram/*"
@@ -301,7 +295,6 @@ Resources:
           TELEGRAM_ALLOW_CHAT_IDS: !Ref TelegramAllowChatIdsKeyParameter
           SQS_QUEUE_TELEGRAM_UPDATES_NAME: !GetAtt LudusSMATelegramUpdatesSQSQueue.QueueName
           SQS_QUEUE_EVENTS_ARN: !GetAtt LudusSMAEventsSQSQueue.Arn
-          DYNAMODB_TABLE_CHATS_HISTORY_NAME: !Ref LudusSMAChatsHistoryDynamoDBTable
           IAM_ROLE_EVENT_SCHEDULER_ARN: !GetAtt LudusSMAEventSchedulerRole.Arn
           S3_BUCKET_IMAGES_NAME: !Ref LudusSMAImagesBucket
           S3_BUCKET_CHAT_PERSISTENCE_NAME: !Ref LudusSMAChatPersistenceBucket

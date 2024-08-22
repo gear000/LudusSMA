@@ -1,5 +1,4 @@
 # bin/bash !
-export DYNAMODB_TABLE_CHATS_HISTORY_NAME="ChatsHistory"
 export IAM_ROLE_EVENT_SCHEDULER_ARN="arn:aws:iam::730335476244:role/LudusSMA-deployment-stack-LudusSMAEventSchedulerRol-K429Sfox4rqr"
 export S3_BUCKET_IMAGES_NAME="ludussma-images"
 export S3_BUCKET_CHAT_PERSISTENCE_NAME="ludussma-chat-persistence"

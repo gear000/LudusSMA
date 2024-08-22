@@ -40,7 +40,6 @@ __all__ = [
 ]
 
 S3_BUCKET_IMAGES_NAME = os.environ["S3_BUCKET_IMAGES_NAME"]
-DYNAMODB_TABLE_CHATS_HISTORY_NAME = os.environ["DYNAMODB_TABLE_CHATS_HISTORY_NAME"]
 
 
 async def done(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -64,7 +63,7 @@ async def selecting_action_handler(
             return await add_event(update, context)
         case ChatOrchestratorState.DELETE_EVENT:
             return await delete_event(update, context)
-        case ChatOrchestratorState.MANAGE_EVENT_IMAGES:
+        case ChatOrchestratorState.MANAGE_EVENT_TYPE:
             return await manage_event_type(update, context)
         case ChatOrchestratorState.CREATE_STORY:
             return await create_story(update, context)
