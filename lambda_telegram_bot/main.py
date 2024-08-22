@@ -47,7 +47,13 @@ def lambda_handler(event: dict, context):
     chat_id = update.effective_chat.id
 
     app = initialize_app(str(chat_id))
-    update.set_bot(app.bot)
+    update.effective_chat.set_bot(app.bot)
+
+    try:
+        logger.info(f"Is bot well set?: {update.message.get_bot()}")
+    except RuntimeError:
+        logger.error("Bot is not set")
+        return {"statusCode": 200, "body": "Bot is not set"}
 
     ALLOWED_CHAT_IDS = [
         int(chat_id)
