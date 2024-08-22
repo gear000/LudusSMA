@@ -108,7 +108,7 @@ async def delete_event(update: telegram.Update, context: ContextTypes.DEFAULT_TY
         await update.callback_query.answer()
         await update.callback_query.edit_message_text(
             text=message,
-            reply_markup=[[]],
+            reply_markup=InlineKeyboardMarkup([[]]),
         )
     return ConversationHandler.END
 
@@ -161,7 +161,7 @@ async def create_story(update: telegram.Update, context: ContextTypes.DEFAULT_TY
         await update.callback_query.answer()
         await update.callback_query.edit_message_text(
             text=message,
-            reply_markup=[[]],
+            reply_markup=InlineKeyboardMarkup([[]]),
         )
     return ConversationHandler.END
 
@@ -175,7 +175,7 @@ async def create_post(update: telegram.Update, context: ContextTypes.DEFAULT_TYP
         await update.callback_query.answer()
         await update.callback_query.edit_message_text(
             text=message,
-            reply_markup=[[]],
+            reply_markup=InlineKeyboardMarkup([[]]),
         )
     return ConversationHandler.END
 
@@ -208,6 +208,6 @@ async def done(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
         await update.callback_query.answer()
         await update.callback_query.edit_message_text(
             text=message,
-            reply_markup=[[]],
+            reply_markup=InlineKeyboardMarkup([[]]),
         )
     return ConversationHandler.END
