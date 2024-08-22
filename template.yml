@@ -191,29 +191,13 @@ Resources:
       VersioningConfiguration:
         Status: Enabled
 
-  ### DYNAMODB TABLES ###
-
-  LudusSMAChatsHistoryDynamoDBTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      BillingMode: PAY_PER_REQUEST
-      DeletionProtectionEnabled: true
-      TableName: ChatsHistory
-      TableClass: STANDARD
-      AttributeDefinitions:
-        - AttributeName: user_id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: user_id
-          KeyType: HASH
-
   ### SQS QUEUE ###
 
   LudusSMAEventsSQSQueue:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: ScheduledEvents
-      VisibilityTimeout: 300
+      VisibilityTimeout: 30
 
   LudusSMATelegramUpdatesSQSQueue:
     Type: AWS::SQS::Queue
@@ -223,7 +207,7 @@ Resources:
       ContentBasedDeduplication: true
       FifoThroughputLimit: perMessageGroupId
       DeduplicationScope: messageGroup
-      VisibilityTimeout: 300
+      VisibilityTimeout: 30
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt LudusSMAErrorNotificationSQSQueue.Arn
         maxReceiveCount: 1
@@ -281,6 +265,7 @@ Resources:
       Handler: main.lambda_handler
       Runtime: python3.11
       Timeout: 60
+      MemorySize: 256
       Architectures:
         - x86_64
       Role: !GetAtt LudusSMALambdaRole.Arn

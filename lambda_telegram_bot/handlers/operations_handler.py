@@ -272,7 +272,7 @@ async def error_handler(update: telegram.Update, context: ContextTypes.DEFAULT_T
     )
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="C'è stato un errore nell'elaborazione del mesaggio.\nProva a resettare il bot con il comando /done o contatta un amministratore se l'errore persiste.",
+        text="C'è stato un errore nell'elaborazione del messaggio.\nAspetta 30 secondi poi prova a resettare il bot con il comando /done o contatta un amministratore se l'errore persiste.",
     )
 
     raise context.error
