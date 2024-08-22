@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, field_validator, ValidationInfo, model_va
 class Event(BaseModel):
     description: str = Field(
         description="Description of the event. It must not contain references to location or time and must be 3 to 6 words long",
-        min_length=10,
+        min_length=1,
     )
     start_date: datetime = Field(
         description="Start date of the event. Must be in the format %Y-%m-%dT%H:%M:%S",
