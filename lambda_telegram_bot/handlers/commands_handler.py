@@ -138,11 +138,17 @@ async def manage_event_type(
     markup = InlineKeyboardMarkup(buttons)
     message = "Va bene. Cosa vuoi fare? "
 
-    await update.callback_query.edit_message_text(
-        text=message,
-        reply_markup=markup,
-    )
-
+    if update.message:
+        await update.message.reply_text(
+            text=message,
+            reply_markup=markup,
+        )
+    elif update.callback_query:
+        await update.callback_query.answer()
+        await update.callback_query.edit_message_text(
+            text=message,
+            reply_markup=[[]],
+        )
     return ChatOrchestratorState.MANAGE_EVENT_TYPE
 
 
