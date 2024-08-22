@@ -70,7 +70,7 @@ def lambda_handler(event: dict, context):
         return {"statusCode": 200, "body": "You are not allowed to use this bot"}
 
     app.add_handler(get_orchestrator_handler())
-    # app.add_error_handler(error_handler)
+    app.add_error_handler(error_handler)
     asyncio.run(process_update(app=app, update=update))
 
     return {"statusCode": 200, "body": "Elaboration completed"}
