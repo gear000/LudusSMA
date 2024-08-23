@@ -4,9 +4,8 @@ import boto3
 from PIL import Image
 from io import BytesIO
 
-from .image_editing import image_edit
-from .imgur_functions import load_imgur
-from .meta_functions import publish_story
+from image_editing import image_edit
+from meta_functions import publish_story
 
 from utils import aws_utils  # ricordati di spostare utils in lambda_functions
 from utils.telegram_utils import send_telegram_message
