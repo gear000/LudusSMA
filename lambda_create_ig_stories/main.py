@@ -1,17 +1,32 @@
-from utils import aws_utils  # ricordati di spostare utils in lambda_functions
-from utils.telegram_utils import send_telegram_message
+import json
 import boto3
-from image_editing import image_edit
-from imgur_functions import load_imgur
-from meta_functions import publish_story
+
 from PIL import Image
 from io import BytesIO
+
+from .image_editing import image_edit
+from .imgur_functions import load_imgur
+from .meta_functions import publish_story
+
+from utils import aws_utils  # ricordati di spostare utils in lambda_functions
+from utils.telegram_utils import send_telegram_message
+from utils.logger_utils import *
+
 
 ssm_client = boto3.client("ssm")
 s3_client = boto3.client("s3")
 
 
-def lambda_handler(event, context):
+def lambda_handler(event: dict, context):
+
+    logger.info(f"Received event: {event}")
+    logger.info(f"Received context: {context}")
+
+    sqs_record: dict = event.get("Records")[0]
+    logger.info(f"Received event: {sqs_record.get('body')}")
+
+    event_json = json.loads(sqs_record.get("body"))
+
     TELEGRAM_TOKEN = aws_utils.get_parameter(
         parameter_name="/telegram/bot-token", is_secure=True
     )
@@ -140,4 +155,6 @@ def _lambda_handler(event: dict, context):
 
 if __name__ == "__main__":
 
-    lambda_handler(1, 2)
+    with open("test/event.json", "r") as f:
+        event = f.read()
+        lambda_handler(event, None)
