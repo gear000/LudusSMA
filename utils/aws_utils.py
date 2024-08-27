@@ -56,6 +56,15 @@ def get_s3_object(bucket_name: str, object_key: str):
         return None
 
 
+def list_s3_objects(bucket_name: str, prefix: str) -> list[str]:
+    try:
+        response = _S3_CLIENT.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+        return response["Contents"]
+    except ClientError as e:
+        logger.error(f"An error occurred: {e}")
+        return None
+
+
 def put_s3_object(bucket_name: str, object_key: str, body):
     try:
         response = _S3_CLIENT.put_object(Bucket=bucket_name, Key=object_key, Body=body)
@@ -78,6 +87,18 @@ def delete_s3_object(bucket_name: str, object_key: str, recursive: bool = False)
         else:
             response = _S3_CLIENT.delete_object(Bucket=bucket_name, Key=object_key)
 
+        return response
+    except ClientError as e:
+        logger.error(f"An error occurred: {e}")
+        return None
+
+
+def move_s3_object(bucket_name: str, object_key: str, new_key: str):
+    try:
+        response = _S3_CLIENT.copy_object(
+            Bucket=bucket_name, Key=new_key, CopySource=f"{bucket_name}/{object_key}"
+        )
+        delete_s3_object(bucket_name=bucket_name, object_key=object_key)
         return response
     except ClientError as e:
         logger.error(f"An error occurred: {e}")

@@ -20,5 +20,8 @@ class ChatAddEventState(Enum):
 class ChatManageEventTypeState(Enum):
     SET_NEW_EVENT_TYPE = 1
     LOAD_IMAGE = 2
-    UPDATING_ACTION = 3
-    DELETING = 4
+    EXPOSE_UPDATING_ACTION = 3
+    SELECTING_UPDATING_ACTION = 4
+    UPDATE_LABEL = 5
+    UPDATE_IMAGE = 6
+    DELETING = 7

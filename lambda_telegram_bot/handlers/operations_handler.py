@@ -7,6 +7,7 @@ import telegram
 from telegram.constants import ParseMode
 
 from telegram import (
+    InlineKeyboardButton,
     InlineKeyboardMarkup,
     ReplyKeyboardMarkup,
     ReplyKeyboardRemove,
@@ -19,7 +20,13 @@ from telegram.ext import (
     filters,
 )
 
-from utils.aws_utils import delete_s3_object, put_s3_object
+from utils.aws_utils import (
+    delete_s3_object,
+    get_s3_object,
+    list_s3_objects,
+    move_s3_object,
+    put_s3_object,
+)
 from utils.formatter_utils import format_event_types
 from utils.telegram_utils import send_event_types
 from utils.logger_utils import *
@@ -223,6 +230,7 @@ async def create_new_event_type(
 
 
 async def request_image(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
+
     event_types = format_event_types()
 
     event_type = re.sub(r"[^a-zA-Z0-9 -]", "", update.message.text.strip())
@@ -259,14 +267,170 @@ async def load_image(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
 async def update_event_type(
     update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
 ):
-    is_any_event_type = await send_event_types(
+    are_there_event_type = await send_event_types(
         update,
         context,
         "Che tipologia di evento vuoi AGGIORNARE?",
     )
 
-    if is_any_event_type:
-        return ChatManageEventTypeState.UPDATING_ACTION
+    if are_there_event_type:
+        return ChatManageEventTypeState.EXPOSE_UPDATING_ACTION
+
+    return ConversationHandler.END
+
+
+async def expose_updating_action(
+    update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
+):
+    context.user_data[ContextKeys.EVENT_TYPE] = update.callback_query.data.lower()
+
+    buttons = [
+        [
+            InlineKeyboardButton(
+                text="Aggiorna label del tipo di evento",
+                callback_data="update_event_type_label",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Aggiorna immagine del tipo di evento",
+                callback_data="update_event_type_image",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Verifica l'immagine attuale",
+                callback_data="check_event_type_image",
+            )
+        ],
+    ]
+
+    markup = InlineKeyboardMarkup(buttons)
+    await update.callback_query.answer()
+    await update.callback_query.edit_message_text(
+        "Perfetto! Cosa vuoi fare?", reply_markup=markup
+    )
+    return ChatManageEventTypeState.SELECTING_UPDATING_ACTION
+
+
+async def update_event_type_label(
+    update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
+):
+    await update.callback_query.answer()
+    await update.callback_query.edit_message_text(
+        "Va bene! Quale nuova label vuoi dare a questo tipo di evento?"
+        "Ricorda che il titolo dovrebbe essere unico e molto coinciso.\n"
+        "Inoltre, ogni spazio sarà sostituito da un trattino ed ogni carattere speciale rimosso.",
+        reply_markup=InlineKeyboardMarkup([[]]),
+    )
+
+    return ChatManageEventTypeState.UPDATE_LABEL
+
+
+async def validate_label(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
+
+    event_types = format_event_types()
+
+    event_type = re.sub(r"[^a-zA-Z0-9 -]", "", update.message.text.strip())
+    event_type = event_type.replace(" ", "-").lower()
+
+    if event_type in event_types:
+        await update.message.reply_text(
+            "Purtroppo un altro evento ha lo stesso nome. Magari potremmo scegliere un altro titolo."
+        )
+        return ChatManageEventTypeState.UPDATE_LABEL
+    else:
+        images_list = list_s3_objects(
+            bucket_name=S3_BUCKET_IMAGES_NAME,
+            prefix=f"clean-images/{context.user_data[ContextKeys.EVENT_TYPE]}/",
+        )
+
+        image_key = [
+            image_key["Key"]
+            for image_key in images_list
+            if image_key["Key"].split(".")[-1] in ["jpg", "jpeg", "png"]
+        ].pop()
+
+        move_s3_object(
+            bucket_name=S3_BUCKET_IMAGES_NAME,
+            object_key=image_key,
+            new_key=f"clean-images/{event_type}/{image_key.split('/')[-1]}",
+        )
+
+        await update.message.reply_text(
+            f"Perfetto! La label è stata aggiornata da {context.user_data[ContextKeys.EVENT_TYPE]} a {event_type}."
+        )
+
+        return ConversationHandler.END
+
+
+async def update_event_type_image(
+    update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
+):
+    await update.callback_query.answer()
+    await update.callback_query.edit_message_text(
+        f"Ottimo! Carica pure la nuova immagine per {context.user_data[ContextKeys.EVENT_TYPE].title()}.\n"
+        "Ricorda che l'immagine dovrebbe avere dimensioni 1080 px per 1920 px (con proporzioni di 9:16).",
+        reply_markup=InlineKeyboardMarkup([[]]),
+    )
+
+    return ChatManageEventTypeState.UPDATE_IMAGE
+
+
+async def validate_image(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
+
+    delete_s3_object(
+        bucket_name=S3_BUCKET_IMAGES_NAME,
+        object_key=f"clean-images/{context.user_data[ContextKeys.EVENT_TYPE]}/",
+        recursive=True,
+    )
+
+    photo_file = await update.message.photo[-1].get_file()
+
+    put_s3_object(
+        bucket_name=S3_BUCKET_IMAGES_NAME,
+        object_key=f"clean-images/{context.user_data[ContextKeys.EVENT_TYPE]}/{photo_file.file_id}.jpg",
+        body=await photo_file.download_as_bytearray(),
+    )
+
+    await update.message.reply_text(
+        f"Perfetto! La nuova immagine per {context.user_data[ContextKeys.EVENT_TYPE]} è stata caricata"
+    )
+
+    return ConversationHandler.END
+
+
+async def check_event_type_image(
+    update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
+):
+    event_type: str = context.user_data[ContextKeys.EVENT_TYPE]
+
+    images_list = list_s3_objects(
+        bucket_name=S3_BUCKET_IMAGES_NAME,
+        prefix=f"clean-images/{event_type}/",
+    )
+
+    image_key = [
+        image_key["Key"]
+        for image_key in images_list
+        if image_key["Key"].split(".")[-1] in ["jpg", "jpeg", "png"]
+    ].pop()
+
+    event_image = get_s3_object(
+        bucket_name=S3_BUCKET_IMAGES_NAME,
+        object_key=image_key,
+    ).read()
+
+    await update.callback_query.answer()
+    await update.callback_query.edit_message_text(
+        f"Ecco l'immagine per il tipo di evento {event_type.title()}",
+        reply_markup=InlineKeyboardMarkup([[]]),
+    )
+
+    await context.bot.send_photo(
+        chat_id=update.effective_chat.id,
+        photo=event_image,
+    )
 
     return ConversationHandler.END
 
@@ -294,7 +458,8 @@ async def deleting_event_type(
     )
     await update.callback_query.answer()
     await update.callback_query.edit_message_text(
-        "Il tipo di evento è stato cancellato!", reply_markup=InlineKeyboardMarkup([[]])
+        f"Il tipo di evento: {update.callback_query.data.title()} è stato cancellato!",
+        reply_markup=InlineKeyboardMarkup([[]]),
     )
 
     return ConversationHandler.END
@@ -318,8 +483,25 @@ manage_event_type_handler = ConversationHandler(
         ChatManageEventTypeState.LOAD_IMAGE: [
             MessageHandler(filters.PHOTO, load_image)
         ],
-        ChatManageEventTypeState.UPDATING_ACTION: [
-            CallbackQueryHandler(callback=not_implemented)
+        ChatManageEventTypeState.EXPOSE_UPDATING_ACTION: [
+            CallbackQueryHandler(callback=expose_updating_action)
+        ],
+        ChatManageEventTypeState.SELECTING_UPDATING_ACTION: [
+            CallbackQueryHandler(
+                callback=update_event_type_label, pattern="^update_event_type_label$"
+            ),
+            CallbackQueryHandler(
+                callback=update_event_type_image, pattern="^update_event_type_image$"
+            ),
+            CallbackQueryHandler(
+                callback=check_event_type_image, pattern="^check_event_type_image$"
+            ),
+        ],
+        ChatManageEventTypeState.UPDATE_LABEL: [
+            MessageHandler(filters.TEXT & ~(filters.COMMAND), validate_label)
+        ],
+        ChatManageEventTypeState.UPDATE_IMAGE: [
+            MessageHandler(filters.PHOTO, validate_image)
         ],
         ChatManageEventTypeState.DELETING: [
             CallbackQueryHandler(callback=deleting_event_type)
