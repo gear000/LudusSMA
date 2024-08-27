@@ -75,6 +75,7 @@ if __name__ == "__main__":
     from telegram.ext import PicklePersistence
 
     langchain.debug = True
+    logger.setLevel("DEBUG")
 
     TELEGRAM_TOKEN = get_parameter(parameter_name="/telegram/bot-token", is_secure=True)
 

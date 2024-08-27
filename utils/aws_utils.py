@@ -56,9 +56,28 @@ def get_s3_object(bucket_name: str, object_key: str):
         return None
 
 
-def put_s3_object(bucket_name: str, object_key: str, body: str):
+def put_s3_object(bucket_name: str, object_key: str, body):
     try:
         response = _S3_CLIENT.put_object(Bucket=bucket_name, Key=object_key, Body=body)
+        return response
+    except ClientError as e:
+        logger.error(f"An error occurred: {e}")
+        return None
+
+
+def delete_s3_object(bucket_name: str, object_key: str, recursive: bool = False):
+    try:
+        if recursive:
+            objects = _S3_CLIENT.list_objects_v2(Bucket=bucket_name, Prefix=object_key)
+            response = _S3_CLIENT.delete_objects(
+                Bucket=bucket_name,
+                Delete={
+                    "Objects": [{"Key": obj["Key"]} for obj in objects["Contents"]]
+                },
+            )
+        else:
+            response = _S3_CLIENT.delete_object(Bucket=bucket_name, Key=object_key)
+
         return response
     except ClientError as e:
         logger.error(f"An error occurred: {e}")
@@ -134,7 +153,19 @@ def delete_message_from_sqs_queue(queue_name: str, receipt_handle: str):
 
 # endregion
 
+
 # region Scheduler
+
+
+def create_scheduler_group(scheduler_group_name: str, tags: list[dict]):
+    try:
+        _SCHEDULER_CLIENT.create_schedule_group(
+            Name=scheduler_group_name,
+            Tags=[{"Key": "projectID", "Value": "LudusSMA"}, *tags],
+        )
+    except Exception as e:
+        logger.error("Error in creating scheduler group: ", e)
+        raise e
 
 
 def create_scheduler(
@@ -145,12 +176,14 @@ def create_scheduler(
     start_date: datetime,
     end_date: datetime,
     event: Event,
+    schedule_group_name: str = "default",
 ):
     try:
         _SCHEDULER_CLIENT.create_schedule(
             ActionAfterCompletion="DELETE",
             Name=name_schudeler,
             ScheduleExpression=schedule_expression,
+            GroupName=schedule_group_name,
             StartDate=start_date,
             EndDate=end_date,
             State="ENABLED",

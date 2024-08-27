@@ -13,16 +13,12 @@ class ChatOrchestratorState(Enum):
 
 
 class ChatAddEventState(Enum):
-    ADD_EVENT = 1
-    EVENT_INFO = 2
-    RECAP = 3
-    SET_NEW_EVENT_TYPE = 4
-    LOAD_IMAGE = 5
+    EVENT_INFO = 1
+    RECAP = 2
 
 
 class ChatManageEventTypeState(Enum):
-    ADD_IMAGE = 1
-    ADD_EVENT_TYPE = 2
-    RECAP = 3
-    SET_NEW_EVENT_TYPE = 4
-    LOAD_IMAGE = 5
+    SET_NEW_EVENT_TYPE = 1
+    LOAD_IMAGE = 2
+    UPDATING_ACTION = 3
+    DELETING = 4

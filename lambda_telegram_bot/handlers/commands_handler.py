@@ -4,6 +4,7 @@ from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRe
 from telegram.ext import ContextTypes, ConversationHandler
 
 from utils.aws_utils import list_s3_folders
+from utils.telegram_utils import send_event_types
 from .chat_state import ChatOrchestratorState
 
 __all__ = [
@@ -66,37 +67,17 @@ async def start(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def add_event(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
 
-    event_types = [
-        elem.strip("/").split("/")[-1].title()
-        for elem in list_s3_folders(S3_BUCKET_IMAGES_NAME, "clean-images/")
-    ]
+    is_any_event_type = await send_event_types(
+        update,
+        context,
+        "Ottimo! Che tipo di evento vuoi creare?\n"
+        "Se non trovi il tipo di evento che ti serve puoi aggiungerlo con il comando /manage_event_type.",
+    )
 
-    inline_keyboard_buttons = [
-        InlineKeyboardButton(text=even_type, callback_data=even_type)
-        for even_type in event_types
-    ]
+    if is_any_event_type:
+        return ChatOrchestratorState.ADD_EVENT
 
-    buttons = [
-        inline_keyboard_buttons[i : i + 2]
-        for i in range(0, len(inline_keyboard_buttons), 2)
-    ]
-
-    markup = InlineKeyboardMarkup(buttons)
-    message = "Ottimo! Che tipo di evento vuoi creare?\nSe non trovi il tipo di evento puoi aggiungerlo con il comando /manage_event_type."
-
-    if update.message:
-        await update.message.reply_text(
-            text=message,
-            reply_markup=markup,
-        )
-    elif update.callback_query:
-        await update.callback_query.answer()
-        await update.callback_query.edit_message_text(
-            text=message,
-            reply_markup=markup,
-        )
-
-    return ChatOrchestratorState.ADD_EVENT
+    return ConversationHandler.END
 
 
 async def delete_event(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
@@ -154,29 +135,21 @@ async def manage_event_type(
 
 async def create_story(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
 
-    message = "Questo comando non è ancora stato implementato."
-    if update.message:
-        await update.message.reply_text(text=message)
-    elif update.callback_query:
-        await update.callback_query.answer()
-        await update.callback_query.edit_message_text(
-            text=message,
-            reply_markup=InlineKeyboardMarkup([[]]),
-        )
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Questo comando non è ancora stato implementato.",
+    )
+
     return ConversationHandler.END
 
 
 async def create_post(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
 
-    message = "Questo comando non è ancora stato implementato."
-    if update.message:
-        await update.message.reply_text(text=message)
-    elif update.callback_query:
-        await update.callback_query.answer()
-        await update.callback_query.edit_message_text(
-            text=message,
-            reply_markup=InlineKeyboardMarkup([[]]),
-        )
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Questo comando non è ancora stato implementato.",
+    )
+
     return ConversationHandler.END
 
 
@@ -197,17 +170,10 @@ async def help(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def done(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
 
-    message = "Ciao! A presto!"
     context.user_data.clear()
-    if update.message:
-        await update.message.reply_text(
-            text=message,
-            reply_markup=ReplyKeyboardRemove(),
-        )
-    elif update.callback_query:
-        await update.callback_query.answer()
-        await update.callback_query.edit_message_text(
-            text=message,
-            reply_markup=InlineKeyboardMarkup([[]]),
-        )
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Ciao! A presto!",
+    )
+
     return ConversationHandler.END

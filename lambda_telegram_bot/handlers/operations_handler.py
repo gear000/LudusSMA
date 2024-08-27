@@ -1,6 +1,7 @@
 from datetime import date
 from enum import Enum
 import os
+import re
 import telegram
 
 from telegram.constants import ParseMode
@@ -11,7 +12,6 @@ from telegram import (
     ReplyKeyboardRemove,
 )
 from telegram.ext import (
-    CommandHandler,
     CallbackQueryHandler,
     ContextTypes,
     ConversationHandler,
@@ -19,14 +19,20 @@ from telegram.ext import (
     filters,
 )
 
-from utils.aws_utils import list_s3_folders
+from utils.aws_utils import delete_s3_object, put_s3_object
+from utils.formatter_utils import format_event_types
+from utils.telegram_utils import send_event_types
 from utils.logger_utils import *
 from utils.models.model_utils import Event, OutputCreateEvent
 
 from chatbot.tools import create_schedulers
 from chatbot.event_handler import check_info_chain
 
-from .chat_state import ChatOrchestratorState, ChatAddEventState
+from .chat_state import (
+    ChatManageEventTypeState,
+    ChatOrchestratorState,
+    ChatAddEventState,
+)
 from .commands_handler import *
 
 __all__ = [
@@ -59,6 +65,28 @@ async def selecting_action_handler(
             return await create_post(update, context)
 
     raise ValueError("State not found")
+
+
+async def error_handler(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
+    """Log Errors caused by Updates."""
+    logger.error(
+        "Update '%s' caused error '%s'",
+        update,
+        context.error,
+    )
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="C'è stato un errore nell'elaborazione del messaggio.\nAspetta 30 secondi poi prova a resettare il bot con il comando /done o contatta un amministratore se l'errore persiste.",
+    )
+
+    raise context.error
+
+
+async def not_implemented(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Questa funzione non è ancora implementata.",
+    )
 
 
 # region Add Event
@@ -186,40 +214,90 @@ async def create_new_event_type(
     await update.callback_query.answer()
     await update.callback_query.edit_message_text(
         "Sono contento ci sia un nuovo evento a Ludus!\n"
-        "Sotto che tipologia inseriamo l'evento? Ricorda che il titolo dovrebbe essere unico e molto coinciso.",
+        "Sotto che tipologia inseriamo l'evento? Ricorda che il titolo dovrebbe essere unico e molto coinciso.\n"
+        "Inoltre, ogni spazio sarà sostituito da un trattino ed ogni carattere speciale rimosso.",
         reply_markup=InlineKeyboardMarkup([[]]),
     )
 
-    return ChatAddEventState.SET_NEW_EVENT_TYPE
+    return ChatManageEventTypeState.SET_NEW_EVENT_TYPE
 
 
 async def request_image(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
-    event_types = [
-        elem.strip("/").split("/")[-1]
-        for elem in list_s3_folders(S3_BUCKET_IMAGES_NAME, "clean-images/")
-    ]
+    event_types = format_event_types()
 
-    if update.message.text.strip().lower() in event_types:
+    event_type = re.sub(r"[^a-zA-Z0-9 -]", "", update.message.text.strip())
+    event_type = event_type.replace(" ", "-").lower()
+
+    if event_type in event_types:
         await update.message.reply_text(
             "Purtroppo un altro evento ha lo stesso nome. Magari potremmo scegliere un altro titolo."
         )
-        return ChatAddEventState.SET_NEW_EVENT_TYPE
+        return ChatManageEventTypeState.SET_NEW_EVENT_TYPE
     else:
-        context.user_data[ContextKeys.NEW_EVENT] = update.message.text.strip()
+        context.user_data[ContextKeys.NEW_EVENT] = event_type
         await update.message.reply_text(
             "Perfetto! Ora abbiamo bisogno di un immagine per le storie.\n"
             "Ricorda che l'immagine dovrebbe avere dimensioni 1080 px per 1920 px (con proporzioni di 9:16)."
         )
 
-    return ChatAddEventState.LOAD_IMAGE
+    return ChatManageEventTypeState.LOAD_IMAGE
 
 
 async def load_image(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Ecco l'immagine che mi hai inviato...")
-    await update.message.reply_photo(
-        photo=update.message.photo[0],
-        caption=f"Questo è l'immagine di {context.user_data[ContextKeys.NEW_EVENT]}.",
+    photo_file = await update.message.photo[-1].get_file()
+
+    put_s3_object(
+        bucket_name=S3_BUCKET_IMAGES_NAME,
+        object_key=f"clean-images/{context.user_data[ContextKeys.NEW_EVENT]}/{photo_file.file_id}.jpg",
+        body=await photo_file.download_as_bytearray(),
     )
+    await update.message.reply_text(
+        "Il nuovo tipo evento è stato creato! Prova subito a creare un nuovo evento con /add_event !"
+    )
+
+
+async def update_event_type(
+    update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
+):
+    is_any_event_type = await send_event_types(
+        update,
+        context,
+        "Che tipologia di evento vuoi AGGIORNARE?",
+    )
+
+    if is_any_event_type:
+        return ChatManageEventTypeState.UPDATING_ACTION
+
+    return ConversationHandler.END
+
+
+async def delete_event_type(
+    update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
+):
+    is_any_event_type = await send_event_types(
+        update,
+        context,
+        "Che tipologia di evento vuoi CANCELLARE?",
+    )
+
+    if is_any_event_type:
+        return ChatManageEventTypeState.DELETING
+
+
+async def deleting_event_type(
+    update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
+):
+    delete_s3_object(
+        bucket_name=S3_BUCKET_IMAGES_NAME,
+        object_key=f"clean-images/{update.callback_query.data.lower()}",
+        recursive=True,
+    )
+    await update.callback_query.answer()
+    await update.callback_query.edit_message_text(
+        "Il tipo di evento è stato cancellato!", reply_markup=InlineKeyboardMarkup([[]])
+    )
+
+    return ConversationHandler.END
 
 
 manage_event_type_handler = ConversationHandler(
@@ -227,17 +305,25 @@ manage_event_type_handler = ConversationHandler(
         CallbackQueryHandler(
             callback=create_new_event_type, pattern="^add_event_type$"
         ),
-        CallbackQueryHandler(callback=manage_event_type, pattern="^update_event_type$"),
-        CallbackQueryHandler(callback=manage_event_type, pattern="^delete_event_type$"),
+        CallbackQueryHandler(callback=update_event_type, pattern="^update_event_type$"),
+        CallbackQueryHandler(callback=delete_event_type, pattern="^delete_event_type$"),
     ],
     name="manage_event_type",
     persistent=True,
     allow_reentry=True,
     states={
-        ChatAddEventState.SET_NEW_EVENT_TYPE: [
+        ChatManageEventTypeState.SET_NEW_EVENT_TYPE: [
             MessageHandler(filters.TEXT & ~(filters.COMMAND), request_image)
         ],
-        ChatAddEventState.LOAD_IMAGE: [MessageHandler(filters.PHOTO, load_image)],
+        ChatManageEventTypeState.LOAD_IMAGE: [
+            MessageHandler(filters.PHOTO, load_image)
+        ],
+        ChatManageEventTypeState.UPDATING_ACTION: [
+            CallbackQueryHandler(callback=not_implemented)
+        ],
+        ChatManageEventTypeState.DELETING: [
+            CallbackQueryHandler(callback=deleting_event_type)
+        ],
     },
     fallbacks=[],
 )
@@ -251,18 +337,3 @@ create_story_handler = ConversationHandler(entry_points=[], states={}, fallbacks
 create_post_handler = ConversationHandler(entry_points=[], states={}, fallbacks=[])
 
 # endregion
-
-
-async def error_handler(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
-    """Log Errors caused by Updates."""
-    logger.error(
-        "Update '%s' caused error '%s'",
-        update,
-        context.error,
-    )
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="C'è stato un errore nell'elaborazione del messaggio.\nAspetta 30 secondi poi prova a resettare il bot con il comando /done o contatta un amministratore se l'errore persiste.",
-    )
-
-    raise context.error
