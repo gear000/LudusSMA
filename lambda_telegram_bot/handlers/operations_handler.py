@@ -22,6 +22,7 @@ from telegram.ext import (
 
 from utils.aws_utils import (
     delete_s3_object,
+    delete_schedule_group,
     get_s3_object,
     list_s3_objects,
     move_s3_object,
@@ -32,7 +33,7 @@ from utils.telegram_utils import send_event_types
 from utils.logger_utils import *
 from utils.models.model_utils import Event, OutputCreateEvent
 
-from chatbot.tools import create_schedulers
+from chatbot.tools import create_schedule
 from chatbot.event_handler import check_info_chain
 
 from .chat_state import (
@@ -167,16 +168,18 @@ async def llm_processing(update: telegram.Update, context: ContextTypes.DEFAULT_
             parse_mode=ParseMode.HTML,
         )
         context.user_data[ContextKeys.EVENT] = event
-        markup = ReplyKeyboardMarkup([["Vai con l'evento!", "No, aspetta..."]])
+        markup = ReplyKeyboardMarkup(
+            [["Vai con l'evento!", "No, aspetta..."]], one_time_keyboard=True
+        )
         await update.message.reply_text("Cosa facciamo?", reply_markup=markup)
 
         return ChatAddEventState.RECAP
 
 
 async def schedule_event(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
-    """Add event in scheduler"""
+    """Add event in schedule"""
 
-    create_schedulers(context.user_data[ContextKeys.EVENT])
+    create_schedule(context.user_data[ContextKeys.EVENT])
 
     await update.message.reply_text(
         f"Ho creato l'evento!",
@@ -187,7 +190,7 @@ async def schedule_event(update: telegram.Update, context: ContextTypes.DEFAULT_
 
 add_event_handler = ConversationHandler(
     entry_points=[
-        CallbackQueryHandler(callback=set_event, pattern="^.*$"),
+        CallbackQueryHandler(callback=set_event),
     ],
     name="add_event",
     persistent=True,
@@ -209,6 +212,27 @@ add_event_handler = ConversationHandler(
     },
     fallbacks=[],
 )
+
+# endregion
+
+# region Delete Event
+
+
+async def deleting_event(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
+    """Delete schedule group that a specif event belongs to"""
+
+    logger.info("Deleting event %s", update.callback_query.data)
+    delete_schedule_group(update.callback_query.data)
+
+    await update.callback_query.answer()
+    await update.callback_query.edit_message_text(
+        "Ho cancellato l'evento!",
+    )
+
+    return await done(update, context)
+
+
+delete_event_handler = CallbackQueryHandler(callback=deleting_event, pattern="^.*$")
 
 # endregion
 
@@ -514,7 +538,6 @@ manage_event_type_handler = ConversationHandler(
 
 # region Other Operations
 
-delete_event_handler = ConversationHandler(entry_points=[], states={}, fallbacks=[])
 create_story_handler = ConversationHandler(entry_points=[], states={}, fallbacks=[])
 create_post_handler = ConversationHandler(entry_points=[], states={}, fallbacks=[])
 

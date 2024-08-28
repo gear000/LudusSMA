@@ -3,6 +3,7 @@ import boto3
 
 from datetime import datetime
 from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
+from httpx import delete
 from .logger_utils import *
 from .models.model_utils import Event
 
@@ -178,18 +179,26 @@ def delete_message_from_sqs_queue(queue_name: str, receipt_handle: str):
 # region Scheduler
 
 
-def create_scheduler_group(scheduler_group_name: str, tags: list[dict]):
+def create_schedule_group(schedule_group_name: str, tags: list[dict]):
     try:
         _SCHEDULER_CLIENT.create_schedule_group(
-            Name=scheduler_group_name,
+            Name=schedule_group_name,
             Tags=[{"Key": "projectID", "Value": "LudusSMA"}, *tags],
         )
     except Exception as e:
-        logger.error("Error in creating scheduler group: ", e)
+        logger.error("Error in creating schedule group: ", e)
         raise e
 
 
-def create_scheduler(
+def delete_schedule_group(schedule_group_name: str):
+    try:
+        _SCHEDULER_CLIENT.delete_schedule_group(Name=schedule_group_name)
+    except Exception as e:
+        logger.error("Error in deleting schedule group: ", e)
+        raise e
+
+
+def create_schedule(
     name_schudeler: str,
     schedule_expression: str,
     target_arn: str,
@@ -216,7 +225,33 @@ def create_scheduler(
             },
         )
     except Exception as e:
-        logger.error("Error in creating scheduler: ", e)
+        logger.error("Error in creating schedule: ", e)
+        raise e
+
+
+def list_schedule_groups(exclude_default: bool = False) -> list[dict[str, str]]:
+    """
+    Lists all schedule groups, excluding the ones that are DELETING or DEFAULT
+    if exclude_default is True.
+
+    Returns:
+        A list of dictionaries, each containing the details of a schedule group.
+    """
+    schedule_groups = _SCHEDULER_CLIENT.list_schedule_groups()["ScheduleGroups"]
+    return [
+        sg
+        for sg in schedule_groups
+        if sg["State"] != "DELETING"
+        and (not exclude_default or sg["Name"] != "default")
+    ]
+
+
+def list_tags(resource_arn: str):
+    try:
+        response = _SCHEDULER_CLIENT.list_tags_for_resource(ResourceArn=resource_arn)
+        return response["Tags"]
+    except Exception as e:
+        logger.error("Error in listing tags: ", e)
         raise e
 
 

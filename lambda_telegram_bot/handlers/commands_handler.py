@@ -3,9 +3,12 @@ import telegram
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 from telegram.ext import ContextTypes, ConversationHandler
 
-from utils.aws_utils import list_s3_folders
+from utils.aws_utils import list_schedule_groups, list_tags
+from utils.formatter_utils import format_tags
 from utils.telegram_utils import send_event_types
 from .chat_state import ChatOrchestratorState
+
+from utils.logger_utils import *
 
 __all__ = [
     "start",
@@ -82,16 +85,49 @@ async def add_event(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE)
 
 async def delete_event(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
 
-    message = "Questo comando non è ancora stato implementato."
+    schedule_groups = list_schedule_groups(exclude_default=True)
+
+    if len(schedule_groups) == 0:
+        message = (
+            "Non ci sono eventi da cancellare! Aggiungine un evento con /add_event !"
+        )
+        buttons = [[]]
+    else:
+        schedule_groups_with_tags = []
+
+        for schedule_group in schedule_groups:
+            schedule_groups_with_tags.append(
+                {"Tags": format_tags(list_tags(schedule_group["Arn"]))}
+                | {"ScheduleGroupName": schedule_group["Name"]}
+            )
+
+        logger.info(schedule_groups_with_tags)
+
+        buttons = [
+            [
+                InlineKeyboardButton(
+                    text=f"{schedule_group['Tags']['event_type']} {schedule_group['Tags']['event_date'].replace('T', ' ')}",
+                    callback_data=schedule_group["ScheduleGroupName"],
+                )
+            ]
+            for schedule_group in schedule_groups_with_tags
+        ]
+
+        message = "Seleziona l'evento da cancellare:"
+
     if update.message:
-        await update.message.reply_text(text=message)
+        await update.message.reply_text(
+            text=message,
+            reply_markup=InlineKeyboardMarkup(buttons),
+        )
     elif update.callback_query:
         await update.callback_query.answer()
         await update.callback_query.edit_message_text(
             text=message,
-            reply_markup=InlineKeyboardMarkup([[]]),
+            reply_markup=InlineKeyboardMarkup(buttons),
         )
-    return ConversationHandler.END
+
+    return ChatOrchestratorState.DELETE_EVENT
 
 
 async def manage_event_type(

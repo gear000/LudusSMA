@@ -43,7 +43,6 @@ async def send_event_types(
             text=message,
             reply_markup=markup,
         )
-        return False
 
     elif update.callback_query:
 
@@ -53,7 +52,7 @@ async def send_event_types(
             reply_markup=markup,
         )
 
-        return True
+    return True
 
 
 def send_telegram_message(token: str, chat_id: str, message: str) -> None:

@@ -1,23 +1,24 @@
 import random
 import uuid
 import os
+import utils.aws_utils as aws_utils
+
 from datetime import datetime, timedelta
-from utils.aws_utils import create_scheduler, create_scheduler_group
 from utils.models.model_utils import Event
 
 SQS_QUEUE_EVENTS_ARN = os.getenv("SQS_QUEUE_EVENTS_ARN", "")
 IAM_ROLE_EVENT_SCHEDULER_ARN = os.getenv("IAM_ROLE_EVENT_SCHEDULER_ARN", "")
 
 
-def create_schedulers(event: Event):
+def create_schedule(event: Event):
     event_id = str(uuid.uuid4())
     now = datetime.now()
     cron_expressions: list[dict] = [
         {
             "cron": f"at({(event.start_date - timedelta(days=30)).strftime('%Y-%m-%dT10:{0}:00').format(str(random.randint(0, 59)).zfill(2))})",
             "name": "FirstStoryBeforeEvent",
-            # l'end_date serve solo a evitare di creare un scheduler che non avrà esecuzione.
-            # In ogni caso questo campo non viene usato nello scheduler
+            # l'end_date serve solo a evitare di creare un schedule che non avrà esecuzione.
+            # In ogni caso questo campo non viene usato nello schedule
             "end_date": max((event.start_date - timedelta(days=30)), now),
         },
         {
@@ -52,8 +53,8 @@ def create_schedulers(event: Event):
         },
     ]
 
-    create_scheduler_group(
-        scheduler_group_name=event_id,
+    aws_utils.create_schedule_group(
+        schedule_group_name=event_id,
         tags=[
             {"Key": "event_type", "Value": event.event_type},
             {
@@ -66,7 +67,7 @@ def create_schedulers(event: Event):
     for ce in cron_expressions:
         if ce.get("end_date") == now:
             continue
-        create_scheduler(
+        aws_utils.create_schedule(
             name_schudeler=ce["name"],
             schedule_expression=ce["cron"],
             target_arn=SQS_QUEUE_EVENTS_ARN,

@@ -42,9 +42,10 @@ def get_orchestrator_handler() -> ConversationHandler:
         persistent=True,
         states={
             ChatOrchestratorState.SELECTING_ACTION: [
-                CallbackQueryHandler(selecting_action_handler, pattern="^.*$")
+                CallbackQueryHandler(selecting_action_handler)
             ],
             ChatOrchestratorState.ADD_EVENT: [add_event_handler],
+            ChatOrchestratorState.DELETE_EVENT: [delete_event_handler],
             ChatOrchestratorState.MANAGE_EVENT_TYPE: [manage_event_type_handler],
         },
         fallbacks=[
