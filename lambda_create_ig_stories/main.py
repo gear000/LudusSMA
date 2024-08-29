@@ -8,15 +8,14 @@ from image_editing import image_edit
 from meta_functions import publish_story
 
 from utils import aws_utils  # ricordati di spostare utils in lambda_functions
-from utils.telegram_utils import send_telegram_message
-from utils.logger_utils import *
-
+# from utils.telegram_utils import send_telegram_message
+# from utils.logger_utils import *
 
 ssm_client = boto3.client("ssm")
 s3_client = boto3.client("s3")
 
 
-def lambda_handler(event: dict, context):
+def _lambda_handler(event: dict, context):
 
     logger.info(f"Received event: {event}")
     logger.info(f"Received context: {context}")
@@ -46,93 +45,52 @@ def lambda_handler(event: dict, context):
     return {"statusCode": 200, "body": "Elaboration completed"}
 
 
-def _lambda_handler(event: dict, context):
+def lambda_handler(event: dict, context):
     """
-    event = {"event_id": "1234567890"}
+    
 
     """
     META_CLIENT_SECRET = aws_utils.get_parameter(
-        parameter_name="/meta/client-secret", is_secure=True, ssm_client=ssm_client
+        parameter_name="/meta/client-secret", is_secure=True
     )
 
     META_ACCESS_TOKEN = aws_utils.get_parameter(
-        parameter_name="/meta/access-token", is_secure=True, ssm_client=ssm_client
+        parameter_name="/meta/access-token", is_secure=True
     )
-
-    # fare 3 metodi
-    # - get_object -> def get_s3_object
-    # - put_object -> def put_s3_object wrappare le funzioni
-    # - creare funzione che restituisce presigned url -> def create_presigned_url()
 
     img_from_s3 = aws_utils.get_s3_object(
         bucket_name="ludussma-images",
         object_key="clean-images/bang-tournament/image-v1.png",
-        s3_client=s3_client,
+        # s3_client=s3_client,
     )
-    im = Image.open(img_from_s3)
-    im.save("test_get_image.png")
-
-    # ----------------------------
-    # prendere da dynamo la riga corrispondente a event_id
-    # event_info = {}
-    # ----------------------------
-
-    # ----------------------------
-    # generazione immagine
-    # salvataggio immagine su img_path
-    # ----------------------------
-
-    # ----------------------------
-    # edit immagine con testo
-    # crop to aspect ratio 9:16
-    # salvataggio immagine su img_path_edit
-
-    # provare su aws s3 a caricare un file e creare un url presigned
-
-    # EVENT_TYPE = {
-    #     ""
-    # }
-
-    # img_path = "bang.png"
-    img_path = "test_get_image.png"
-
-    edit_dict = {
-        "title": {"text": "Torneo di Bang", "size": 70, "anchor": "mm"},
-        "description": {
-            "text": "Divertiti con noi al più famoso gioco western!",
-            "size": 40,
-            "anchor": "mm",
-        },
-        "date": {"text": "Mercoledì 31 febbraio", "size": 40, "anchor": "lm"},
-        "time": {"text": "21:00", "size": 40, "anchor": "lm"},
-        "location": {"text": "Centro NOI di Povegliano", "size": 40, "anchor": "lm"},
-        "cost": {"text": "Iscrizione libera", "size": 40, "anchor": "lm"},
-        # "other_info": se non ci sono "na"
-    }
+    # im = Image.open(img_from_s3)
+    # im.save("test_get_image.png")
+    
     print("Editing immagine in corso.")
-    img_path_edit = image_edit(img_path, edit_dict)
+    img_path_edit, file_name, file_stream = image_edit(img_from_s3, event)
     # ----------------------------
     # caricamento immagine su s3
 
-    file_stream = BytesIO()
-    im = Image.open(img_path_edit)  # Image.fromarray(img_array)
-    im.save(file_stream, format="png")
+    # file_stream = BytesIO()
+    # im = Image.open(img_path_edit)  # Image.fromarray(img_array)
+    # im.save(file_stream, format="png")
 
-    img_name = "test"
+    # img_name = "test"
     aws_utils.put_s3_object(
         bucket_name="ludussma-images",
-        object_key=f"to-upload/{img_name}.png",
+        object_key=img_path_edit,
         body=file_stream.getvalue(),
-        s3_client=s3_client,
+        # s3_client=s3_client,
     )
     # ----------------------------
     # generazione presigned url
     img_url = aws_utils.create_presigned_url(
         bucket_name="ludussma-images",
-        object_key=f"to-upload/{img_name}.png",
-        s3_client=s3_client,
+        object_key=f"to-upload/{file_name}",
+        # s3_client=s3_client,
     )
     # ----------------------------
+    print(img_url)
 
     # ----------------------------
     # post storia ig
@@ -154,6 +112,6 @@ def _lambda_handler(event: dict, context):
 
 if __name__ == "__main__":
 
-    with open("test/event.json", "r") as f:
-        event = f.read()
+    with open("../test/event.json") as f:
+        event = json.load(f)
         lambda_handler(event, None)

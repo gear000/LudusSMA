@@ -1,10 +1,18 @@
 from PIL import Image, ImageFont, ImageDraw 
 import requests
 import io
+from datetime import datetime
+from io import BytesIO
 
 # ------------------
 # Global constants
 # ---
+# Title mapping
+TITLE_MAPPING = {
+    "Bang-Tournament": "Torneo di Bang",
+    # Warhammer
+}
+
 # Textbox constants
 UPPER_BOXES_START_POINT = (50, 150)
 UPPER_BOXES_WIDTH = 550
@@ -26,12 +34,27 @@ STROKE_WIDTH = 2
 STROKE_COLOR = (0,0,0)
 # Text size constants
 CONTACT_TEXT_SIZE = 30
+TEXT_SIZE_DICT = {
+    "title": 70,
+    "description": 40,
+    "date": 40,
+    "time": 40,
+    "location": 40
+}
+# Text position constants (anchors)
+TEXT_POSITION_DICT = {
+    "title": "mm",
+    "description": "mm",
+    "date": "lm",
+    "time": "lm",
+    "location": "lm"
+}
 # Font constants
 TEXT_FONT = "montserratalternates/MontserratAlternates-Bold.ttf"
 CONTACT_FONT = "montserratalternates/MontserratAlternates-Bold.ttf"
 # ---
 # Icons constants
-ICONS_PATH = "../../images/icons/"
+ICONS_PATH = "../images/icons/"
 ICONS_DICT = {"date":"calendar-color.png", 
               "time":"clock-color.png", 
               "location":"map2-color.png", 
@@ -261,12 +284,53 @@ def write_on_image(my_image, edit_dict):
 
     return my_image
 
+def prepare_dict(input_dict):
+    """
+    Trasformo il dizionario che viene generato
+    """
+    d_start = datetime.strptime(input_dict["start_date"], "%Y-%m-%dT%H:%M:%S")
+    d_end = datetime.strptime(input_dict["end_date"], "%Y-%m-%dT%H:%M:%S")
+    duration = d_end - d_start
+    duration_h = duration.seconds/3600 # durata evento in ore
+
+
+    output_dict = {
+        "title": {
+            "text": TITLE_MAPPING[input_dict["event_type"]],
+            "size": TEXT_SIZE_DICT["title"],
+            "anchor": TEXT_POSITION_DICT["title"]
+            },
+        "description": {
+            "text": input_dict["description"],
+            "size": TEXT_SIZE_DICT["description"],
+            "anchor": TEXT_POSITION_DICT["description"]
+            },
+        "date": {
+            "text": d_start.strftime('%d/%m/%Y'),
+            "size": TEXT_SIZE_DICT["date"],
+            "anchor": TEXT_POSITION_DICT["date"]
+            },
+        "time": {
+            "text": d_start.strftime('%H:%M'),
+            "size": TEXT_SIZE_DICT["time"],
+            "anchor": TEXT_POSITION_DICT["time"]
+            },
+        "location": {
+            "text": input_dict["location"],
+            "size": TEXT_SIZE_DICT["location"],
+            "anchor": TEXT_POSITION_DICT["location"]
+            }
+    }
+    return output_dict
+
 def image_edit(img_path: str, edit_dict: dict, crop=True, textboxes=False):
     """
     Funzione principale per l'editing dell'immagine. Richiama la funzione di cropping e di writing.
     Le logiche sul posizionamento del testo sono richiamate da write_on_image().
     Viene salvata fisicamente l'immagine di output con il prefisso "EDIT_".
     """    
+    edit_dict = prepare_dict(edit_dict)
+
     if crop:
         # Carico immagine
         my_image = Image.open(img_path) 
@@ -283,8 +347,14 @@ def image_edit(img_path: str, edit_dict: dict, crop=True, textboxes=False):
         my_image = draw_textboxes(my_image, edit_dict)
 
     # Salvataggio risutlato
-    output_path = "EDIT_"+img_path
+    file_name = f"EDIT_{datetime.now().strftime('%Y%m%dT%H%M%S')}.png"
+    output_path = f"../images/edited_images/{file_name}"
     my_image.save(output_path)
-    
-    return output_path
+
+    file_stream = BytesIO()
+    im = Image.open(output_path)
+    im.save(file_stream, format="png")
+
+    return output_path, file_name, file_stream
+
 
