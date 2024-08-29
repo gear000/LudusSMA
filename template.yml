@@ -128,6 +128,10 @@ Resources:
             Action:
               - "bedrock:InvokeModel"
             Resource: "arn:aws:bedrock:*"
+          # - Effect: Allow
+          #   Action:
+          #     - "transcribe:*"
+          #   Resource: "*"
 
   LudusSMAEventSchedulerPolicy:
     Type: AWS::IAM::Policy
@@ -169,6 +173,11 @@ Resources:
   # Parameters cannot be created by Cloud Formation if they are of type SecureString
   # which is why they were created by hand inside the console
   # parameter keys are passed within the Lambda Function as environment variables.
+
+  ### TRANSCRIBE VOCABULARY ###
+
+  # Custom vocabulary cannot be created by Cloud Formation which is why they were created by hand inside the console
+  # vocabulary name is passed within the Lambda Function as environment variables.
 
   ### S3 BUCKET ###
 

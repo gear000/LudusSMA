@@ -1,5 +1,7 @@
 import uuid
 import boto3
+import time
+import requests
 
 from datetime import datetime
 from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
@@ -13,6 +15,7 @@ _S3_CLIENT = boto3.client("s3")
 _SSM_CLIENT = boto3.client("ssm")
 _SQS_CLIENT = boto3.client("sqs")
 _SCHEDULER_CLIENT = boto3.client("scheduler")
+_TRANSCRIBE_CLIENT = boto3.client("transcribe")
 
 # endregion
 
@@ -253,6 +256,39 @@ def list_tags(resource_arn: str):
     except Exception as e:
         logger.error("Error in listing tags: ", e)
         raise e
+
+
+# endregion
+
+# region Transcribe
+
+
+def transcribe_audio(audio_key: str) -> str:
+
+    transcription_job_name = uuid.uuid4().hex
+    _TRANSCRIBE_CLIENT.start_transcription_job(
+        TranscriptionJobName=transcription_job_name,
+        Media={"MediaFileUri": audio_key},
+        MediaFormat="mp3",
+        LanguageCode="it-IT",  # Specifica il codice della lingua del file audio
+    )
+
+    # Attendere che la trascrizione sia completata
+    while True:
+        status = _TRANSCRIBE_CLIENT.get_transcription_job(
+            TranscriptionJobName=transcription_job_name
+        )
+        if status["TranscriptionJob"]["TranscriptionJobStatus"] == "COMPLETED":
+            break
+        elif status["TranscriptionJob"]["TranscriptionJobStatus"] == "FAILED":
+            raise Exception("Transcription failed.")
+
+        time.sleep(0.5)
+
+    transcript_uri = status["TranscriptionJob"]["Transcript"]["TranscriptFileUri"]
+    transcript = requests.get(transcript_uri).json()
+
+    return transcript["results"]["transcripts"][0]["transcript"]
 
 
 # endregion

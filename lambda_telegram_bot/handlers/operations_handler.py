@@ -27,6 +27,7 @@ from utils.aws_utils import (
     list_s3_objects,
     move_s3_object,
     put_s3_object,
+    transcribe_audio,
 )
 from utils.formatter_utils import format_event_types
 from utils.telegram_utils import send_event_types
@@ -54,6 +55,7 @@ __all__ = [
 ]
 
 S3_BUCKET_IMAGES_NAME = os.environ["S3_BUCKET_IMAGES_NAME"]
+S3_BUCKET_CHAT_PERSISTENCE_NAME = os.environ["S3_BUCKET_CHAT_PERSISTENCE_NAME"]
 
 
 async def selecting_action_handler(
@@ -132,11 +134,15 @@ async def set_event(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE)
     return ChatAddEventState.EVENT_INFO
 
 
-async def llm_processing(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
+async def llm_processing(
+    update: telegram.Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    user_message: str | None = None,
+):
     """
     Instantiate the bot and get the answer
     """
-    text = update.message.text
+    text = update.message.text or user_message
 
     if context.user_data.get(ContextKeys.CONTEXT):
         context.user_data[ContextKeys.CONTEXT].append(("user", text))
@@ -176,6 +182,28 @@ async def llm_processing(update: telegram.Update, context: ContextTypes.DEFAULT_
         return ChatAddEventState.RECAP
 
 
+async def llm_processing_audio(
+    update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
+):
+
+    audio_file = await update.message.voice.get_file()
+    audio_s3_key = f"{update.effective_chat.id}/audio/{audio_file.file_id}.mp3"
+
+    put_s3_object(
+        bucket_name=S3_BUCKET_CHAT_PERSISTENCE_NAME,
+        object_key=audio_s3_key,
+        body=await audio_file.download_as_bytearray(),
+    )
+
+    transcribe_text = transcribe_audio(
+        audio_key=f"s3://{S3_BUCKET_CHAT_PERSISTENCE_NAME}/{audio_s3_key}"
+    )
+
+    return await llm_processing(
+        update=update, context=context, user_message=transcribe_text
+    )
+
+
 async def schedule_event(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
     """Add event in schedule"""
 
@@ -197,7 +225,8 @@ add_event_handler = ConversationHandler(
     allow_reentry=True,
     states={
         ChatAddEventState.EVENT_INFO: [
-            MessageHandler(filters.TEXT & ~(filters.COMMAND), llm_processing)
+            MessageHandler(filters.TEXT & ~(filters.COMMAND), llm_processing),
+            MessageHandler(filters=filters.VOICE, callback=llm_processing_audio),
         ],
         ChatAddEventState.RECAP: [
             MessageHandler(

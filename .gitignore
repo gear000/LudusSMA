@@ -167,9 +167,35 @@ cython_debug/
 *.backup
 *.bkp
 
+# Ignore Mac specific files
+.DS_Store
+
 # AWS SAM build
 .aws-sam
 
 # Lambda Layers
 utils.zip
 test.py
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+
+# Terraform crash log files
+crash.log
+
+# Terraform plan files
+*.tfplan
+
+# Terraform variable override files
+*.tfvars
+*.tfvars.json
+
+# Lock file
+.terraform.lock.hcl
+
+# .terraform directory
+.terraform/
+
+# Directory for local backend
+terraform.tfstate.d/
