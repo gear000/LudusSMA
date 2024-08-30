@@ -184,8 +184,9 @@ test.py
 # Terraform crash log files
 crash.log
 
-# Terraform plan files
+# Terraform plan files, but foundation
 *.tfplan
+!tf_foundation/*.tfstate
 
 # Terraform variable override files
 *.tfvars

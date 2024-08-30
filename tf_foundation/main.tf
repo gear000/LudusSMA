@@ -75,12 +75,14 @@ data "aws_iam_policy_document" "codebuild_policy_document" {
     actions = ["*"]
     resources = [
       "arn:aws:s3:::*",
-      "arn:aws:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*",
-      "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:*",
       "arn:aws:sns:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*",
+      "arn:aws:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*",
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*",
+      "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*",
+      "arn:aws:bedrock:us-west-2::*",
+      "arn:aws:pipes:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*",
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*",
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/*",
-      "arn:aws:pipes:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
     ]
   }
 }
@@ -280,7 +282,7 @@ resource "aws_codepipeline" "terraform_pipeline" {
   }
 
   stage {
-    name = "Build"
+    name = "Build&Deploy"
 
     action {
       name            = "Build"
