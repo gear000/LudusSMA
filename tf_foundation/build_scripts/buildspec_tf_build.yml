@@ -3,17 +3,13 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - echo "### ENVIRONMENT VARIABLES"
-      - echo "S3_BUCKET_ARTIFACT_NAME $S3_BUCKET_ARTIFACT_NAME"
-      - echo "S3_BUCKET_ARTIFACT_KEY $S3_BUCKET_ARTIFACT_KEY"
-      - echo "DDB_TABLE_NAME $DDB_TABLE_NAME"
-      - echo "AWS_REGION $AWS_REGION"
       - echo "### VALIDATE TERRAFORM TEMPLATE"
-      - terraform -chdir=terraform init \
-        -backend-config="bucket=$S3_BUCKET_ARTIFACT_NAME" \
-        -backend-config="key=$S3_BUCKET_ARTIFACT_KEY" \
-        -backend-config="dynamodb_table=$DDB_TABLE_NAME" \
-        -backend-config="region=$AWS_REGION"
+      - |
+        terraform -chdir=terraform init \
+          -backend-config="bucket=$S3_BUCKET_ARTIFACT_NAME" \
+          -backend-config="key=$S3_BUCKET_ARTIFACT_KEY" \
+          -backend-config="dynamodb_table=$DDB_TABLE_NAME" \
+          -backend-config="region=$AWS_REGION"
       - terraform -chdir=terraform fmt -recursive
       - terraform -chdir=terraform validate
 
