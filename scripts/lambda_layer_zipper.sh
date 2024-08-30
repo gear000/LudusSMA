@@ -20,8 +20,6 @@ create_zip() {
     rm -rf "python"
 }
 
-cd ./lambda_functions
-
 # Iterate over each folder in the list and create a zip file
 for folder in $folders; do
     create_zip "$folder"
