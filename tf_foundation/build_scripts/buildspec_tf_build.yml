@@ -16,6 +16,7 @@ phases:
   build:
     commands:
       - echo "### CREATING LAYERS FOR LAMBDA FUNCTIONS"
+      - sed -i 's/\r$//' ./scripts/lambda_layer_zipper.sh
       - chmod +x ./scripts/lambda_layer_zipper.sh
       - pwd
       - ls -la ./scripts
