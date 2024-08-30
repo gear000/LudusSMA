@@ -4,8 +4,8 @@ phases:
   install:
     commands:
       - echo "### INSTALLING ZIP"
-      - apt-get update -y
-      - apt-get install -y zip
+      - apk update
+      - apk add zip
 
   pre_build:
     commands:
