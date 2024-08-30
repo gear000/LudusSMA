@@ -252,6 +252,22 @@ data "aws_iam_policy_document" "codepipeline_policy_document" {
     effect = "Allow"
 
     actions = [
+      "s3:GetObject",
+      "s3:GetObjectVersion",
+      "s3:PutObjectAcl",
+      "s3:PutObject"
+    ]
+
+    resources = [
+      aws_s3_bucket.s3_bucket_artifact.arn,
+      "${aws_s3_bucket.s3_bucket_artifact.arn}/*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
       "servicecatalog:ListProvisioningArtifacts",
       "servicecatalog:CreateProvisioningArtifact",
       "servicecatalog:DescribeProvisioningArtifact",
@@ -287,7 +303,7 @@ resource "aws_iam_role_policy_attachment" "codepipeline_policy_attach" {
 }
 
 resource "aws_codepipeline" "terraform_pipeline" {
-  name     = "ludussma-terraform-pipeline"
+  name     = "ludussma-tf-pipeline"
   role_arn = aws_iam_role.codepipeline_role.arn
   tags     = var.tags
 

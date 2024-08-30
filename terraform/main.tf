@@ -12,7 +12,8 @@ provider "aws" {
   region = var.aws_region
 }
 
-resource "aws_codestarconnections_connection" "example" {
-  name          = "test-connection"
-  provider_type = "GitHub"
+resource "aws_ssm_parameter" "test-params" {
+  name  = "/test/test-params"
+  type  = "String"
+  value = "test-value"
 }

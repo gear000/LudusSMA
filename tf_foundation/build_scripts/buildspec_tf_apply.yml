@@ -6,11 +6,9 @@ phases:
       - echo "### INIT TERRAFORM"
       - terraform -chdir=terraform init \
         -backend-config="bucket=$S3_BUCKET_ARTIFACT_NAME" \
-        -backend-config="key=$S3_BUCKET_ARTIFACT_KEY"
-        -backend-config="dynamodb_table=$DDB_TABLE_NAME"
+        -backend-config="key=$S3_BUCKET_ARTIFACT_KEY" \
+        -backend-config="dynamodb_table=$DDB_TABLE_NAME" \
         -backend-config="region=$AWS_REGION"
-      - terraform -chdir=terraform fmt -recursive
-      - terraform -chdir=terraform validate
 
   build:
     commands:
