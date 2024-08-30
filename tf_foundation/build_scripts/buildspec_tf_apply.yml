@@ -14,9 +14,4 @@ phases:
   build:
     commands:
       - echo "### TERRAFORM APPLY"
-      - terraform -chdir=terraform apply -auto-approve
-
-artifacts:
-  name: BuildArtifact
-  files:
-    - terraform/plan.tfplan
+      - terraform -chdir=terraform apply plan.tfplan --auto-approve
