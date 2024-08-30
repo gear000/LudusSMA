@@ -16,8 +16,10 @@ phases:
   build:
     commands:
       - echo "### CREATING LAYERS FOR LAMBDA FUNCTIONS"
-      - chmod +x ../scripts/lambda_layer_zipper.sh
-      - ../scripts/lambda_layer_zipper.sh
+      - pwd
+      - ls -la
+      - chmod +x ./scripts/lambda_layer_zipper.sh
+      - ./scripts/lambda_layer_zipper.sh
 
       - echo "### CREATING TERRAFORM PLAN"
       - terraform -chdir=terraform plan -out=plan.tfplan
