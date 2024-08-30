@@ -27,7 +27,7 @@ phases:
       - echo "### CREATING TERRAFORM PLAN"
       - terraform -chdir=terraform plan -out=plan.tfplan
 
-artifacts:
-  name: BuildArtifact
-  files:
-    - terraform/plan.tfplan
+  post_build:
+    commands:
+      - echo "### APPLYING TERRAFORM PLAN"
+      - terraform -chdir=terraform apply plan.tfplan

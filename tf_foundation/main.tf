@@ -38,10 +38,6 @@ resource "aws_cloudwatch_log_group" "log_group_codebuild_build" {
   name = "/aws/codebuild/LudusSMA-codebuild-tf-build"
 }
 
-resource "aws_cloudwatch_log_group" "log_group_codebuild_deploy" {
-  name = "/aws/codebuild/LudusSMA-codebuild-tf-deploy"
-}
-
 data "aws_iam_policy_document" "assume_role_policy_codebuild" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -72,8 +68,6 @@ data "aws_iam_policy_document" "codebuild_policy_document" {
     resources = [
       aws_cloudwatch_log_group.log_group_codebuild_build.arn,
       "${aws_cloudwatch_log_group.log_group_codebuild_build.arn}:*",
-      aws_cloudwatch_log_group.log_group_codebuild_deploy.arn,
-      "${aws_cloudwatch_log_group.log_group_codebuild_deploy.arn}:*"
     ]
   }
 
@@ -153,53 +147,6 @@ resource "aws_codebuild_project" "codebuild_tf_build" {
   source {
     type      = "CODEPIPELINE"
     buildspec = "tf_foundation/build_scripts/buildspec_tf_build.yml"
-  }
-
-}
-
-resource "aws_codebuild_project" "codebuild_tf_deploy" {
-
-  name                   = "LudusSMA-codebuild-tf-deploy"
-  service_role           = aws_iam_role.codebuild_role.arn
-  concurrent_build_limit = 1
-  tags                   = var.tags
-
-  artifacts {
-    type = "CODEPIPELINE"
-  }
-
-  environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "hashicorp/terraform:latest"
-    type         = "LINUX_CONTAINER"
-    environment_variable {
-      name  = "S3_BUCKET_ARTIFACT_NAME"
-      value = aws_s3_bucket.s3_bucket_artifact.bucket
-    }
-    environment_variable {
-      name  = "S3_BUCKET_ARTIFACT_KEY"
-      value = "terraform/state/terraform.tfstate"
-    }
-    environment_variable {
-      name  = "DDB_TABLE_NAME"
-      value = aws_dynamodb_table.table_tf_plan_lock.name
-    }
-    environment_variable {
-      name  = "AWS_REGION"
-      value = var.aws_region
-    }
-  }
-
-  logs_config {
-    cloudwatch_logs {
-      status     = "ENABLED"
-      group_name = aws_cloudwatch_log_group.log_group_codebuild_build.name
-    }
-  }
-
-  source {
-    type      = "CODEPIPELINE"
-    buildspec = "tf_foundation/build_scripts/buildspec_tf_deploy.yml"
   }
 
 }
@@ -326,8 +273,8 @@ resource "aws_codepipeline" "terraform_pipeline" {
 
       configuration = {
         ConnectionArn    = aws_codestarconnections_connection.github_connection.arn
-        FullRepositoryId = "gear000/LudusSMA"
-        BranchName       = "feat/tf_foundation"
+        FullRepositoryId = var.source_repository
+        BranchName       = var.source_branch
       }
     }
   }
@@ -336,34 +283,15 @@ resource "aws_codepipeline" "terraform_pipeline" {
     name = "Build"
 
     action {
-      name             = "Build"
-      category         = "Build"
-      owner            = "AWS"
-      provider         = "CodeBuild"
-      input_artifacts  = ["source_output"]
-      output_artifacts = ["build_output"]
-      version          = "1"
+      name            = "Build"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["source_output"]
+      version         = "1"
 
       configuration = {
         ProjectName = aws_codebuild_project.codebuild_tf_build.name
-      }
-    }
-  }
-
-  stage {
-    name = "Deploy"
-
-    action {
-      name             = "Deploy"
-      category         = "Build"
-      owner            = "AWS"
-      provider         = "CodeBuild"
-      input_artifacts  = ["build_output"]
-      output_artifacts = ["deploy_output"]
-      version          = "1"
-
-      configuration = {
-        ProjectName = aws_codebuild_project.codebuild_tf_deploy.name
       }
     }
   }

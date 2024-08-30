@@ -12,3 +12,15 @@ variable "tags" {
   }
   description = "Tags"
 }
+
+variable "source_repository" {
+  type        = string
+  default     = "gear000/LudusSMA"
+  description = "Source repository"
+}
+
+variable "source_branch" {
+  type        = string
+  default     = "feat/tf_foundation"
+  description = "Source branch"
+}
