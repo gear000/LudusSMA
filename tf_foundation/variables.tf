@@ -24,3 +24,9 @@ variable "source_branch" {
   default     = "feat/tf_foundation"
   description = "Source branch"
 }
+
+variable "parameters_file" {
+  description = "Path to the JSON file containing SSM parameters."
+  type        = string
+  default     = "secrets.json"
+}

@@ -32,6 +32,18 @@ resource "aws_codestarconnections_connection" "github_connection" {
   provider_type = "GitHub"
 }
 
+### PARAMETERS ###
+
+resource "aws_ssm_parameter" "secure_string" {
+  for_each = local.parameters
+
+  name  = each.key
+  type  = "SecureString"
+  value = each.value
+
+  tags = var.tags
+}
+
 ### CODEBUILD ###
 
 resource "aws_cloudwatch_log_group" "log_group_codebuild_build" {
@@ -148,7 +160,7 @@ resource "aws_codebuild_project" "codebuild_tf_build" {
 
   source {
     type      = "CODEPIPELINE"
-    buildspec = "tf_foundation/build_scripts/buildspec_tf_build.yml"
+    buildspec = "tf_foundation/buildspec.yml"
   }
 
 }
@@ -252,9 +264,11 @@ resource "aws_iam_role_policy_attachment" "codepipeline_policy_attach" {
 }
 
 resource "aws_codepipeline" "terraform_pipeline" {
-  name     = "ludussma-tf-pipeline"
-  role_arn = aws_iam_role.codepipeline_role.arn
-  tags     = var.tags
+  name           = "ludussma-tf-pipeline"
+  role_arn       = aws_iam_role.codepipeline_role.arn
+  tags           = var.tags
+  pipeline_type  = "V2"
+  execution_mode = "QUEUED"
 
   artifact_store {
     location = aws_s3_bucket.s3_bucket_artifact.bucket
@@ -282,7 +296,7 @@ resource "aws_codepipeline" "terraform_pipeline" {
   }
 
   stage {
-    name = "Build&Deploy"
+    name = "BuildAndDeploy"
 
     action {
       name            = "Build"

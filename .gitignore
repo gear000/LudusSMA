@@ -186,7 +186,6 @@ crash.log
 
 # Terraform plan files, but foundation
 *.tfplan
-!tf_foundation/*.tfstate
 
 # Terraform variable override files
 *.tfvars
@@ -200,3 +199,6 @@ crash.log
 
 # Directory for local backend
 terraform.tfstate.d/
+
+# Platform Secrets
+secrets.json
