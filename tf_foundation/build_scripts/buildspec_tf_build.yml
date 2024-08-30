@@ -1,6 +1,12 @@
 version: 0.2
 
 phases:
+  install:
+    commands:
+      - echo "### INSTALLING ZIP"
+      - apt-get update -y
+      - apt-get install -y zip
+
   pre_build:
     commands:
       - echo "### VALIDATE TERRAFORM TEMPLATE"
