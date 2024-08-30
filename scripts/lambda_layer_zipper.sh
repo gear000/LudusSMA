@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/bin/sh
 
-# List of folder names
-folders=("utils")
+# List of folder names as a space-separated string
+folders="utils"
 
 # Function to create zip files
 create_zip() {
@@ -22,7 +22,7 @@ create_zip() {
 
 cd ./lambda_functions
 
-# Iterate on each folder in the list and create a zip file
-for folder in "${folders[@]}"; do
+# Iterate over each folder in the list and create a zip file
+for folder in $folders; do
     create_zip "$folder"
 done
