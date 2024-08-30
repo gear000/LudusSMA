@@ -11,11 +11,11 @@ create_zip() {
     zip_name="${folder}.zip"
     cp -r "$folder" "python"
     echo "checking if ./python/$folder exists"
-    ls -la ./python
+    echo ls -la ./python
     
     if [ -d "$folder" ]; then
         zip -r "$zip_name" "./python/$folder"
-        echo "Created $zip_name for the $folder"
+        echo "Created $zip_name for $folder"
     else
         echo "The $folder does not exist"
     fi

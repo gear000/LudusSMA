@@ -24,4 +24,4 @@ phases:
 artifacts:
   name: BuildArtifact
   files:
-    - plan.tfplan
+    - terraform/plan.tfplan
