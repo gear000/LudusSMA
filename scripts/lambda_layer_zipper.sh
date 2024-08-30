@@ -5,10 +5,13 @@ folders="utils"
 
 # Function to create zip files
 create_zip() {
+    echo "Creating zip file for $folder"
     folder=$1
     mkdir -p "python"
     zip_name="${folder}.zip"
     cp -r "$folder" "python"
+    echo "checking if ./python/$folder exists"
+    ls -la ./python
     
     if [ -d "$folder" ]; then
         zip -r "$zip_name" "./python/$folder"
