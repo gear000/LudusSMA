@@ -16,9 +16,9 @@ phases:
   build:
     commands:
       - echo "### CREATING LAYERS FOR LAMBDA FUNCTIONS"
-      - pwd
-      - ls -la
       - chmod +x ./scripts/lambda_layer_zipper.sh
+      - pwd
+      - ls -la ./scripts
       - ./scripts/lambda_layer_zipper.sh
 
       - echo "### CREATING TERRAFORM PLAN"
