@@ -291,7 +291,7 @@ resource "aws_lambda_function" "auth_tg_requests_function" {
   architectures = ["x86_64"]
   layers = [
     aws_lambda_layer_version.utils_layer.arn,
-    aws_lambda_layer_version.requirements_layer
+    aws_lambda_layer_version.requirements_layer.arn
   ]
 }
 
@@ -323,7 +323,7 @@ resource "aws_lambda_function" "telegram_bot_function" {
   architectures = ["x86_64"]
   layers = [
     aws_lambda_layer_version.utils_layer.arn,
-    aws_lambda_layer_version.requirements_layer
+    aws_lambda_layer_version.requirements_layer.arn
   ]
 }
 
@@ -354,7 +354,7 @@ resource "aws_lambda_function" "create_ig_stories_function" {
   architectures = ["x86_64"]
   layers = [
     aws_lambda_layer_version.utils_layer.arn,
-    aws_lambda_layer_version.requirements_layer
+    aws_lambda_layer_version.requirements_layer.arn
   ]
 }
 
@@ -385,8 +385,8 @@ data "archive_file" "requirements_zip" {
 }
 
 resource "aws_lambda_layer_version" "requirements_layer" {
-  filename         = data.archive_file.layer_zip.output_path
-  source_code_hash = data.archive_file.layer_zip.output_base64sha256
+  filename         = data.archive_file.requirements_zip.output_path
+  source_code_hash = data.archive_file.requirements_zip.output_base64sha256
   layer_name       = "RequirementsLayer"
 
   compatible_runtimes = ["python3.11"]
