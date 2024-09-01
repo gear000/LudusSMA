@@ -208,7 +208,7 @@ resource "aws_sqs_queue" "events_sqs_queue" {
 }
 
 resource "aws_sqs_queue" "telegram_updates_sqs_queue" {
-  name                        = var.sqs_telegram_updates_name
+  name                        = "${var.sqs_telegram_updates_name}.fifo"
   fifo_queue                  = true
   content_based_deduplication = true
   fifo_throughput_limit       = "perMessageGroupId"
@@ -227,7 +227,7 @@ resource "aws_sqs_queue" "telegram_updates_sqs_queue_ddl" {
 
   redrive_allow_policy = jsonencode({
     redrivePermission = "byQueue"
-    sourceQueueArns   = ["arn:aws:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${var.sqs_telegram_updates_name}"]
+    sourceQueueArns   = ["arn:aws:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${var.sqs_telegram_updates_name}.fifo"]
   })
 }
 
