@@ -161,35 +161,35 @@ provider "aws" {
 #   policy = data.aws_iam_policy_document.scheduler_policy_document.json
 # }
 
-# data "aws_iam_policy_document" "pipe_policy_document" {
-#   statement {
-#     effect = "Allow"
-#     actions = [
-#       "sqs:ReceiveMessage",
-#       "sqs:DeleteMessage",
-#       "sqs:GetQueueAttributes",
-#     ]
-#     resources = [
-#       aws_sqs_queue.telegram_updates_sqs_queue_ddl.arn,
-#     ]
-#   }
+data "aws_iam_policy_document" "pipe_policy_document" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "sqs:ReceiveMessage",
+      "sqs:DeleteMessage",
+      "sqs:GetQueueAttributes",
+    ]
+    resources = [
+      aws_sqs_queue.telegram_updates_sqs_queue_ddl.arn,
+    ]
+  }
 
-#   statement {
-#     effect = "Allow"
-#     actions = [
-#       "sns:Publish",
-#     ]
-#     resources = [
-#       aws_sns_topic.error_sns_topic.arn
-#     ]
-#   }
-# }
+  statement {
+    effect = "Allow"
+    actions = [
+      "sns:Publish",
+    ]
+    resources = [
+      aws_sns_topic.error_sns_topic.arn
+    ]
+  }
+}
 
-# resource "aws_iam_role_policy" "pipe_policy" {
-#   name   = "LudusSMAPipePolicy"
-#   role   = aws_iam_role.pipe_role.id
-#   policy = data.aws_iam_policy_document.pipe_policy_document.json
-# }
+resource "aws_iam_role_policy" "pipe_policy" {
+  name   = "LudusSMAPipePolicy"
+  role   = aws_iam_role.pipe_role.id
+  policy = data.aws_iam_policy_document.pipe_policy_document.json
+}
 
 ### S3 BUCKETS ###
 
@@ -234,10 +234,10 @@ resource "aws_sqs_queue" "telegram_updates_sqs_queue_ddl" {
 
 # ### SNS TOPIC ###
 
-# resource "aws_sns_topic" "error_sns_topic" {
-#   name         = "error-notification"
-#   display_name = "Error Notification"
-# }
+resource "aws_sns_topic" "error_sns_topic" {
+  name         = "error-notification"
+  display_name = "Error Notification"
+}
 
 # resource "aws_sns_topic_subscription" "error_sns_subscription" {
 #   topic_arn = aws_sns_topic.error_sns_topic.arn
