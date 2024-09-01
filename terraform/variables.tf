@@ -31,7 +31,7 @@ variable "meta_access_token_key_parameter" {
 
 variable "sqs_telegram_updates_name" {
   type    = string
-  default = "TelegramUpdates.fifo"
+  default = "TelegramUpdates"
 }
 
 variable "bedrock_models_region" {
