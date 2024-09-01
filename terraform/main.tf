@@ -274,48 +274,48 @@ resource "aws_pipes_pipe" "pipe_error_notification" {
 
 ### API GATEWAY ###
 
-resource "aws_apigatewayv2_api" "lambda_api_gateway" {
-  name          = "ludussma-api-gateway"
-  protocol_type = "HTTP"
-}
+# resource "aws_apigatewayv2_api" "lambda_api_gateway" {
+#   name          = "ludussma-api-gateway"
+#   protocol_type = "HTTP"
+# }
 
-resource "aws_apigatewayv2_stage" "lambda_api_gateway_stage" {
-  api_id      = aws_apigatewayv2_api.lambda_api_gateway.id
-  name        = "prd"
-  auto_deploy = true
+# resource "aws_apigatewayv2_stage" "lambda_api_gateway_stage" {
+#   api_id      = aws_apigatewayv2_api.lambda_api_gateway.id
+#   name        = "prd"
+#   auto_deploy = true
 
-  access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.log_group_api_gateway.arn
+#   access_log_settings {
+#     destination_arn = aws_cloudwatch_log_group.log_group_api_gateway.arn
 
-    format = jsonencode({
-      requestId               = "$context.requestId"
-      sourceIp                = "$context.identity.sourceIp"
-      requestTime             = "$context.requestTime"
-      protocol                = "$context.protocol"
-      httpMethod              = "$context.httpMethod"
-      resourcePath            = "$context.resourcePath"
-      routeKey                = "$context.routeKey"
-      status                  = "$context.status"
-      responseLength          = "$context.responseLength"
-      integrationErrorMessage = "$context.integrationErrorMessage"
-      }
-    )
-  }
-}
+#     format = jsonencode({
+#       requestId               = "$context.requestId"
+#       sourceIp                = "$context.identity.sourceIp"
+#       requestTime             = "$context.requestTime"
+#       protocol                = "$context.protocol"
+#       httpMethod              = "$context.httpMethod"
+#       resourcePath            = "$context.resourcePath"
+#       routeKey                = "$context.routeKey"
+#       status                  = "$context.status"
+#       responseLength          = "$context.responseLength"
+#       integrationErrorMessage = "$context.integrationErrorMessage"
+#       }
+#     )
+#   }
+# }
 
-resource "aws_apigatewayv2_integration" "lambda_api_gateway_integration" {
-  api_id             = aws_apigatewayv2_api.lambda_api_gateway.id
-  integration_type   = "AWS_PROXY"
-  integration_method = "POST"
-  integration_uri    = module.lambda_telegram_bot.lambda_function_arn
-}
+# resource "aws_apigatewayv2_integration" "lambda_api_gateway_integration" {
+#   api_id             = aws_apigatewayv2_api.lambda_api_gateway.id
+#   integration_type   = "AWS_PROXY"
+#   integration_method = "POST"
+#   integration_uri    = module.lambda_telegram_bot.lambda_function_arn
+# }
 
-resource "aws_apigatewayv2_route" "get_lambda_api_gateway_route" {
-  api_id = aws_apigatewayv2_api.lambda_api_gateway.id
+# resource "aws_apigatewayv2_route" "get_lambda_api_gateway_route" {
+#   api_id = aws_apigatewayv2_api.lambda_api_gateway.id
 
-  route_key = "POST /telegram-bot"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda_api_gateway_integration.id}"
-}
+#   route_key = "POST /telegram-bot"
+#   target    = "integrations/${aws_apigatewayv2_integration.lambda_api_gateway_integration.id}"
+# }
 
 ### LAMBDA FUNCTIONS ###
 
@@ -335,6 +335,11 @@ module "lambda_auth_tg_requests" {
     S3_BUCKET_CHAT_PERSISTENCE_NAME = aws_s3_bucket.chat_persistence_bucket.bucket
   }
   lambda_layers = [aws_lambda_layer_version.utils_layer.arn]
+}
+
+resource "aws_lambda_function_url" "auth_tg_http_trigger" {
+  function_name      = module.lambda_auth_tg_requests.lambda_function_arn
+  authorization_type = "NONE"
 }
 
 module "lambda_telegram_bot" {
@@ -390,13 +395,13 @@ resource "aws_lambda_event_source_mapping" "create_ig_stories_sqs_trigger" {
 
 ### LAMBDA TRIGGER PERMISSIONS ###
 
-resource "aws_lambda_permission" "auth_tg_permission_trigger" {
-  statement_id  = "AllowAPIGatewayInvoke"
-  action        = "lambda:InvokeFunction"
-  function_name = module.lambda_auth_tg_requests.lambda_function_arn
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = aws_apigatewayv2_api.lambda_api_gateway.arn
-}
+# resource "aws_lambda_permission" "auth_tg_permission_trigger" {
+#   statement_id  = "AllowAPIGatewayInvoke"
+#   action        = "lambda:InvokeFunction"
+#   function_name = module.lambda_auth_tg_requests.lambda_function_arn
+#   principal     = "apigateway.amazonaws.com"
+#   source_arn    = aws_apigatewayv2_api.lambda_api_gateway.arn
+# }
 
 resource "aws_lambda_permission" "tg_bot_permission_trigger" {
   statement_id  = "AllowSQSTrigger"

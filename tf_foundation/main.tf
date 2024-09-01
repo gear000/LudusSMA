@@ -102,7 +102,9 @@ data "aws_iam_policy_document" "codebuild_policy_document" {
     effect = "Allow"
     actions = [
       "lambda:CreateEventSourceMapping",
-      "logs:CreateLogDelivery"
+      "logs:CreateLogDelivery",
+      "logs:ListLogDeliveries",
+      "logs:DeleteLogDelivery"
     ]
     resources = ["*"]
   }
