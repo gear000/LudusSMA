@@ -1,5 +1,6 @@
 terraform {
   required_version = ">= 1.9.0"
+  backend "s3" {}
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -288,7 +289,10 @@ resource "aws_lambda_function" "auth_tg_requests_function" {
   filename = data.archive_file.auth_tg_zip.output_path
 
   architectures = ["x86_64"]
-  layers        = [aws_lambda_layer_version.utils_layer.arn]
+  layers = [
+    aws_lambda_layer_version.utils_layer.arn,
+    aws_lambda_layer_version.requirements_layer
+  ]
 }
 
 data "archive_file" "telegram_bot_zip" {
@@ -317,7 +321,10 @@ resource "aws_lambda_function" "telegram_bot_function" {
   filename = data.archive_file.telegram_bot_zip.output_path
 
   architectures = ["x86_64"]
-  layers        = [aws_lambda_layer_version.utils_layer.arn]
+  layers = [
+    aws_lambda_layer_version.utils_layer.arn,
+    aws_lambda_layer_version.requirements_layer
+  ]
 }
 
 data "archive_file" "create_ig_stories_zip" {
@@ -326,8 +333,8 @@ data "archive_file" "create_ig_stories_zip" {
   output_path = "create_ig_stories_zip.zip"
 }
 
-resource "aws_lambda_function" "random_images_function" {
-  function_name = "random-images"
+resource "aws_lambda_function" "create_ig_stories_function" {
+  function_name = "create-ig-stories"
   handler       = "main.lambda_handler"
   runtime       = "python3.11"
   memory_size   = 256
@@ -345,7 +352,10 @@ resource "aws_lambda_function" "random_images_function" {
   filename = data.archive_file.create_ig_stories_zip.output_path
 
   architectures = ["x86_64"]
-  layers        = [aws_lambda_layer_version.utils_layer.arn]
+  layers = [
+    aws_lambda_layer_version.utils_layer.arn,
+    aws_lambda_layer_version.requirements_layer
+  ]
 }
 
 ### LAMBDA LAYER ###
@@ -356,3 +366,28 @@ resource "aws_lambda_layer_version" "utils_layer" {
   compatible_runtimes = ["python3.11"]
 }
 
+resource "null_resource" "build_requirements" {
+  provisioner "local-exec" {
+    command = "pip install -r ../requirements.txt -t requirements_layer/python/lib/python3.11/site-packages"
+  }
+  triggers = {
+    trigger = uuid()
+  }
+}
+
+data "archive_file" "requirements_zip" {
+  type        = "zip"
+  source_dir  = "requirements_layer"
+  output_path = "requirements_layer.zip"
+  depends_on = [
+    null_resource.build_requirements
+  ]
+}
+
+resource "aws_lambda_layer_version" "requirements_layer" {
+  filename         = data.archive_file.layer_zip.output_path
+  source_code_hash = data.archive_file.layer_zip.output_base64sha256
+  layer_name       = "RequirementsLayer"
+
+  compatible_runtimes = ["python3.11"]
+}
