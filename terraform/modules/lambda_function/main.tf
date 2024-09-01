@@ -1,6 +1,6 @@
 resource "null_resource" "build_deps" {
   triggers = {
-    refresh = sha256(filesha256("${var.lambda_folder}/requirements.txt"))
+    always = uuid()
   }
   provisioner "local-exec" {
     command = "pip install -r ${var.lambda_folder}/requirements.txt --target ${var.lambda_folder}"
