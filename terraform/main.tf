@@ -265,8 +265,8 @@ resource "aws_pipes_pipe" "pipe_error_notification" {
 
 data "archive_file" "auth_tg_zip" {
   type        = "zip"
-  source_dir  = "../lambda_auth_tg"
-  output_path = "auth_tg_zip.zip"
+  source_dir  = "../lambda_auth_tg_requests"
+  output_path = "auth_tg_reuqests_zip.zip"
 }
 
 resource "aws_lambda_function" "auth_tg_requests_function" {
