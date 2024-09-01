@@ -17,6 +17,7 @@ phases:
           -backend-config="key=$S3_BUCKET_ARTIFACT_KEY" \
           -backend-config="dynamodb_table=$DDB_TABLE_NAME" \
           -backend-config="region=$AWS_REGION"
+      - export TF_VAR_s3_bucket_artifact=$S3_BUCKET_ARTIFACT_NAME
 
   build:
     commands:
