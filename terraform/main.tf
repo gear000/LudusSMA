@@ -58,11 +58,11 @@ provider "aws" {
 #   }
 # }
 
-# resource "aws_iam_role" "pipe_role" {
-#   name = "LudusSMAPipeRole"
+resource "aws_iam_role" "pipe_role" {
+  name = "LudusSMAPipeRole"
 
-#   assume_role_policy = data.aws_iam_policy_document.pipe_role_document.json
-# }
+  assume_role_policy = data.aws_iam_policy_document.pipe_role_document.json
+}
 
 # ### IAM POLICIES ###
 
