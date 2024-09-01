@@ -10,15 +10,13 @@ phases:
 
   pre_build:
     commands:
-      - echo "### VALIDATE TERRAFORM TEMPLATE"
+      - echo "### TERRAFORM INITIALIZATION"
       - |
         terraform -chdir=terraform init \
           -backend-config="bucket=$S3_BUCKET_ARTIFACT_NAME" \
           -backend-config="key=$S3_BUCKET_ARTIFACT_KEY" \
           -backend-config="dynamodb_table=$DDB_TABLE_NAME" \
           -backend-config="region=$AWS_REGION"
-      - terraform -chdir=terraform fmt -recursive
-      - terraform -chdir=terraform validate
 
   build:
     commands:
@@ -26,6 +24,8 @@ phases:
       - chmod +x ./scripts/lambda_layer_zipper.sh
       - ./scripts/lambda_layer_zipper.sh
       - echo "### CREATING TERRAFORM PLAN"
+      - terraform -chdir=terraform fmt -recursive
+      - terraform -chdir=terraform validate
       - terraform -chdir=terraform plan -out=plan.tfplan
 
   post_build:
