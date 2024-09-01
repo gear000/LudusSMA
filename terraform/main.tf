@@ -356,7 +356,7 @@ module "lambda_telegram_bot" {
   lambda_layers = [aws_lambda_layer_version.utils_layer.arn]
 }
 
-resource "aws_lambda_event_source_mapping" "sqs_trigger" {
+resource "aws_lambda_event_source_mapping" "telegram_bot_sqs_trigger" {
   event_source_arn = aws_sqs_queue.telegram_updates_sqs_queue.arn
   function_name    = lambda_telegram_bot.this.arn
   enabled          = true
@@ -381,7 +381,7 @@ module "lambda_create_ig_stories" {
   lambda_layers = [aws_lambda_layer_version.utils_layer.arn]
 }
 
-resource "aws_lambda_event_source_mapping" "sqs_trigger" {
+resource "aws_lambda_event_source_mapping" "create_ig_stories_sqs_trigger" {
   event_source_arn = aws_sqs_queue.events_sqs_queue.arn
   function_name    = lambda_create_ig_stories.this.arn
   enabled          = true
