@@ -285,7 +285,7 @@ resource "aws_apigatewayv2_stage" "lambda_api_gateway_stage" {
   auto_deploy = true
 
   access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.api_gw.arn
+    destination_arn = aws_cloudwatch_log_group.log_group_api_gateway.arn
 
     format = jsonencode({
       requestId               = "$context.requestId"
@@ -307,7 +307,7 @@ resource "aws_apigatewayv2_integration" "lambda_api_gateway_integration" {
   api_id             = aws_apigatewayv2_api.lambda_api_gateway.id
   integration_type   = "AWS_PROXY"
   integration_method = "POST"
-  integration_uri    = lambda_auth_tg_requests.this.invoke_arn
+  integration_uri    = module.lambda_auth_tg_requests.this.invoke_arn
 }
 
 resource "aws_apigatewayv2_route" "get_lambda_api_gateway_route" {
@@ -358,7 +358,7 @@ module "lambda_telegram_bot" {
 
 resource "aws_lambda_event_source_mapping" "telegram_bot_sqs_trigger" {
   event_source_arn = aws_sqs_queue.telegram_updates_sqs_queue.arn
-  function_name    = lambda_telegram_bot.this.arn
+  function_name    = module.lambda_telegram_bot.this.arn
   enabled          = true
   batch_size       = 1
 }
@@ -383,7 +383,7 @@ module "lambda_create_ig_stories" {
 
 resource "aws_lambda_event_source_mapping" "create_ig_stories_sqs_trigger" {
   event_source_arn = aws_sqs_queue.events_sqs_queue.arn
-  function_name    = lambda_create_ig_stories.this.arn
+  function_name    = module.lambda_create_ig_stories.this.arn
   enabled          = true
   batch_size       = 1
 }
