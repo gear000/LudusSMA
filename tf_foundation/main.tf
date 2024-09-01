@@ -99,17 +99,11 @@ data "aws_iam_policy_document" "codebuild_policy_document" {
   }
 }
 
-resource "aws_iam_policy" "codebuild_policy" {
-  name        = "ludussma-codebuild-policy"
-  description = "Policy for CodeBuild"
+resource "aws_iam_role_policy" "codebuild_policy" {
+  name = "ludussma-codebuild-policy"
+  role = aws_iam_role.codebuild_role.id
 
   policy = data.aws_iam_policy_document.codebuild_policy_document.json
-}
-
-
-resource "aws_iam_role_policy_attachment" "codebuild_policy_attach" {
-  role       = aws_iam_role.codebuild_role.name
-  policy_arn = aws_iam_policy.codebuild_policy.arn
 }
 
 resource "aws_codebuild_source_credential" "example" {
@@ -251,16 +245,10 @@ data "aws_iam_policy_document" "codepipeline_policy_document" {
 
 }
 
-resource "aws_iam_policy" "codepipeline_policy" {
-  name        = "ludussma-codepipeline-policy"
-  description = "Policy for CodePipeline"
-  policy      = data.aws_iam_policy_document.codepipeline_policy_document.json
-}
-
-
-resource "aws_iam_role_policy_attachment" "codepipeline_policy_attach" {
-  role       = aws_iam_role.codepipeline_role.name
-  policy_arn = aws_iam_policy.codepipeline_policy.arn
+resource "aws_iam_role_policy" "codepipeline_policy" {
+  name   = "ludussma-codepipeline-policy"
+  role   = aws_iam_role.codepipeline_role.id
+  policy = data.aws_iam_policy_document.codepipeline_policy_document.json
 }
 
 resource "aws_codepipeline" "terraform_pipeline" {
