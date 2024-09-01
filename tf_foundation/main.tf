@@ -70,13 +70,11 @@ data "aws_iam_policy_document" "codebuild_policy_document" {
 
   statement {
     effect = "Allow"
-
     actions = [
       "logs:CreateLogGroup",
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ]
-
     resources = [
       aws_cloudwatch_log_group.log_group_codebuild_build.arn,
       "${aws_cloudwatch_log_group.log_group_codebuild_build.arn}:*",
@@ -84,6 +82,7 @@ data "aws_iam_policy_document" "codebuild_policy_document" {
   }
 
   statement {
+    effect  = "Allow"
     actions = ["*"]
     resources = [
       "arn:aws:s3:::*",
@@ -91,11 +90,18 @@ data "aws_iam_policy_document" "codebuild_policy_document" {
       "arn:aws:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*",
       "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*",
       "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*",
+      "arn:aws:apigateway:${data.aws_region.current.name}::/*",
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*",
       "arn:aws:bedrock:us-west-2::*",
       "arn:aws:pipes:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*",
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*",
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/*",
     ]
+  }
+  statement {
+    effect    = "Allow"
+    actions   = ["lambda:CreateEventSourceMapping"]
+    resources = ["*"]
   }
 }
 

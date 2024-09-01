@@ -212,7 +212,7 @@ resource "aws_cloudwatch_log_group" "log_group_api_gateway" {
 
 resource "aws_sqs_queue" "events_sqs_queue" {
   name                       = "ScheduledEvents"
-  visibility_timeout_seconds = 30
+  visibility_timeout_seconds = 60
 }
 
 resource "aws_sqs_queue" "telegram_updates_sqs_queue" {
@@ -221,7 +221,7 @@ resource "aws_sqs_queue" "telegram_updates_sqs_queue" {
   content_based_deduplication = true
   fifo_throughput_limit       = "perMessageGroupId"
   deduplication_scope         = "messageGroup"
-  visibility_timeout_seconds  = 30
+  visibility_timeout_seconds  = 60
 
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.telegram_updates_sqs_queue_ddl.arn
