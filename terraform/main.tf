@@ -239,11 +239,14 @@ resource "aws_sns_topic" "error_sns_topic" {
   display_name = "Error Notification"
 }
 
-# resource "aws_sns_topic_subscription" "error_sns_subscription" {
-#   topic_arn = aws_sns_topic.error_sns_topic.arn
-#   protocol  = "email"
-#   endpoint  = "d.franzoni.97@gmail.com"
-# }
+resource "aws_sns_topic_subscription" "error_sns_subscription" {
+  for_each = var.developers_email
+
+  topic_arn = aws_sns_topic.error_sns_topic.arn
+  protocol  = "email"
+  endpoint  = each.value
+
+}
 
 # ### EVENTBRIDGE PIPES ###
 

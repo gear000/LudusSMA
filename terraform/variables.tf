@@ -38,3 +38,10 @@ variable "sqs_telegram_updates_name" {
 #   type    = string
 #   default = "us-west-2"
 # }
+
+variable "developers_email" {
+  type = tuple([string])
+
+  default = ["d.franzoni.97@gmail.com"]
+
+}
