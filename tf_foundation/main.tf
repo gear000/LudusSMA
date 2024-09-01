@@ -136,7 +136,7 @@ resource "aws_codebuild_project" "codebuild_tf_build" {
 
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "hashicorp/terraform:latest"
+    image        = "hashicorp/terraform:1.9.5"
     type         = "LINUX_CONTAINER"
     environment_variable {
       name  = "S3_BUCKET_ARTIFACT_NAME"
