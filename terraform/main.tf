@@ -203,10 +203,10 @@ resource "aws_s3_bucket" "chat_persistence_bucket" {
 
 ### LOG GROUP ###
 
-resource "aws_cloudwatch_log_group" "log_group_api_gateway" {
-  name              = "/aws/apigateway/${aws_apigatewayv2_api.lambda_api_gateway.name}"
-  retention_in_days = 7
-}
+# resource "aws_cloudwatch_log_group" "log_group_api_gateway" {
+#   name              = "/aws/apigateway/${aws_apigatewayv2_api.lambda_api_gateway.name}"
+#   retention_in_days = 7
+# }
 
 # ### SQS QUEUE ###
 
