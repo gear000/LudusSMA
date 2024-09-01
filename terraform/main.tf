@@ -48,15 +48,15 @@ provider "aws" {
 #   assume_role_policy = data.aws_iam_policy_document.scheduler_role_document.json
 # }
 
-# data "aws_iam_policy_document" "pipe_role_document" {
-#   statement {
-#     actions = ["sts:AssumeRole"]
-#     principals {
-#       type        = "Service"
-#       identifiers = ["pipes.amazonaws.com"]
-#     }
-#   }
-# }
+data "aws_iam_policy_document" "pipe_role_document" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["pipes.amazonaws.com"]
+    }
+  }
+}
 
 resource "aws_iam_role" "pipe_role" {
   name = "LudusSMAPipeRole"
