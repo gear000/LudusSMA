@@ -1,0 +1,38 @@
+resource "null_resource" "build_deps" {
+  triggers = {
+    refresh = sha256(filesha256("${var.lambda_folder}/requirements.txt"))
+  }
+  provisioner "local-exec" {
+    command = "pip install -r ${var.lambda_folder}/requirements.txt --target ${var.lambda_folder}"
+  }
+}
+
+data "archive_file" "create_zip" {
+  type        = "zip"
+  source_dir  = var.lambda_folder
+  output_path = var.lambda_name
+
+  depends_on = [null_resource.build_deps]
+}
+
+resource "aws_s3_object" "lambda_zip" {
+  bucket = var.s3_bucket
+  key    = "lambda_package/${var.lambda_name}.zip"
+  source = "${path.module}/${data.archive_file.create_zip.output_path}"
+}
+
+resource "aws_lambda_function" "this" {
+  function_name    = var.lambda_name
+  source_code_hash = data.archive_file.create_zip.output_base64sha256
+  s3_bucket        = aws_s3_object.lambda_zip.bucket
+  s3_key           = aws_s3_object.lambda_zip.key
+  memory_size      = var.lambda_memory_size
+  timeout          = var.lambda_timeout
+  handler          = var.lambda_handler
+  runtime          = var.lambda_runtime
+  role             = var.iam_role_arn
+  environment {
+    variables = var.environment_variables
+  }
+  layers = var.lambda_layers
+}

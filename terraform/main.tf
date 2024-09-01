@@ -13,40 +13,40 @@ provider "aws" {
   region = var.aws_region
 }
 
-# ### IAM ROLES ###
+### IAM ROLES ###
 
-# data "aws_iam_policy_document" "lambda_role_document" {
-#   statement {
-#     actions = ["sts:AssumeRole"]
+data "aws_iam_policy_document" "lambda_role_document" {
+  statement {
+    actions = ["sts:AssumeRole"]
 
-#     principals {
-#       type        = "Service"
-#       identifiers = ["lambda.amazonaws.com"]
-#     }
-#   }
-# }
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
 
-# resource "aws_iam_role" "lambda_role" {
-#   name               = "LudusSMALambdaRole"
-#   assume_role_policy = data.aws_iam_policy_document.lambda_role_document.json
-# }
+resource "aws_iam_role" "lambda_role" {
+  name               = "LudusSMALambdaRole"
+  assume_role_policy = data.aws_iam_policy_document.lambda_role_document.json
+}
 
-# data "aws_iam_policy_document" "scheduler_role_document" {
-#   statement {
-#     actions = ["sts:AssumeRole"]
+data "aws_iam_policy_document" "scheduler_role_document" {
+  statement {
+    actions = ["sts:AssumeRole"]
 
-#     principals {
-#       type        = "Service"
-#       identifiers = ["scheduler.amazonaws.com"]
-#     }
-#   }
-# }
+    principals {
+      type        = "Service"
+      identifiers = ["scheduler.amazonaws.com"]
+    }
+  }
+}
 
-# resource "aws_iam_role" "scheduler_role" {
-#   name = "LudusSMASchedulerRole"
+resource "aws_iam_role" "scheduler_role" {
+  name = "LudusSMASchedulerRole"
 
-#   assume_role_policy = data.aws_iam_policy_document.scheduler_role_document.json
-# }
+  assume_role_policy = data.aws_iam_policy_document.scheduler_role_document.json
+}
 
 data "aws_iam_policy_document" "pipe_role_document" {
   statement {
@@ -64,102 +64,102 @@ resource "aws_iam_role" "pipe_role" {
   assume_role_policy = data.aws_iam_policy_document.pipe_role_document.json
 }
 
-# ### IAM POLICIES ###
+### IAM POLICIES ###
 
-# data "aws_iam_policy_document" "lambda_policy_document" {
-#   statement {
-#     effect    = "Allow"
-#     actions   = ["logs:*"]
-#     resources = ["*"]
-#   }
-#   statement {
-#     effect  = "Allow"
-#     actions = ["ssm:GetParameter"]
-#     resources = [
-#       "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/telegram/*",
-#       "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/meta/*"
-#     ]
-#   }
-#   statement {
-#     effect = "Allow"
-#     actions = [
-#       "sqs:ReceiveMessage",
-#       "sqs:DeleteMessage",
-#       "sqs:GetQueueAttributes"
-#     ]
-#     resources = [
-#       aws_sqs_queue.events_sqs_queue.arn,
-#       aws_sqs_queue.telegram_updates_sqs_queue.arn
-#     ]
-#   }
-#   statement {
-#     effect  = "Allow"
-#     actions = ["sqs:SendMessage"]
-#     resources = [
-#       aws_sqs_queue.telegram_updates_sqs_queue.arn
-#     ]
-#   }
-#   statement {
-#     effect = "Allow"
-#     actions = [
-#       "s3:GetObject",
-#       "s3:PutObject",
-#       "s3:ListBucket",
-#       "s3:ListObject",
-#     ]
-#     resources = [
-#       aws_s3_bucket.chat_persistence_bucket.arn,
-#       "${aws_s3_bucket.chat_persistence_bucket.arn}/*",
-#       aws_s3_bucket.images_bucket.arn,
-#       "${aws_s3_bucket.images_bucket.arn}/*"
-#     ]
-#   }
-#   statement {
-#     effect  = "Allow"
-#     actions = ["*"]
-#     resources = [
-#       "arn:aws:scheduler:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:schedule/*",
-#     ]
-#   }
-#   statement {
-#     effect = "Allow"
-#     actions = [
-#       "iam:PassRole",
-#     ]
-#     resources = [
-#       aws_iam_role.scheduler_role.arn
-#     ]
-#   }
-#   statement {
-#     effect = "Allow"
-#     actions = [
-#       "bedrock:InvokeModel"
-#     ]
-#     resources = [
-#       "arn:aws:bedrock:${var.bedrock_models_region}::foundation-model/*"
-#     ]
-#   }
-# }
+data "aws_iam_policy_document" "lambda_policy_document" {
+  statement {
+    effect    = "Allow"
+    actions   = ["logs:*"]
+    resources = ["*"]
+  }
+  statement {
+    effect  = "Allow"
+    actions = ["ssm:GetParameter"]
+    resources = [
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/telegram/*",
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/meta/*"
+    ]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "sqs:ReceiveMessage",
+      "sqs:DeleteMessage",
+      "sqs:GetQueueAttributes"
+    ]
+    resources = [
+      aws_sqs_queue.events_sqs_queue.arn,
+      aws_sqs_queue.telegram_updates_sqs_queue.arn
+    ]
+  }
+  statement {
+    effect  = "Allow"
+    actions = ["sqs:SendMessage"]
+    resources = [
+      aws_sqs_queue.telegram_updates_sqs_queue.arn
+    ]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:ListBucket",
+      "s3:ListObject",
+    ]
+    resources = [
+      aws_s3_bucket.chat_persistence_bucket.arn,
+      "${aws_s3_bucket.chat_persistence_bucket.arn}/*",
+      aws_s3_bucket.images_bucket.arn,
+      "${aws_s3_bucket.images_bucket.arn}/*"
+    ]
+  }
+  statement {
+    effect  = "Allow"
+    actions = ["*"]
+    resources = [
+      "arn:aws:scheduler:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:schedule/*",
+    ]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:PassRole",
+    ]
+    resources = [
+      aws_iam_role.scheduler_role.arn
+    ]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "bedrock:InvokeModel"
+    ]
+    resources = [
+      "arn:aws:bedrock:${var.bedrock_models_region}::foundation-model/*"
+    ]
+  }
+}
 
-# resource "aws_iam_role_policy" "lambda_policy" {
-#   name   = "LudusSMALambdaPolicy"
-#   role   = aws_iam_role.lambda_role.id
-#   policy = data.aws_iam_policy_document.lambda_policy_document.json
-# }
+resource "aws_iam_role_policy" "lambda_policy" {
+  name   = "LudusSMALambdaPolicy"
+  role   = aws_iam_role.lambda_role.id
+  policy = data.aws_iam_policy_document.lambda_policy_document.json
+}
 
-# data "aws_iam_policy_document" "scheduler_policy_document" {
-#   statement {
-#     effect    = "Allow"
-#     actions   = ["sqs:SendMessage"]
-#     resources = [aws_sqs_queue.events_sqs_queue.arn]
-#   }
-# }
+data "aws_iam_policy_document" "scheduler_policy_document" {
+  statement {
+    effect    = "Allow"
+    actions   = ["sqs:SendMessage"]
+    resources = [aws_sqs_queue.events_sqs_queue.arn]
+  }
+}
 
-# resource "aws_iam_role_policy" "scheduler_policy" {
-#   name   = "LudusSMASchedulerPolicy"
-#   role   = aws_iam_role.scheduler_role.id
-#   policy = data.aws_iam_policy_document.scheduler_policy_document.json
-# }
+resource "aws_iam_role_policy" "scheduler_policy" {
+  name   = "LudusSMASchedulerPolicy"
+  role   = aws_iam_role.scheduler_role.id
+  policy = data.aws_iam_policy_document.scheduler_policy_document.json
+}
 
 data "aws_iam_policy_document" "pipe_policy_document" {
   statement {
@@ -248,24 +248,24 @@ resource "aws_sns_topic_subscription" "error_sns_subscription" {
 
 }
 
-# ### EVENTBRIDGE PIPES ###
+### EVENTBRIDGE PIPES ###
 
-# resource "aws_pipes_pipe" "pipe_error_notification" {
-#   name          = "error-notification"
-#   role_arn      = aws_iam_role.pipe_role.arn
-#   source        = aws_sqs_queue.telegram_updates_sqs_queue_ddl.arn
-#   target        = aws_sns_topic.error_sns_topic.arn
-#   desired_state = "RUNNING"
+resource "aws_pipes_pipe" "pipe_error_notification" {
+  name          = "error-notification"
+  role_arn      = aws_iam_role.pipe_role.arn
+  source        = aws_sqs_queue.telegram_updates_sqs_queue_ddl.arn
+  target        = aws_sns_topic.error_sns_topic.arn
+  desired_state = "RUNNING"
 
-#   target_parameters {
-#     input_template = jsonencode({
-#       body           = "<$.body>"
-#       eventSourceARN = "<$.eventSourceARN>"
-#     })
-#   }
-# }
+  target_parameters {
+    input_template = jsonencode({
+      body           = "<$.body>"
+      eventSourceARN = "<$.eventSourceARN>"
+    })
+  }
+}
 
-# ### LAMBDA FUNCTIONS ###
+### LAMBDA FUNCTIONS ###
 
 # resource "null_resource" "auth_tg_requests_deps" {
 #   triggers = {
@@ -390,9 +390,9 @@ resource "aws_sns_topic_subscription" "error_sns_subscription" {
 
 # ### LAMBDA LAYER ###
 
-# resource "aws_lambda_layer_version" "utils_layer" {
-#   filename            = "../utils.zip"
-#   layer_name          = "LudusSMAUtilsLayer"
-#   compatible_runtimes = ["python3.11"]
-# }
-
+resource "aws_lambda_layer_version" "utils_layer" {
+  filename            = "../utils.zip"
+  layer_name          = "LudusSMAUtilsLayer"
+  compatible_runtimes = ["python3.11"]
+  source_code_hash    = sha256(filebase64sha256("../utils.zip"))
+}

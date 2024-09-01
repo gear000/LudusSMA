@@ -34,10 +34,10 @@ variable "sqs_telegram_updates_name" {
   default = "TelegramUpdates"
 }
 
-# variable "bedrock_models_region" {
-#   type    = string
-#   default = "us-west-2"
-# }
+variable "bedrock_models_region" {
+  type    = string
+  default = "us-west-2"
+}
 
 variable "developers_email" {
   type = set(string)
