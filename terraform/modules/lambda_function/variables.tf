@@ -49,5 +49,4 @@ variable "lambda_layers" {
   description = "List of Lambda layer ARNs to attach to the Lambda function"
   type        = list(string)
   default     = []
-
 }

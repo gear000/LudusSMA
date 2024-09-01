@@ -4,6 +4,11 @@ variable "aws_region" {
   description = "AWS Region"
 }
 
+variable "s3_bucket_artifact" {
+  type        = string
+  description = "S3 bucket for storing artifact"
+}
+
 # variable "telegram_bot_key_parameter" {
 #   type    = string
 #   default = "/telegram/bot-token"
@@ -14,10 +19,10 @@ variable "aws_region" {
 #   default = "/telegram/allow-chat-ids"
 # }
 
-# variable "telegram_header_webhook_token_key_parameter" {
-#   type    = string
-#   default = "/telegram/header-webhook-token"
-# }
+variable "telegram_header_webhook_token_key_parameter" {
+  type    = string
+  default = "/telegram/header-webhook-token"
+}
 
 # variable "meta_client_secret_key_parameter" {
 #   type    = string

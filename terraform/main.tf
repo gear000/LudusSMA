@@ -267,22 +267,22 @@ resource "aws_pipes_pipe" "pipe_error_notification" {
 
 ### LAMBDA FUNCTIONS ###
 
-# resource "null_resource" "auth_tg_requests_deps" {
-#   triggers = {
-#     refresh = sha256(filesha256("../lambda_auth_tg_requests/requirements.txt"))
-#   }
-#   provisioner "local-exec" {
-#     command = "pip install -r ../lambda_auth_tg_requests/requirements.txt --target ../lambda_auth_tg_requests"
-#   }
-# }
-
-# data "archive_file" "auth_tg_zip" {
-#   type        = "zip"
-#   source_dir  = "../lambda_auth_tg_requests"
-#   output_path = "auth_tg_requests.zip"
-
-#   depends_on = [null_resource.auth_tg_requests_deps]
-# }
+module "lambda_auth_tg_requests" {
+  source             = "./modules/lambda_function"
+  lambda_name        = "auth-tg-requests"
+  lambda_folder      = "../lambda_auth_tg_requests"
+  lambda_handler     = "main.lambda_handler"
+  lambda_memory_size = 256
+  lambda_timeout     = 60
+  lambda_runtime     = "python3.11"
+  s3_bucket          = var.s3_bucket_artifact
+  iam_role_arn       = aws_iam_role.lambda_role.arn
+  environment_variables = {
+    TELEGRAM_HEADER_WEBHOOK_TOKEN   = var.telegram_header_webhook_token_key_parameter
+    SQS_QUEUE_TELEGRAM_UPDATES_NAME = aws_sqs_queue.telegram_updates_sqs_queue.name
+    S3_BUCKET_CHAT_PERSISTENCE_NAME = aws_s3_bucket.chat_persistence_bucket.bucket
+  }
+}
 
 # resource "aws_lambda_function" "auth_tg_requests_function" {
 #   function_name    = "auth-tg-requests"
