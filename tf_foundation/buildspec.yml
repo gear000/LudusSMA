@@ -7,7 +7,6 @@ phases:
       - apk update
       - apk add zip
       - apk add py3-pip
-      - pip --version
 
   pre_build:
     commands:

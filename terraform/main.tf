@@ -326,7 +326,7 @@ module "lambda_auth_tg_requests" {
   lambda_handler     = "main.lambda_handler"
   lambda_memory_size = 256
   lambda_timeout     = 60
-  lambda_runtime     = "python3.11"
+  lambda_runtime     = "python3.12"
   s3_bucket          = var.s3_bucket_artifact
   iam_role_arn       = aws_iam_role.lambda_role.arn
   environment_variables = {
@@ -349,7 +349,7 @@ module "lambda_telegram_bot" {
   lambda_handler     = "main.lambda_handler"
   lambda_memory_size = 512
   lambda_timeout     = 60
-  lambda_runtime     = "python3.11"
+  lambda_runtime     = "python3.12"
   s3_bucket          = var.s3_bucket_artifact
   iam_role_arn       = aws_iam_role.lambda_role.arn
   environment_variables = {
@@ -375,7 +375,7 @@ module "lambda_create_ig_stories" {
   lambda_handler     = "main.lambda_handler"
   lambda_memory_size = 256
   lambda_timeout     = 60
-  lambda_runtime     = "python3.11"
+  lambda_runtime     = "python3.12"
   s3_bucket          = var.s3_bucket_artifact
   iam_role_arn       = aws_iam_role.lambda_role.arn
   environment_variables = {
