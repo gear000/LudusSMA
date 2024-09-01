@@ -1,6 +1,5 @@
 terraform {
   required_version = ">= 1.9.0"
-  backend "s3" {}
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -209,7 +208,7 @@ resource "aws_sqs_queue" "events_sqs_queue" {
 }
 
 resource "aws_sqs_queue" "telegram_updates_sqs_queue" {
-  name                        = "${var.sqs_telegram_updates_name}.fifo"
+  name                        = var.sqs_telegram_updates_name
   fifo_queue                  = true
   content_based_deduplication = true
   fifo_throughput_limit       = "perMessageGroupId"
@@ -228,7 +227,7 @@ resource "aws_sqs_queue" "telegram_updates_sqs_queue_ddl" {
 
   redrive_allow_policy = jsonencode({
     redrivePermission = "byQueue"
-    sourceQueueArns   = ["arn:aws:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${var.sqs_telegram_updates_name}.fifo"]
+    sourceQueueArns   = ["arn:aws:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${var.sqs_telegram_updates_name}"]
   })
 }
 
@@ -264,19 +263,31 @@ resource "aws_pipes_pipe" "pipe_error_notification" {
 
 ### LAMBDA FUNCTIONS ###
 
+resource "null_resource" "auth_tg_requests_deps" {
+  triggers = {
+    refresh = sha256(filesha256("../lambda_auth_tg_requests/requirements.txt"))
+  }
+  provisioner "local-exec" {
+    command = "pip install -r ../lambda_auth_tg_requests/requirements.txt --target ../lambda_auth_tg_requests"
+  }
+}
+
 data "archive_file" "auth_tg_zip" {
   type        = "zip"
   source_dir  = "../lambda_auth_tg_requests"
-  output_path = "auth_tg_reuqests_zip.zip"
+  output_path = "auth_tg_requests.zip"
+
+  depends_on = [null_resource.auth_tg_requests_deps]
 }
 
 resource "aws_lambda_function" "auth_tg_requests_function" {
-  function_name = "auth-tg-requests"
-  handler       = "main.lambda_handler"
-  runtime       = "python3.11"
-  memory_size   = 256
-  timeout       = 60
-  role          = aws_iam_role.lambda_role.arn
+  function_name    = "auth-tg-requests"
+  source_code_hash = data.archive_file.auth_tg_zip.output_base64sha256
+  handler          = "main.lambda_handler"
+  runtime          = "python3.11"
+  memory_size      = 256
+  timeout          = 60
+  role             = aws_iam_role.lambda_role.arn
 
   environment {
     variables = {
@@ -289,25 +300,34 @@ resource "aws_lambda_function" "auth_tg_requests_function" {
   filename = data.archive_file.auth_tg_zip.output_path
 
   architectures = ["x86_64"]
-  layers = [
-    aws_lambda_layer_version.utils_layer.arn,
-    aws_lambda_layer_version.requirements_layer.arn
-  ]
+  layers        = [aws_lambda_layer_version.utils_layer.arn]
+}
+
+resource "null_resource" "telegram_bot_deps" {
+  triggers = {
+    refresh = sha256(filesha256("../lambda_telegram_bot/requirements.txt"))
+  }
+  provisioner "local-exec" {
+    command = "pip install -r ../lambda_telegram_bot/requirements.txt --target ../lambda_telegram_bot"
+  }
 }
 
 data "archive_file" "telegram_bot_zip" {
   type        = "zip"
   source_dir  = "../lambda_telegram_bot"
-  output_path = "telegram_bot_zip.zip"
+  output_path = "telegram_bot.zip"
+
+  depends_on = [null_resource.telegram_bot_deps]
 }
 
 resource "aws_lambda_function" "telegram_bot_function" {
-  function_name = "telegram-bot"
-  handler       = "main.lambda_handler"
-  runtime       = "python3.11"
-  memory_size   = 256
-  timeout       = 60
-  role          = aws_iam_role.lambda_role.arn
+  function_name    = "telegram-bot"
+  source_code_hash = data.archive_file.telegram_bot_zip.output_base64sha256
+  handler          = "main.lambda_handler"
+  runtime          = "python3.11"
+  memory_size      = 256
+  timeout          = 60
+  role             = aws_iam_role.lambda_role.arn
 
   environment {
     variables = {
@@ -321,25 +341,34 @@ resource "aws_lambda_function" "telegram_bot_function" {
   filename = data.archive_file.telegram_bot_zip.output_path
 
   architectures = ["x86_64"]
-  layers = [
-    aws_lambda_layer_version.utils_layer.arn,
-    aws_lambda_layer_version.requirements_layer.arn
-  ]
+  layers        = [aws_lambda_layer_version.utils_layer.arn]
+}
+
+resource "null_resource" "create_ig_stories_deps" {
+  triggers = {
+    refresh = sha256(filesha256("../lambda_create_ig_stories/requirements.txt"))
+  }
+  provisioner "local-exec" {
+    command = "pip install -r ../lambda_create_ig_stories/requirements.txt --target ../lambda_create_ig_stories"
+  }
 }
 
 data "archive_file" "create_ig_stories_zip" {
   type        = "zip"
   source_dir  = "../lambda_create_ig_stories"
-  output_path = "create_ig_stories_zip.zip"
+  output_path = "create_ig_stories.zip"
+
+  depends_on = [null_resource.create_ig_stories_deps]
 }
 
-resource "aws_lambda_function" "create_ig_stories_function" {
-  function_name = "create-ig-stories"
-  handler       = "main.lambda_handler"
-  runtime       = "python3.11"
-  memory_size   = 256
-  timeout       = 60
-  role          = aws_iam_role.lambda_role.arn
+resource "aws_lambda_function" "random_images_function" {
+  function_name    = "random-images"
+  source_code_hash = data.archive_file.create_ig_stories_zip.output_base64sha256
+  handler          = "main.lambda_handler"
+  runtime          = "python3.11"
+  memory_size      = 256
+  timeout          = 60
+  role             = aws_iam_role.lambda_role.arn
 
   environment {
     variables = {
@@ -352,10 +381,7 @@ resource "aws_lambda_function" "create_ig_stories_function" {
   filename = data.archive_file.create_ig_stories_zip.output_path
 
   architectures = ["x86_64"]
-  layers = [
-    aws_lambda_layer_version.utils_layer.arn,
-    aws_lambda_layer_version.requirements_layer.arn
-  ]
+  layers        = [aws_lambda_layer_version.utils_layer.arn]
 }
 
 ### LAMBDA LAYER ###
@@ -366,28 +392,3 @@ resource "aws_lambda_layer_version" "utils_layer" {
   compatible_runtimes = ["python3.11"]
 }
 
-resource "null_resource" "build_requirements" {
-  provisioner "local-exec" {
-    command = "pip install -r ../requirements.txt -t requirements_layer/python/lib/python3.11/site-packages"
-  }
-  triggers = {
-    trigger = uuid()
-  }
-}
-
-data "archive_file" "requirements_zip" {
-  type        = "zip"
-  source_dir  = "requirements_layer"
-  output_path = "requirements_layer.zip"
-  depends_on = [
-    null_resource.build_requirements
-  ]
-}
-
-resource "aws_lambda_layer_version" "requirements_layer" {
-  filename         = data.archive_file.requirements_zip.output_path
-  source_code_hash = data.archive_file.requirements_zip.output_base64sha256
-  layer_name       = "RequirementsLayer"
-
-  compatible_runtimes = ["python3.11"]
-}

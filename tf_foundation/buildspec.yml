@@ -6,6 +6,7 @@ phases:
       - echo "### INSTALLING ZIP"
       - apk update
       - apk add zip
+      - apk add py3-pip
 
   pre_build:
     commands:
