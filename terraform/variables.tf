@@ -40,8 +40,9 @@ variable "sqs_telegram_updates_name" {
 # }
 
 variable "developers_email" {
-  type = tuple([string])
-
-  default = ["d.franzoni.97@gmail.com"]
-
+  type = set(string)
+  default = [
+    "d.franzoni.97@gmail.com"
+  ]
+  description = "Emails of the developers for error reporting"
 }
