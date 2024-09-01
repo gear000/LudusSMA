@@ -284,6 +284,42 @@ module "lambda_auth_tg_requests" {
   }
 }
 
+module "lambda_telegram_bot" {
+  source             = "./modules/lambda_function"
+  lambda_name        = "telegram-bot"
+  lambda_folder      = "../lambda_telegram_bot"
+  lambda_handler     = "main.lambda_handler"
+  lambda_memory_size = 512
+  lambda_timeout     = 60
+  lambda_runtime     = "python3.11"
+  s3_bucket          = var.s3_bucket_artifact
+  iam_role_arn       = aws_iam_role.lambda_role.arn
+  environment_variables = {
+    TELEGRAM_BOT_KEY                = var.telegram_bot_key_parameter
+    TELEGRAM_ALLOW_CHAT_IDS_KEY     = var.telegram_allow_chat_ids_key_parameter
+    SQS_QUEUE_EVENTS_NAME           = aws_sqs_queue.events_sqs_queue.name
+    S3_BUCKET_CHAT_PERSISTENCE_NAME = aws_s3_bucket.chat_persistence_bucket.bucket
+  }
+
+}
+
+module "lambda_create_ig_stories" {
+  source             = "./modules/lambda_function"
+  lambda_name        = "create-ig-stories"
+  lambda_folder      = "../lambda_create_ig_stories"
+  lambda_handler     = "main.lambda_handler"
+  lambda_memory_size = 256
+  lambda_timeout     = 60
+  lambda_runtime     = "python3.11"
+  s3_bucket          = var.s3_bucket_artifact
+  iam_role_arn       = aws_iam_role.lambda_role.arn
+  environment_variables = {
+    S3_BUCKET_IMAGES_NAME           = aws_s3_bucket.images_bucket.bucket
+    S3_BUCKET_CHAT_PERSISTENCE_NAME = aws_s3_bucket.chat_persistence_bucket.bucket
+    SQS_QUEUE_TELEGRAM_UPDATES_NAME = aws_sqs_queue.telegram_updates_sqs_queue.name
+  }
+}
+
 # resource "aws_lambda_function" "auth_tg_requests_function" {
 #   function_name    = "auth-tg-requests"
 #   source_code_hash = data.archive_file.auth_tg_zip.output_base64sha256
