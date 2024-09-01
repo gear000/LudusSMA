@@ -29,10 +29,10 @@ variable "aws_region" {
 #   default = "/meta/access-token"
 # }
 
-# variable "sqs_telegram_updates_name" {
-#   type    = string
-#   default = "TelegramUpdates"
-# }
+variable "sqs_telegram_updates_name" {
+  type    = string
+  default = "TelegramUpdates"
+}
 
 # variable "bedrock_models_region" {
 #   type    = string

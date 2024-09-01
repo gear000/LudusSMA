@@ -203,34 +203,34 @@ resource "aws_s3_bucket" "chat_persistence_bucket" {
 
 # ### SQS QUEUE ###
 
-# resource "aws_sqs_queue" "events_sqs_queue" {
-#   name                       = "ScheduledEvents"
-#   visibility_timeout_seconds = 30
-# }
+resource "aws_sqs_queue" "events_sqs_queue" {
+  name                       = "ScheduledEvents"
+  visibility_timeout_seconds = 30
+}
 
-# resource "aws_sqs_queue" "telegram_updates_sqs_queue" {
-#   name                        = "${var.sqs_telegram_updates_name}.fifo"
-#   fifo_queue                  = true
-#   content_based_deduplication = true
-#   fifo_throughput_limit       = "perMessageGroupId"
-#   deduplication_scope         = "messageGroup"
-#   visibility_timeout_seconds  = 30
+resource "aws_sqs_queue" "telegram_updates_sqs_queue" {
+  name                        = "${var.sqs_telegram_updates_name}.fifo"
+  fifo_queue                  = true
+  content_based_deduplication = true
+  fifo_throughput_limit       = "perMessageGroupId"
+  deduplication_scope         = "messageGroup"
+  visibility_timeout_seconds  = 30
 
-#   redrive_policy = jsonencode({
-#     deadLetterTargetArn = aws_sqs_queue.telegram_updates_sqs_queue_ddl.arn
-#     maxReceiveCount     = 1
-#   })
-# }
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.telegram_updates_sqs_queue_ddl.arn
+    maxReceiveCount     = 1
+  })
+}
 
-# resource "aws_sqs_queue" "telegram_updates_sqs_queue_ddl" {
-#   name       = "${var.sqs_telegram_updates_name}DDL.fifo"
-#   fifo_queue = true
+resource "aws_sqs_queue" "telegram_updates_sqs_queue_ddl" {
+  name       = "${var.sqs_telegram_updates_name}DDL.fifo"
+  fifo_queue = true
 
-#   redrive_allow_policy = jsonencode({
-#     redrivePermission = "byQueue"
-#     sourceQueueArns   = ["arn:aws:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${var.sqs_telegram_updates_name}.fifo"]
-#   })
-# }
+  redrive_allow_policy = jsonencode({
+    redrivePermission = "byQueue"
+    sourceQueueArns   = ["arn:aws:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${var.sqs_telegram_updates_name}.fifo"]
+  })
+}
 
 # ### SNS TOPIC ###
 
