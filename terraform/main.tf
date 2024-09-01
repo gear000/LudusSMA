@@ -281,7 +281,7 @@ resource "aws_apigatewayv2_api" "lambda_api_gateway" {
 
 resource "aws_apigatewayv2_stage" "lambda_api_gateway_stage" {
   api_id      = aws_apigatewayv2_api.lambda_api_gateway.id
-  name        = "dev"
+  name        = "prd"
   auto_deploy = true
 
   access_log_settings {
@@ -388,109 +388,31 @@ resource "aws_lambda_event_source_mapping" "create_ig_stories_sqs_trigger" {
   batch_size       = 1
 }
 
-# resource "aws_lambda_function" "auth_tg_requests_function" {
-#   function_name    = "auth-tg-requests"
-#   source_code_hash = data.archive_file.auth_tg_zip.output_base64sha256
-#   handler          = "main.lambda_handler"
-#   runtime          = "python3.11"
-#   memory_size      = 256
-#   timeout          = 60
-#   role             = aws_iam_role.lambda_role.arn
+### LAMBDA TRIGGER PERMISSIONS ###
 
-#   environment {
-#     variables = {
-#       TELEGRAM_HEADER_WEBHOOK_TOKEN   = var.telegram_header_webhook_token_key_parameter
-#       SQS_QUEUE_TELEGRAM_UPDATES_NAME = aws_sqs_queue.telegram_updates_sqs_queue.name
-#       S3_BUCKET_CHAT_PERSISTENCE_NAME = aws_s3_bucket.chat_persistence_bucket.bucket
-#     }
-#   }
+resource "aws_lambda_permission" "auth_tg_permission_trigger" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = module.lambda_auth_tg_requests.lambda_function_arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = aws_apigatewayv2_api.lambda_api_gateway.arn
+}
 
-#   filename = data.archive_file.auth_tg_zip.output_path
+resource "aws_lambda_permission" "tg_bot_permission_trigger" {
+  statement_id  = "AllowSQSTrigger"
+  action        = "lambda:InvokeFunction"
+  function_name = module.lambda_telegram_bot.lambda_function_arn
+  principal     = "sqs.amazonaws.com"
+  source_arn    = aws_sqs_queue.telegram_updates_sqs_queue.arn
+}
 
-#   architectures = ["x86_64"]
-#   layers        = [aws_lambda_layer_version.utils_layer.arn]
-# }
-
-# resource "null_resource" "telegram_bot_deps" {
-#   triggers = {
-#     refresh = sha256(filesha256("../lambda_telegram_bot/requirements.txt"))
-#   }
-#   provisioner "local-exec" {
-#     command = "pip install -r ../lambda_telegram_bot/requirements.txt --target ../lambda_telegram_bot"
-#   }
-# }
-
-# data "archive_file" "telegram_bot_zip" {
-#   type        = "zip"
-#   source_dir  = "../lambda_telegram_bot"
-#   output_path = "telegram_bot.zip"
-
-#   depends_on = [null_resource.telegram_bot_deps]
-# }
-
-# resource "aws_lambda_function" "telegram_bot_function" {
-#   function_name    = "telegram-bot"
-#   source_code_hash = data.archive_file.telegram_bot_zip.output_base64sha256
-#   handler          = "main.lambda_handler"
-#   runtime          = "python3.11"
-#   memory_size      = 256
-#   timeout          = 60
-#   role             = aws_iam_role.lambda_role.arn
-
-#   environment {
-#     variables = {
-#       TELEGRAM_BOT_KEY                = var.telegram_bot_key_parameter
-#       TELEGRAM_ALLOW_CHAT_IDS_KEY     = var.telegram_allow_chat_ids_key_parameter
-#       SQS_QUEUE_EVENTS_NAME           = aws_sqs_queue.events_sqs_queue.name
-#       S3_BUCKET_CHAT_PERSISTENCE_NAME = aws_s3_bucket.chat_persistence_bucket.bucket
-#     }
-#   }
-
-#   filename = data.archive_file.telegram_bot_zip.output_path
-
-#   architectures = ["x86_64"]
-#   layers        = [aws_lambda_layer_version.utils_layer.arn]
-# }
-
-# resource "null_resource" "create_ig_stories_deps" {
-#   triggers = {
-#     refresh = sha256(filesha256("../lambda_create_ig_stories/requirements.txt"))
-#   }
-#   provisioner "local-exec" {
-#     command = "pip install -r ../lambda_create_ig_stories/requirements.txt --target ../lambda_create_ig_stories"
-#   }
-# }
-
-# data "archive_file" "create_ig_stories_zip" {
-#   type        = "zip"
-#   source_dir  = "../lambda_create_ig_stories"
-#   output_path = "create_ig_stories.zip"
-
-#   depends_on = [null_resource.create_ig_stories_deps]
-# }
-
-# resource "aws_lambda_function" "random_images_function" {
-#   function_name    = "random-images"
-#   source_code_hash = data.archive_file.create_ig_stories_zip.output_base64sha256
-#   handler          = "main.lambda_handler"
-#   runtime          = "python3.11"
-#   memory_size      = 256
-#   timeout          = 60
-#   role             = aws_iam_role.lambda_role.arn
-
-#   environment {
-#     variables = {
-#       S3_BUCKET_IMAGES_NAME           = aws_s3_bucket.images_bucket.bucket
-#       S3_BUCKET_CHAT_PERSISTENCE_NAME = aws_s3_bucket.chat_persistence_bucket.bucket
-#       SQS_QUEUE_TELEGRAM_UPDATES_NAME = aws_sqs_queue.telegram_updates_sqs_queue.name
-#     }
-#   }
-
-#   filename = data.archive_file.create_ig_stories_zip.output_path
-
-#   architectures = ["x86_64"]
-#   layers        = [aws_lambda_layer_version.utils_layer.arn]
-# }
+resource "aws_lambda_permission" "create_ig_stories_permission_trigger" {
+  statement_id  = "AllowSQSTrigger"
+  action        = "lambda:InvokeFunction"
+  function_name = module.lambda_create_ig_stories.lambda_function_arn
+  principal     = "sqs.amazonaws.com"
+  source_arn    = aws_sqs_queue.events_sqs_queue.arn
+}
 
 # ### LAMBDA LAYER ###
 
