@@ -201,6 +201,13 @@ resource "aws_s3_bucket" "chat_persistence_bucket" {
   bucket = "ludussma-chat-persistence"
 }
 
+### LOG GROUP ###
+
+resource "aws_cloudwatch_log_group" "log_group_api_gateway" {
+  name              = "/aws/apigateway/${aws_apigatewayv2_api.lambda_api_gateway.name}"
+  retention_in_days = 7
+}
+
 # ### SQS QUEUE ###
 
 resource "aws_sqs_queue" "events_sqs_queue" {
@@ -265,6 +272,51 @@ resource "aws_pipes_pipe" "pipe_error_notification" {
   }
 }
 
+### API GATEWAY ###
+
+resource "aws_apigatewayv2_api" "lambda_api_gateway" {
+  name          = "ludussma-api-gateway"
+  protocol_type = "HTTP"
+}
+
+resource "aws_apigatewayv2_stage" "lambda_api_gateway_stage" {
+  api_id      = aws_apigatewayv2_api.lambda_api_gateway.id
+  name        = "dev"
+  auto_deploy = true
+
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.api_gw.arn
+
+    format = jsonencode({
+      requestId               = "$context.requestId"
+      sourceIp                = "$context.identity.sourceIp"
+      requestTime             = "$context.requestTime"
+      protocol                = "$context.protocol"
+      httpMethod              = "$context.httpMethod"
+      resourcePath            = "$context.resourcePath"
+      routeKey                = "$context.routeKey"
+      status                  = "$context.status"
+      responseLength          = "$context.responseLength"
+      integrationErrorMessage = "$context.integrationErrorMessage"
+      }
+    )
+  }
+}
+
+resource "aws_apigatewayv2_integration" "lambda_api_gateway_integration" {
+  api_id             = aws_apigatewayv2_api.lambda_api_gateway.id
+  integration_type   = "AWS_PROXY"
+  integration_method = "POST"
+  integration_uri    = lambda_auth_tg_requests.this.invoke_arn
+}
+
+resource "aws_apigatewayv2_route" "get_lambda_api_gateway_route" {
+  api_id = aws_apigatewayv2_api.lambda_api_gateway.id
+
+  route_key = "POST /telegram-bot"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda_api_gateway_integration.id}"
+}
+
 ### LAMBDA FUNCTIONS ###
 
 module "lambda_auth_tg_requests" {
@@ -282,6 +334,7 @@ module "lambda_auth_tg_requests" {
     SQS_QUEUE_TELEGRAM_UPDATES_NAME = aws_sqs_queue.telegram_updates_sqs_queue.name
     S3_BUCKET_CHAT_PERSISTENCE_NAME = aws_s3_bucket.chat_persistence_bucket.bucket
   }
+  lambda_layers = [aws_lambda_layer_version.utils_layer.arn]
 }
 
 module "lambda_telegram_bot" {
@@ -300,7 +353,14 @@ module "lambda_telegram_bot" {
     SQS_QUEUE_EVENTS_NAME           = aws_sqs_queue.events_sqs_queue.name
     S3_BUCKET_CHAT_PERSISTENCE_NAME = aws_s3_bucket.chat_persistence_bucket.bucket
   }
+  lambda_layers = [aws_lambda_layer_version.utils_layer.arn]
+}
 
+resource "aws_lambda_event_source_mapping" "sqs_trigger" {
+  event_source_arn = aws_sqs_queue.telegram_updates_sqs_queue.arn
+  function_name    = lambda_telegram_bot.this.arn
+  enabled          = true
+  batch_size       = 1
 }
 
 module "lambda_create_ig_stories" {
@@ -318,6 +378,14 @@ module "lambda_create_ig_stories" {
     S3_BUCKET_CHAT_PERSISTENCE_NAME = aws_s3_bucket.chat_persistence_bucket.bucket
     SQS_QUEUE_TELEGRAM_UPDATES_NAME = aws_sqs_queue.telegram_updates_sqs_queue.name
   }
+  lambda_layers = [aws_lambda_layer_version.utils_layer.arn]
+}
+
+resource "aws_lambda_event_source_mapping" "sqs_trigger" {
+  event_source_arn = aws_sqs_queue.events_sqs_queue.arn
+  function_name    = lambda_create_ig_stories.this.arn
+  enabled          = true
+  batch_size       = 1
 }
 
 # resource "aws_lambda_function" "auth_tg_requests_function" {
