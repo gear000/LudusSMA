@@ -16,9 +16,10 @@ data "archive_file" "create_zip" {
 }
 
 resource "aws_s3_object" "lambda_zip" {
-  bucket = var.s3_bucket
-  key    = "lambda_package/${var.lambda_name}.zip"
-  source = data.archive_file.create_zip.output_path
+  bucket      = var.s3_bucket
+  key         = "lambda_package/${var.lambda_name}.zip"
+  source      = data.archive_file.create_zip.output_path
+  source_hash = data.archive_file.create_zip.output_base64sha256
 }
 
 resource "aws_lambda_function" "this" {
