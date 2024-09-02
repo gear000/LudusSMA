@@ -424,6 +424,6 @@ resource "aws_lambda_permission" "create_ig_stories_permission_trigger" {
 resource "aws_lambda_layer_version" "utils_layer" {
   filename            = "../utils.zip"
   layer_name          = "LudusSMAUtilsLayer"
-  compatible_runtimes = ["python3.11"]
+  compatible_runtimes = ["python3.12"]
   source_code_hash    = sha256(filebase64sha256("../utils.zip"))
 }
