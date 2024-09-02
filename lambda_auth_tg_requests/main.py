@@ -13,10 +13,6 @@ def lambda_handler(event: dict, context):
         parameter_name=os.getenv("TELEGRAM_HEADER_WEBHOOK_TOKEN"), is_secure=True
     )
 
-    logger.info(f"Received event: {event}")
-    logger.info(f"Received context: {context}")
-    logger.info(f"Received secret token: {SECRET_TOKEN}")
-
     headers: dict = event.get("headers", {})
     client_secret = headers.get("x-telegram-bot-api-secret-token", "")
 
