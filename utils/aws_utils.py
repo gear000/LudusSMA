@@ -5,7 +5,7 @@ import requests
 
 from datetime import datetime
 from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
-from httpx import delete
+
 from .logger_utils import *
 from .models.model_utils import Event
 
