@@ -139,6 +139,15 @@ data "aws_iam_policy_document" "lambda_policy_document" {
       "arn:aws:bedrock:${var.bedrock_models_region}::foundation-model/*"
     ]
   }
+  statement {
+    effect = "Allow"
+    actions = [
+      "transcribe:*"
+    ]
+    resources = [
+      "*"
+    ]
+  }
 }
 
 resource "aws_iam_role_policy" "lambda_policy" {
@@ -368,4 +377,19 @@ resource "aws_lambda_layer_version" "utils_layer" {
   layer_name          = "LudusSMAUtilsLayer"
   compatible_runtimes = ["python3.12"]
   source_code_hash    = sha256(filebase64sha256("../utils.zip"))
+}
+
+### TRANSCRIBE VOCABULARY ###
+
+resource "aws_s3_object" "vocabulary_artifact" {
+  bucket      = var.s3_bucket_artifact
+  key         = "transcribe/custom_vocabulary.csv"
+  source      = "../vocabulary.csv"
+  source_hash = sha256(filebase64sha256("../vocabulary.csv"))
+}
+
+resource "aws_transcribe_vocabulary" "ludussma_vocabulary" {
+  vocabulary_name     = "ludussma-vocabulary"
+  language_code       = "it-IT"
+  vocabulary_file_uri = "s3://${aws_s3_object.vocabulary_artifact.bucket}/${aws_s3_object.vocabulary_artifact.key}"
 }
