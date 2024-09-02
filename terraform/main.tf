@@ -310,13 +310,14 @@ module "lambda_telegram_bot" {
   s3_bucket          = var.s3_bucket_artifact
   iam_role_arn       = aws_iam_role.lambda_role.arn
   environment_variables = {
-    TELEGRAM_BOT_KEY                = var.telegram_bot_key_parameter
-    TELEGRAM_ALLOW_CHAT_IDS         = var.telegram_allow_chat_ids_key_parameter
-    SQS_QUEUE_TELEGRAM_UPDATES_NAME = aws_sqs_queue.telegram_updates_sqs_queue.name
-    SQS_QUEUE_EVENTS_ARN            = aws_sqs_queue.events_sqs_queue.arn
-    IAM_ROLE_EVENT_SCHEDULER_ARN    = aws_iam_role.scheduler_role.arn
-    S3_BUCKET_IMAGES_NAME           = aws_s3_bucket.images_bucket.bucket
-    S3_BUCKET_CHAT_PERSISTENCE_NAME = aws_s3_bucket.chat_persistence_bucket.bucket
+    TELEGRAM_BOT_KEY                  = var.telegram_bot_key_parameter
+    TELEGRAM_ALLOW_CHAT_IDS           = var.telegram_allow_chat_ids_key_parameter
+    SQS_QUEUE_TELEGRAM_UPDATES_NAME   = aws_sqs_queue.telegram_updates_sqs_queue.name
+    SQS_QUEUE_EVENTS_ARN              = aws_sqs_queue.events_sqs_queue.arn
+    IAM_ROLE_EVENT_SCHEDULER_ARN      = aws_iam_role.scheduler_role.arn
+    S3_BUCKET_IMAGES_NAME             = aws_s3_bucket.images_bucket.bucket
+    S3_BUCKET_CHAT_PERSISTENCE_NAME   = aws_s3_bucket.chat_persistence_bucket.bucket
+    TRANSCRIBE_CUSTOM_VOCABULARY_NAME = aws_transcribe_vocabulary.custom_vocabulary.id
   }
   lambda_layers = [aws_lambda_layer_version.utils_layer.arn]
 }
@@ -388,7 +389,7 @@ resource "aws_s3_object" "vocabulary_artifact" {
   source_hash = sha256(filebase64sha256("../${var.custom_vocabulary_file_name}"))
 }
 
-resource "aws_transcribe_vocabulary" "ludussma_vocabulary" {
+resource "aws_transcribe_vocabulary" "custom_vocabulary" {
   vocabulary_name     = "ludussma-vocabulary"
   language_code       = "it-IT"
   vocabulary_file_uri = "s3://${aws_s3_object.vocabulary_artifact.bucket}/${aws_s3_object.vocabulary_artifact.key}"

@@ -1,3 +1,4 @@
+import os
 import uuid
 import boto3
 import time
@@ -16,6 +17,12 @@ _SSM_CLIENT = boto3.client("ssm")
 _SQS_CLIENT = boto3.client("sqs")
 _SCHEDULER_CLIENT = boto3.client("scheduler")
 _TRANSCRIBE_CLIENT = boto3.client("transcribe")
+
+# endregion
+
+# region Defaults
+
+TRANSCRIBE_CUSTOM_VOCABULARY_NAME = os.getenv("TRANSCRIBE_CUSTOM_VOCABULARY_NAME")
 
 # endregion
 
@@ -270,7 +277,10 @@ def transcribe_audio(audio_key: str) -> str:
         TranscriptionJobName=transcription_job_name,
         Media={"MediaFileUri": audio_key},
         MediaFormat="mp3",
-        LanguageCode="it-IT",  # Specifica il codice della lingua del file audio
+        LanguageCode="it-IT",
+        Settings={
+            "VocabularyName": TRANSCRIBE_CUSTOM_VOCABULARY_NAME,
+        },
     )
 
     # Attendere che la trascrizione sia completata
