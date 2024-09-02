@@ -32,6 +32,7 @@ resource "aws_lambda_function" "this" {
   handler          = var.lambda_handler
   runtime          = var.lambda_runtime
   role             = var.iam_role_arn
+  architectures    = ["x86_64"]
   environment {
     variables = var.environment_variables
   }
