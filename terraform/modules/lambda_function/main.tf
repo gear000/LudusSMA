@@ -3,7 +3,7 @@ resource "null_resource" "build_deps" {
     always = uuid()
   }
   provisioner "local-exec" {
-    command = "pip install -r ${var.lambda_folder}/requirements.txt --target ${var.lambda_folder}"
+    command = "pip install -r ${var.lambda_folder}/requirements.txt --platform manylinux2014_x86_64 --target ${var.lambda_folder} --only-binary=:all:"
   }
 }
 
