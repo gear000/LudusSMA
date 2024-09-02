@@ -4,12 +4,13 @@ import boto3
 from PIL import Image
 from io import BytesIO
 
-from image_editing import image_edit
-from meta_functions import publish_story
+from utils.image_utils import image_edit
+from utils.social_utils import publish_story
 
 from utils import aws_utils  # ricordati di spostare utils in lambda_functions
 # from utils.telegram_utils import send_telegram_message
 # from utils.logger_utils import *
+
 
 ssm_client = boto3.client("ssm")
 s3_client = boto3.client("s3")
