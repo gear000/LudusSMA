@@ -51,8 +51,7 @@ async def send_event_types(
             reply_markup=markup,
         )
 
-    # If there is at least one button it means that there is at least one event
-    return len(buttons) > 0
+    return len(event_types) > 0
 
 
 def send_telegram_message(token: str, chat_id: str, message: str) -> None:
