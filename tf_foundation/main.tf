@@ -13,7 +13,7 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "s3_bucket_artifact" {
-  bucket = "ludussma-artifact-v2"
+  bucket = "ludussma-artifact"
 }
 
 resource "aws_dynamodb_table" "table_tf_plan_lock" {

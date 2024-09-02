@@ -21,7 +21,7 @@ variable "source_repository" {
 
 variable "source_branch" {
   type        = string
-  default     = "feat/tf_foundation"
+  default     = "main"
   description = "Source branch"
 }
 
