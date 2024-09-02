@@ -3,47 +3,56 @@ Transform: AWS::Serverless-2016-10-31
 
 Description: AWS CodePipeline for a Serverless Application
 
-Parameters:
-  TelegramBotKeyParameter:
-    Type: String
-    Default: /telegram/bot-token
-    Description: The key of SSM parameter that contains the Telegram Bot token
-  TelegramAllowChatIdsKeyParameter:
-    Type: String
-    Default: /telegram/allow-chat-ids
-    Description: The key of SSM parameter that contains the Telegram allowed chat ids
-  TelegramHeaderWebhookTokenKeyParameter:
-    Type: String
-    Default: /telegram/header-webhook-token
-    Description: The key of SSM parameter that contains the Telegram header webhook token
-  MetaClientSecretKeyParameter:
-    Type: String
-    Default: /meta/client-secret
-    Description: The key of SSM parameter that contains the Client Secret of Meta Account
-  MetaAccessTokenKeyParameter:
-    Type: String
-    Default: /meta/access-token
-    Description: The key of SSM parameter that contains the Access Token of Meta Account
-  SQSTelegramUpdatesName:
-    Type: String
-    Default: TelegramUpdates.fifo
-    Description: The name of SQS queue that contains Telegram updates
+# Parameters:
+#   TelegramBotKeyParameter:
+#     Type: String
+#     Default: /telegram/bot-token
+#     Description: The key of SSM parameter that contains the Telegram Bot token
+#   TelegramAllowChatIdsKeyParameter:
+#     Type: String
+#     Default: /telegram/allow-chat-ids
+#     Description: The key of SSM parameter that contains the Telegram allowed chat ids
+#   TelegramHeaderWebhookTokenKeyParameter:
+#     Type: String
+#     Default: /telegram/header-webhook-token
+#     Description: The key of SSM parameter that contains the Telegram header webhook token
+#   MetaClientSecretKeyParameter:
+#     Type: String
+#     Default: /meta/client-secret
+#     Description: The key of SSM parameter that contains the Client Secret of Meta Account
+#   MetaAccessTokenKeyParameter:
+#     Type: String
+#     Default: /meta/access-token
+#     Description: The key of SSM parameter that contains the Access Token of Meta Account
+#   SQSTelegramUpdatesName:
+#     Type: String
+#     Default: TelegramUpdates.fifo
+#     Description: The name of SQS queue that contains Telegram updates
+Conditions:
+
+  Never:
+    !Equals [ "A", "B" ]
 
 Resources:
+
+  NonResource:
+    Type: Custom::NonResource
+    Condition: Never
+    
   ### IAM ROLE ###
 
-  LudusSMALambdaRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - "sts:AssumeRole"
+  # LudusSMALambdaRole:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     AssumeRolePolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Effect: Allow
+  #           Principal:
+  #             Service:
+  #               - lambda.amazonaws.com
+  #           Action:
+  #             - "sts:AssumeRole"
 
   # LudusSMAEventSchedulerRole:
   #   Type: AWS::IAM::Role
