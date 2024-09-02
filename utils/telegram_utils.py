@@ -23,7 +23,6 @@ async def send_event_types(
     if len(event_types) == 0:
         message = "Devi prima creare una tipologia di evento. Puoi farlo con il comando /manage_event_type."
         markup = InlineKeyboardMarkup([[]])
-        return False
     else:
         inline_keyboard_buttons = [
             InlineKeyboardButton(text=even_type, callback_data=even_type)
@@ -52,7 +51,8 @@ async def send_event_types(
             reply_markup=markup,
         )
 
-    return True
+    # If there is at least one button it means that there is at least one event
+    return len(buttons) > 0
 
 
 def send_telegram_message(token: str, chat_id: str, message: str) -> None:
