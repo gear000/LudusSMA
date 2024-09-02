@@ -383,9 +383,9 @@ resource "aws_lambda_layer_version" "utils_layer" {
 
 resource "aws_s3_object" "vocabulary_artifact" {
   bucket      = var.s3_bucket_artifact
-  key         = "transcribe/custom_vocabulary.csv"
-  source      = "../vocabulary.csv"
-  source_hash = sha256(filebase64sha256("../vocabulary.csv"))
+  key         = "transcribe/${var.custom_vocabulary_path}"
+  source      = var.custom_vocabulary_path
+  source_hash = sha256(filebase64sha256(var.custom_vocabulary_path))
 }
 
 resource "aws_transcribe_vocabulary" "ludussma_vocabulary" {

@@ -51,3 +51,9 @@ variable "developers_email" {
   ]
   description = "Emails of the developers for error reporting"
 }
+
+variable "custom_vocabulary_path" {
+  type        = string
+  default     = "../vocabulary.txt"
+  description = "Path to the custom vocabulary file"
+}
