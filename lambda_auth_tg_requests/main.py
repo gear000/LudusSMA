@@ -18,7 +18,7 @@ def lambda_handler(event: dict, context):
     logger.info(f"Received secret token: {SECRET_TOKEN}")
 
     headers: dict = event.get("headers", {})
-    client_secret = headers.get("X-Telegram-Bot-Api-Secret-Token", "")
+    client_secret = headers.get("x-telegram-bot-api-secret-token", "")
 
     if client_secret != SECRET_TOKEN:
         logger.error("Unauthorized request")
