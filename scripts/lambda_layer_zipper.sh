@@ -1,18 +1,21 @@
-#!/bin/bash
+#!/bin/sh
 
-# List of folder names
-folders=("utils")
+# List of folder names as a space-separated string
+folders="utils"
 
 # Function to create zip files
 create_zip() {
+    echo "Creating zip file for $folder"
     folder=$1
     mkdir -p "python"
     zip_name="${folder}.zip"
     cp -r "$folder" "python"
+    echo "checking if ./python/$folder exists"
+    echo ls -la ./python
     
     if [ -d "$folder" ]; then
         zip -r "$zip_name" "./python/$folder"
-        echo "Created $zip_name for the $folder"
+        echo "Created $zip_name for $folder"
     else
         echo "The $folder does not exist"
     fi
@@ -20,9 +23,7 @@ create_zip() {
     rm -rf "python"
 }
 
-cd ./lambda_functions
-
-# Iterate on each folder in the list and create a zip file
-for folder in "${folders[@]}"; do
+# Iterate over each folder in the list and create a zip file
+for folder in $folders; do
     create_zip "$folder"
 done

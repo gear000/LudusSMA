@@ -1,0 +1,35 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "### INSTALLING ZIP"
+      - apk update
+      - apk add zip
+      - apk add py3-pip
+
+  pre_build:
+    commands:
+      - echo "### TERRAFORM INITIALIZATION"
+      - |
+        terraform -chdir=terraform init \
+          -backend-config="bucket=$S3_BUCKET_ARTIFACT_NAME" \
+          -backend-config="key=$S3_BUCKET_ARTIFACT_KEY" \
+          -backend-config="dynamodb_table=$DDB_TABLE_NAME" \
+          -backend-config="region=$AWS_REGION"
+      - export TF_VAR_s3_bucket_artifact=$S3_BUCKET_ARTIFACT_NAME
+
+  build:
+    commands:
+      - echo "### CREATING LAYERS FOR LAMBDA FUNCTIONS"
+      - chmod +x ./scripts/lambda_layer_zipper.sh
+      - ./scripts/lambda_layer_zipper.sh
+      - echo "### CREATING TERRAFORM PLAN"
+      - terraform -chdir=terraform fmt -recursive
+      - terraform -chdir=terraform validate
+      - terraform -chdir=terraform plan -out=plan.tfplan
+
+  post_build:
+    commands:
+      - echo "### APPLYING TERRAFORM PLAN"
+      - terraform -chdir=terraform apply plan.tfplan

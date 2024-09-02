@@ -14,9 +14,10 @@ def lambda_handler(event: dict, context):
     )
 
     headers: dict = event.get("headers", {})
-    client_secret = headers.get("X-Telegram-Bot-Api-Secret-Token", "")
+    client_secret = headers.get("x-telegram-bot-api-secret-token", "")
 
     if client_secret != SECRET_TOKEN:
+        logger.error("Unauthorized request")
         return {"statusCode": 401, "body": "Unauthorized"}
     else:
         update = Update.de_json(data=json.loads(event.get("body")))
@@ -27,4 +28,5 @@ def lambda_handler(event: dict, context):
             message_deduplication_id=str(update.update_id),
         )
 
+    logger.info("Accepted request")
     return {"statusCode": 202, "body": "Accepted"}

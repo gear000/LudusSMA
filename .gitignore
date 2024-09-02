@@ -184,7 +184,7 @@ test.py
 # Terraform crash log files
 crash.log
 
-# Terraform plan files
+# Terraform plan files, but foundation
 *.tfplan
 
 # Terraform variable override files
@@ -199,3 +199,6 @@ crash.log
 
 # Directory for local backend
 terraform.tfstate.d/
+
+# Platform Secrets
+secrets.json
