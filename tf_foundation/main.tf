@@ -275,6 +275,18 @@ resource "aws_codepipeline" "terraform_pipeline" {
     type     = "S3"
   }
 
+  trigger {
+    provider_type = "CodeStarSourceConnection"
+    git_configuration {
+      source_action_name = "Init"
+      push {
+        branches {
+          includes = [var.source_branch]
+        }
+      }
+    }
+  }
+
   stage {
     name = "Source"
     action {
