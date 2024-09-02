@@ -37,8 +37,10 @@ Resources:
 
   NonResource:
     Type: Custom::NonResource
+    Properties:
+      ServiceToken: ""
     Condition: Never
-    
+
   ### IAM ROLE ###
 
   # LudusSMALambdaRole:
