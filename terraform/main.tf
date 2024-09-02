@@ -354,8 +354,11 @@ module "lambda_telegram_bot" {
   iam_role_arn       = aws_iam_role.lambda_role.arn
   environment_variables = {
     TELEGRAM_BOT_KEY                = var.telegram_bot_key_parameter
-    TELEGRAM_ALLOW_CHAT_IDS_KEY     = var.telegram_allow_chat_ids_key_parameter
-    SQS_QUEUE_EVENTS_NAME           = aws_sqs_queue.events_sqs_queue.name
+    TELEGRAM_ALLOW_CHAT_IDS         = var.telegram_allow_chat_ids_key_parameter
+    SQS_QUEUE_TELEGRAM_UPDATES_NAME = aws_sqs_queue.telegram_updates_sqs_queue.name
+    SQS_QUEUE_EVENTS_ARN            = aws_sqs_queue.events_sqs_queue.arn
+    IAM_ROLE_EVENT_SCHEDULER_ARN    = aws_iam_role.scheduler_role.arn
+    S3_BUCKET_IMAGES_NAME           = aws_s3_bucket.images_bucket.bucket
     S3_BUCKET_CHAT_PERSISTENCE_NAME = aws_s3_bucket.chat_persistence_bucket.bucket
   }
   lambda_layers = [aws_lambda_layer_version.utils_layer.arn]
@@ -379,9 +382,8 @@ module "lambda_create_ig_stories" {
   s3_bucket          = var.s3_bucket_artifact
   iam_role_arn       = aws_iam_role.lambda_role.arn
   environment_variables = {
-    S3_BUCKET_IMAGES_NAME           = aws_s3_bucket.images_bucket.bucket
-    S3_BUCKET_CHAT_PERSISTENCE_NAME = aws_s3_bucket.chat_persistence_bucket.bucket
-    SQS_QUEUE_TELEGRAM_UPDATES_NAME = aws_sqs_queue.telegram_updates_sqs_queue.name
+    META_CLIENT_SECRET = var.meta_client_secret_key_parameter
+    META_ACCESS_TOKEN  = var.meta_access_token_key_parameter
   }
   lambda_layers = [aws_lambda_layer_version.utils_layer.arn]
 }
