@@ -118,7 +118,7 @@ data "aws_iam_policy_document" "lambda_policy_document" {
     effect  = "Allow"
     actions = ["*"]
     resources = [
-      "arn:aws:scheduler:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:schedule/*",
+      "arn:aws:scheduler:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*",
     ]
   }
   statement {
