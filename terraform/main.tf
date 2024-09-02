@@ -390,6 +390,6 @@ resource "aws_s3_object" "vocabulary_artifact" {
 
 resource "aws_transcribe_vocabulary" "ludussma_vocabulary" {
   vocabulary_name     = "ludussma-vocabulary"
-  language_code       = "it-IT"
+  language_code       = "en-US"
   vocabulary_file_uri = "s3://${aws_s3_object.vocabulary_artifact.bucket}/${aws_s3_object.vocabulary_artifact.key}"
 }
