@@ -316,6 +316,8 @@ async def load_image(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
         "Il nuovo tipo evento è stato creato! Prova subito a creare un nuovo evento con /add_event !"
     )
 
+    return ConversationHandler.END
+
 
 async def update_event_type(
     update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
