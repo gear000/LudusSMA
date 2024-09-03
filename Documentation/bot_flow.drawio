@@ -1,9 +1,12 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0" version="24.7.10">
   <diagram name="Page-1" id="9CthINMSwHqmj2xD3PxE">
-    <mxGraphModel dx="2505" dy="1418" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+    <mxGraphModel dx="1055" dy="597" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
+        <mxCell id="9gYRuJ7WdFeHxlppkzCV-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="NqRKgjS5j_kVblSuN0PK-2" target="9gYRuJ7WdFeHxlppkzCV-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="NqRKgjS5j_kVblSuN0PK-2" value="/help" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
           <mxGeometry x="454" y="90" width="80" height="30" as="geometry" />
         </mxCell>
@@ -454,6 +457,9 @@
         </mxCell>
         <mxCell id="NqRKgjS5j_kVblSuN0PK-157" value="END" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
           <mxGeometry x="1290" y="1031.9300000000003" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="9gYRuJ7WdFeHxlppkzCV-1" value="Show command doc" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="454" y="160" width="80" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

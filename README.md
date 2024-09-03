@@ -25,10 +25,10 @@ The Whole architecture is based on AWS, in particular:
     - telegram API to manage the bot on telegram; 
     - Instagram API to publish posts and stories;
 - SQS
-- Esse3
+- S3
 - …
 
 
 ## OVERALL BOT STRUCTURE
 
-![Bot Flow](/Documentation/bot_flow.drawio)
+![Bot Flow](/Documentation/bot_flow.png)
