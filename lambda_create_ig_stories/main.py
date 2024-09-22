@@ -3,6 +3,7 @@ import boto3
 
 from PIL import Image
 from io import BytesIO
+from utils.models.model_utils import Event
 
 from utils.image_utils import image_edit
 from utils.social_utils import publish_story
@@ -51,6 +52,8 @@ def lambda_handler(event: dict, context):
     
 
     """
+    event = Event.model_validate(event)
+
     META_CLIENT_SECRET = aws_utils.get_parameter(
         parameter_name="/meta/client-secret", is_secure=True
     )
@@ -67,7 +70,8 @@ def lambda_handler(event: dict, context):
     # im = Image.open(img_from_s3)
     # im.save("test_get_image.png")
     
-    print("Editing immagine in corso.")
+    # print("Editing immagine in corso.")
+    # usare event.<attribute>
     img_path_edit, file_name, file_stream = image_edit(img_from_s3, event)
     # ----------------------------
     # caricamento immagine su s3
