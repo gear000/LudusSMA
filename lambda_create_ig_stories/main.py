@@ -8,43 +8,43 @@ from utils.models.model_utils import Event
 from utils.image_utils import image_edit
 from utils.social_utils import publish_story
 
-from utils import aws_utils  # ricordati di spostare utils in lambda_functions
+from utils import aws_utils
 # from utils.telegram_utils import send_telegram_message
-# from utils.logger_utils import *
+from utils.logger_utils import *
 
 
 ssm_client = boto3.client("ssm")
 s3_client = boto3.client("s3")
 
 
-def _lambda_handler(event: dict, context):
+# def _lambda_handler(event: dict, context):
 
-    logger.info(f"Received event: {event}")
-    logger.info(f"Received context: {context}")
+#     logger.info(f"Received event: {event}")
+#     logger.info(f"Received context: {context}")
 
-    sqs_record: dict = event.get("Records")[0]
-    logger.info(f"Received event: {sqs_record.get('body')}")
+#     sqs_record: dict = event.get("Records")[0]
+#     logger.info(f"Received event: {sqs_record.get('body')}")
 
-    event_json = json.loads(sqs_record.get("body"))
+#     event_json = json.loads(sqs_record.get("body"))
 
-    TELEGRAM_TOKEN = aws_utils.get_parameter(
-        parameter_name="/telegram/bot-token", is_secure=True
-    )
-    ALLOWED_CHAT_IDS = [
-        int(chat_id)
-        for chat_id in aws_utils.get_parameter(
-            parameter_name="/telegram/allow-chat-ids",
-            is_secure=True,
-        ).split(",")
-    ]
+#     TELEGRAM_TOKEN = aws_utils.get_parameter(
+#         parameter_name="/telegram/bot-token", is_secure=True
+#     )
+#     ALLOWED_CHAT_IDS = [
+#         int(chat_id)
+#         for chat_id in aws_utils.get_parameter(
+#             parameter_name="/telegram/allow-chat-ids",
+#             is_secure=True,
+#         ).split(",")
+#     ]
 
-    send_telegram_message(
-        token=TELEGRAM_TOKEN,
-        chat_id=ALLOWED_CHAT_IDS[0],
-        message="Una storia è stata creata su IG!\nNo, non è vero è solo un test ahah",
-    )
+#     send_telegram_message(
+#         token=TELEGRAM_TOKEN,
+#         chat_id=ALLOWED_CHAT_IDS[0],
+#         message="Una storia è stata creata su IG!\nNo, non è vero è solo un test ahah",
+#     )
 
-    return {"statusCode": 200, "body": "Elaboration completed"}
+#     return {"statusCode": 200, "body": "Elaboration completed"}
 
 
 def lambda_handler(event: dict, context):
