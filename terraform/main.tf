@@ -31,6 +31,22 @@ resource "aws_iam_role" "lambda_role" {
   assume_role_policy = data.aws_iam_policy_document.lambda_role_document.json
 }
 
+data "aws_iam_policy_document" "lambda_rotate_tokens_role_document" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "lambda_rotate_tokens_role" {
+  name               = "LudusSMALambdaRotateTokensRole"
+  assume_role_policy = data.aws_iam_policy_document.lambda_rotate_tokens_role_document.json
+}
+
 data "aws_iam_policy_document" "scheduler_role_document" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -154,6 +170,26 @@ resource "aws_iam_role_policy" "lambda_policy" {
   name   = "LudusSMALambdaPolicy"
   role   = aws_iam_role.lambda_role.id
   policy = data.aws_iam_policy_document.lambda_policy_document.json
+}
+
+data "aws_iam_policy_document" "scheduler_policy_document" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "ssm:GetParameter",
+      "ssm:PutParameter"
+    ]
+    resources = [
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.telegram_header_webhook_token_key_parameter}",
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.meta_access_token_key_parameter}"
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "scheduler_policy" {
+  name   = "LudusSMASchedulerPolicy"
+  role   = aws_iam_role.scheduler_role.id
+  policy = data.aws_iam_policy_document.scheduler_policy_document.json
 }
 
 data "aws_iam_policy_document" "scheduler_policy_document" {
@@ -351,6 +387,24 @@ resource "aws_lambda_event_source_mapping" "create_ig_stories_sqs_trigger" {
   enabled                            = true
   batch_size                         = 1
   maximum_batching_window_in_seconds = 300
+}
+
+module "lambda_create_ig_stories" {
+  source             = "./modules/lambda_function"
+  lambda_name        = "rotate_tokens"
+  lambda_folder      = "../lambda_rotate_tokens"
+  lambda_handler     = "main.lambda_handler"
+  lambda_memory_size = 256
+  lambda_timeout     = 60
+  lambda_runtime     = "python3.12"
+  s3_bucket          = var.s3_bucket_artifact
+  iam_role_arn       = aws_iam_role.lambda_rotate_tokens_role.arn
+  environment_variables = {
+    TELEGRAM_BOT_KEY              = var.telegram_bot_key_parameter
+    TELEGRAM_HEADER_WEBHOOK_TOKEN = var.telegram_header_webhook_token_key_parameter
+    TELEGRAM_BOT_WEBHOOK_URL      = module.lambda_create_ig_stories.lambda_function_arn
+  }
+  lambda_layers = [aws_lambda_layer_version.utils_layer.arn]
 }
 
 ### LAMBDA TRIGGER PERMISSIONS ###

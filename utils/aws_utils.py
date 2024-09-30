@@ -32,14 +32,14 @@ TRANSCRIBE_CUSTOM_VOCABULARY_NAME = os.getenv("TRANSCRIBE_CUSTOM_VOCABULARY_NAME
 def get_parameter(
     parameter_name: str,
     is_secure: bool = False,
-) -> str | None:
+) -> str:
     """
     Retrieve an encrypted parameter from AWS Systems Manager Parameter Store.
 
     :param parameter_name: string, the name of the parameter to retrieve
     :param is_secure: boolean, whether the parameter should be decrypted
     :param ssm_client: boto3 client, the client to use to retrieve the parameter
-    :return: string or None, the value of the parameter if successful, None if not
+    :return: string, the value of the parameter if successful
     """
 
     try:
@@ -49,8 +49,31 @@ def get_parameter(
         )
         return response["Parameter"]["Value"]
     except ClientError as e:
-        logger.error(f"An error occurred: {e}")
-        return None
+        logger.error(f"Failed to get parameter: {e}")
+        raise e
+
+
+def set_parameter(parameter_name: str, parameter_value: str, parameter_type: str):
+    """
+    Set an encrypted parameter in AWS Systems Manager Parameter Store.
+
+    :param parameter_name: string, the name of the parameter to set
+    :param parameter_value: string, the value of the parameter to set
+    :param parameter_type: string, the type of the parameter to set
+    :param ssm_client: boto3 client, the client to use to set the parameter
+    :return: None
+    """
+    try:
+        response = _SSM_CLIENT.put_parameter(
+            Name=parameter_name,
+            Value=parameter_value,
+            Type=parameter_type,
+            Overwrite=True,
+        )
+        return response
+    except ClientError as e:
+        logger.error(f"Failed to set new parameter: {e}")
+        raise e
 
 
 # endregion
