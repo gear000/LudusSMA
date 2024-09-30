@@ -29,7 +29,7 @@ def rotate_telegram_header_token():
     )
     new_telegram_header_token = _generate_random_string(256)
 
-    url = f"https://api.telegram.org/{telegram_bot_token_value}/setWebhook"
+    url = f"https://api.telegram.org/bot{telegram_bot_token_value}/setWebhook"
 
     payload = f'{{"url": "{telegram_bot_webhook_url}","max_connections": 10,"allowed_updates": "message","drop_pending_updates": true,"secret_token":"{new_telegram_header_token}"}}'
 
