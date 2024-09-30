@@ -46,7 +46,7 @@ def rotate_telegram_header_token():
 
     if telegram_response.status_code == 200:
         logger.info("Telegram Header token rotated successfully on Telegram side.")
-        logger.info("Response: ", telegram_response.text)
+        logger.info(f"Response: {telegram_response.text}")
     else:
         logger.error(
             f"Failed to rotate Telegram Header token. Status code: {telegram_response.status_code}"
