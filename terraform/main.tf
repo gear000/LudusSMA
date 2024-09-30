@@ -198,6 +198,15 @@ data "aws_iam_policy_document" "scheduler_policy_document" {
     actions   = ["sqs:SendMessage"]
     resources = [aws_sqs_queue.events_sqs_queue.arn]
   }
+  statement {
+    effect = "Allow"
+    actions = [
+      "lambda:InvokeFunction"
+    ]
+    resources = [
+      module.lambda_rotate_tokens.lambda_function_arn
+    ]
+  }
 }
 
 resource "aws_iam_role_policy" "scheduler_policy" {
@@ -402,7 +411,7 @@ module "lambda_rotate_tokens" {
   environment_variables = {
     TELEGRAM_BOT_KEY              = var.telegram_bot_key_parameter
     TELEGRAM_HEADER_WEBHOOK_TOKEN = var.telegram_header_webhook_token_key_parameter
-    TELEGRAM_BOT_WEBHOOK_URL      = module.lambda_create_ig_stories.lambda_function_arn
+    TELEGRAM_BOT_WEBHOOK_URL      = aws_lambda_function_url.auth_tg_http_trigger.function_url
   }
   lambda_layers = [aws_lambda_layer_version.utils_layer.arn]
 }
@@ -432,6 +441,24 @@ resource "aws_lambda_layer_version" "utils_layer" {
   layer_name          = "LudusSMAUtilsLayer"
   compatible_runtimes = ["python3.12"]
   source_code_hash    = sha256(filebase64sha256("../utils.zip"))
+}
+
+### SCHEDULER ###
+
+resource "aws_scheduler_schedule" "example" {
+  name = "RotateTokensSchedule"
+
+  flexible_time_window {
+    mode = "15 minutes"
+  }
+
+  schedule_expression = "rate(50 days)"
+
+  target {
+    arn      = module.lambda_rotate_tokens.lambda_function_arn
+    role_arn = aws_iam_role.scheduler_role.arn
+    input    = jsonencode({})
+  }
 }
 
 ### TRANSCRIBE VOCABULARY ###
