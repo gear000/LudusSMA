@@ -1,9 +1,7 @@
-from email import header
 import json
 import os
 import secrets
 import string
-from httpx import head
 import requests
 
 from utils.aws_utils import get_parameter, set_parameter
