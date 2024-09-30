@@ -389,7 +389,7 @@ resource "aws_lambda_event_source_mapping" "create_ig_stories_sqs_trigger" {
   maximum_batching_window_in_seconds = 300
 }
 
-module "lambda_create_ig_stories" {
+module "lambda_rotate_tokens" {
   source             = "./modules/lambda_function"
   lambda_name        = "rotate_tokens"
   lambda_folder      = "../lambda_rotate_tokens"
