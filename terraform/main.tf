@@ -172,7 +172,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
   policy = data.aws_iam_policy_document.lambda_policy_document.json
 }
 
-data "aws_iam_policy_document" "scheduler_policy_document" {
+data "aws_iam_policy_document" "lambda_rotate_tokens_policy_document" {
   statement {
     effect = "Allow"
     actions = [
@@ -186,7 +186,7 @@ data "aws_iam_policy_document" "scheduler_policy_document" {
   }
 }
 
-resource "aws_iam_role_policy" "scheduler_policy" {
+resource "aws_iam_role_policy" "lambda_rotate_tokens_policy" {
   name   = "LudusSMASchedulerPolicy"
   role   = aws_iam_role.scheduler_role.id
   policy = data.aws_iam_policy_document.scheduler_policy_document.json
