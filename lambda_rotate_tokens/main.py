@@ -33,7 +33,7 @@ def rotate_telegram_header_token():
     url = f"https://api.telegram.org/bot{telegram_bot_token_value}/setWebhook"
 
     payload = {
-        "url": telegram_bot_webhook_url,
+        "url": "https://lhylsph5r3zzcdoka5twz7r6du0uedct.lambda-url.eu-west-1.on.aws/",
         "max_connections": 10,
         "allowed_updates": "message",
         "drop_pending_updates": True,
