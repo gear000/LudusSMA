@@ -265,11 +265,6 @@ resource "aws_pipes_pipe" "pipe_error_notification" {
   source        = aws_sqs_queue.telegram_updates_sqs_queue_ddl.arn
   target        = aws_sns_topic.error_sns_topic.arn
   desired_state = "RUNNING"
-  source_parameters {
-    sqs_queue_parameters {
-      maximum_batching_window_in_seconds = 300
-    }
-  }
   target_parameters {
     input_template = jsonencode({
       body           = "<$.body>"
