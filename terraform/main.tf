@@ -265,7 +265,11 @@ resource "aws_pipes_pipe" "pipe_error_notification" {
   source        = aws_sqs_queue.telegram_updates_sqs_queue_ddl.arn
   target        = aws_sns_topic.error_sns_topic.arn
   desired_state = "RUNNING"
-
+  source_parameters {
+    sqs_queue_parameters {
+      maximum_batching_window_in_seconds = 300
+    }
+  }
   target_parameters {
     input_template = jsonencode({
       body           = "<$.body>"
@@ -347,10 +351,11 @@ module "lambda_create_ig_stories" {
 }
 
 resource "aws_lambda_event_source_mapping" "create_ig_stories_sqs_trigger" {
-  event_source_arn = aws_sqs_queue.events_sqs_queue.arn
-  function_name    = module.lambda_create_ig_stories.lambda_function_arn
-  enabled          = true
-  batch_size       = 1
+  event_source_arn                   = aws_sqs_queue.events_sqs_queue.arn
+  function_name                      = module.lambda_create_ig_stories.lambda_function_arn
+  enabled                            = true
+  batch_size                         = 1
+  maximum_batching_window_in_seconds = 300
 }
 
 ### LAMBDA TRIGGER PERMISSIONS ###
