@@ -4,7 +4,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.64"
+      version = "~> 5.0"
     }
   }
 }
@@ -173,6 +173,11 @@ resource "aws_iam_role_policy" "lambda_policy" {
 }
 
 data "aws_iam_policy_document" "lambda_rotate_tokens_policy_document" {
+  statement {
+    effect    = "Allow"
+    actions   = ["logs:*"]
+    resources = ["*"]
+  }
   statement {
     effect = "Allow"
     actions = [
@@ -449,7 +454,8 @@ resource "aws_scheduler_schedule" "example" {
   name = "RotateTokensSchedule"
 
   flexible_time_window {
-    mode = "15 minutes"
+    mode                      = "FLEXIBLE"
+    maximum_window_in_minutes = "15"
   }
 
   schedule_expression = "rate(50 days)"
