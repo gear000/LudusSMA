@@ -97,6 +97,7 @@ data "aws_iam_policy_document" "codebuild_policy_document" {
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*",
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/*",
       "arn:aws:transcribe:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vocabulary/*",
+      "arn:aws:scheduler:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*",
     ]
   }
   statement {
