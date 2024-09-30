@@ -1,3 +1,4 @@
+import json
 import os
 import secrets
 import string
@@ -31,12 +32,17 @@ def rotate_telegram_header_token():
 
     url = f"https://api.telegram.org/bot{telegram_bot_token_value}/setWebhook"
 
-    payload = '{"url": "{telegram_bot_webhook_url}","max_connections": 10,"allowed_updates": "message","drop_pending_updates": true,"secret_token":"{new_telegram_header_token}"}'.format(
-        telegram_bot_webhook_url=telegram_bot_webhook_url,
-        new_telegram_header_token=new_telegram_header_token,
-    )
+    payload = {
+        "url": telegram_bot_webhook_url,
+        "max_connections": 10,
+        "allowed_updates": "message",
+        "drop_pending_updates": True,
+        "secret_token": new_telegram_header_token,
+    }
 
-    telegram_response = requests.request(method="POST", url=url, data=payload)
+    telegram_response = requests.request(
+        method="POST", url=url, data=json.dumps(payload)
+    )
 
     if telegram_response.status_code == 200:
         logger.info("Telegram Header token rotated successfully on Telegram side.")
