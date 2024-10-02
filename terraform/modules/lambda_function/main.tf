@@ -22,6 +22,11 @@ resource "aws_s3_object" "lambda_zip" {
   source_hash = data.archive_file.create_zip.output_base64sha256
 }
 
+resource "aws_cloudwatch_log_group" "this" {
+  name              = "/aws/lambda/${var.lambda_name}"
+  retention_in_days = var.log_retention_in_days
+}
+
 resource "aws_lambda_function" "this" {
   function_name    = var.lambda_name
   source_code_hash = data.archive_file.create_zip.output_base64sha256
@@ -33,6 +38,10 @@ resource "aws_lambda_function" "this" {
   runtime          = var.lambda_runtime
   role             = var.iam_role_arn
   architectures    = ["x86_64"]
+  logging_config {
+    log_group  = aws_cloudwatch_log_group.this.name
+    log_format = "text"
+  }
   environment {
     variables = var.environment_variables
   }
