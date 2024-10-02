@@ -278,6 +278,21 @@ def list_schedule_groups(exclude_default: bool = False) -> list[dict[str, str]]:
         and (not exclude_default or sg["Name"] != "default")
     ]
 
+def delete_schedule_groups(schedule_name: str):
+    all_groups_response = _SCHEDULER_CLIENT.list_schedule_groups()
+    all_schedules_response = _SCHEDULER_CLIENT.list_schedules()
+    schedule_groups_all = [] # Lista di tutti gli schedule groups esistenti
+    for group in all_groups_response['ScheduleGroups']:
+        schedule_groups_all.append(group['Name'])
+        schedule_groups_all = set(schedule_groups_all)
+    schedule_groups_full = [] # Lista di schedule groups che hanno schedules al loro interno
+    for schedule in all_schedules_response['Schedules']:
+        schedule_groups_full.append(schedule['GroupName'])
+        schedule_groups_full = set(schedule_groups_full)
+    schedule_groups_empty = schedule_groups_all - schedule_groups_full
+    for group_to_delete in schedule_groups_empty:
+        if group_to_delete != "default":
+            delete_schedule_group(schedule_group_name=group_to_delete)
 
 def list_tags(resource_arn: str):
     try:

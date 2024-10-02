@@ -111,6 +111,8 @@ def lambda_handler(event: dict, context):
     print("Pubblicazione storia Instagram in corso.")
     publish_story(img_url, meta_config)
     # ----------------------------
+    # Delete empty schedule groups
+    aws_utils.delete_schedule_groups()
 
     return {"statusCode": 200, "body": "Elaboration completed"}
 
@@ -120,3 +122,4 @@ if __name__ == "__main__":
     with open("../test/event.json") as f:
         event = json.load(f)
         lambda_handler(event, None)
+    
