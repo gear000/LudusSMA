@@ -40,7 +40,7 @@ resource "aws_lambda_function" "this" {
   architectures    = ["x86_64"]
   logging_config {
     log_group  = aws_cloudwatch_log_group.this.name
-    log_format = "text"
+    log_format = "Text"
   }
   environment {
     variables = var.environment_variables
