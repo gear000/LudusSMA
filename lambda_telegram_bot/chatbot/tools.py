@@ -10,15 +10,15 @@ SQS_QUEUE_EVENTS_ARN = os.getenv("SQS_QUEUE_EVENTS_ARN", "")
 IAM_ROLE_EVENT_SCHEDULER_ARN = os.getenv("IAM_ROLE_EVENT_SCHEDULER_ARN", "")
 
 
-def create_schedule(event: Event):
+def create_schedules(event: Event):
     event_id = str(uuid.uuid4())
     now = datetime.now()
     cron_expressions: list[dict] = [
         {
             "cron": f"at({(event.start_date - timedelta(days=30)).strftime('%Y-%m-%dT10:{0}:00').format(str(random.randint(0, 59)).zfill(2))})",
             "name": "FirstStoryBeforeEvent",
-            # l'end_date serve solo a evitare di creare un schedule che non avrà esecuzione.
-            # In ogni caso questo campo non viene usato nello schedule
+            # the end_date is just to avoid creating a schedule that will not have execution.
+            # In any case, this field is not used in this specific schedule.
             "end_date": max((event.start_date - timedelta(days=30)), now),
         },
         {

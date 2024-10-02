@@ -25,9 +25,8 @@ async def process_update(app: Application, update: Update):
     """
     Process a single update
 
-    ### Args ###
-        `app` (Application): the Telegram bot app
-        `update` (Update): the Telegram update to process
+    :param app: telegram.ext.Application, the Telegram bot app
+    :param update: telegram.Update, the Telegram update to process
     """
 
     await app.initialize()

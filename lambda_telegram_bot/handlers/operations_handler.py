@@ -34,7 +34,7 @@ from utils.telegram_utils import send_event_types
 from utils.logger_utils import *
 from utils.models.model_utils import Event, OutputCreateEvent
 
-from chatbot.tools import create_schedule
+from chatbot import tools
 from chatbot.event_handler import check_info_chain
 
 from .chat_state import (
@@ -58,9 +58,26 @@ S3_BUCKET_IMAGES_NAME = os.environ["S3_BUCKET_IMAGES_NAME"]
 S3_BUCKET_CHAT_PERSISTENCE_NAME = os.environ["S3_BUCKET_CHAT_PERSISTENCE_NAME"]
 
 
+class ContextKeys(Enum):
+    """
+    These instances are used in the Telegram chat context dictionary as keys.
+    In this way is possible to have a description as metadata for each key.
+    """
+
+    EVENT_TYPE = "Tipo di evento"
+    EVENT = "Informazioni sull'evento"
+    CONTEXT = "Messaggi dell'utente"
+    START_OVER = "Start Over"
+    EVENT_TYPE_DICT = "Dizionario degli eventi disponibili"
+    NEW_EVENT = "Titolo del nuovo evento"
+
+
 async def selecting_action_handler(
     update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
 ):
+    """
+    This step acts as a router on the user's initial choice if the `/start` commad is used.
+    """
     state = int(update.callback_query.data)
     match ChatOrchestratorState(state):
         case ChatOrchestratorState.ADD_EVENT:
@@ -78,7 +95,9 @@ async def selecting_action_handler(
 
 
 async def error_handler(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
-    """Log Errors caused by Updates."""
+    """
+    Log the mishandling of an update either in CloudWatch logs or as a message on Telegram
+    """
     logger.error(
         "Update '%s' caused error '%s'",
         update,
@@ -93,6 +112,9 @@ async def error_handler(update: telegram.Update, context: ContextTypes.DEFAULT_T
 
 
 async def not_implemented(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    This step indicates to the user that a function or command has not yet been implemented.
+    """
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Questa funzione non è ancora implementata.",
@@ -102,17 +124,14 @@ async def not_implemented(update: telegram.Update, context: ContextTypes.DEFAULT
 # region Add Event
 
 
-class ContextKeys(Enum):
-    EVENT_TYPE = "Tipo di evento"
-    EVENT = "Informazioni sull'evento"
-    CONTEXT = "Messaggi dell'utente"
-    START_OVER = "Start Over"
-    EVENT_TYPE_DICT = "Dizionario degli eventi disponibili"
-    NEW_EVENT = "Titolo del nuovo evento"
-
-
 async def set_event(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    In this step you ask for information about the individual event that the user intends to create.
+    Or if the user intends to correct the description they gave earlier.
+    """
 
+    # if ContextKeys.EVENT_TYPE is empty, it means that this is the first user interaction for
+    # this specific event, so it is necessary to make a detailed list of the required fields
     if not context.user_data.get(ContextKeys.EVENT_TYPE):
         text = update.callback_query.data
         context.user_data[ContextKeys.EVENT_TYPE] = text
@@ -140,7 +159,12 @@ async def llm_processing(
     user_message: str | None = None,
 ):
     """
-    Instantiate the bot and get the answer
+    This step is used to process the event description through LLM, checking the completeness of the information and creating the appropriate `Event` instance.
+    If any data is missing, the process will ask the user for the opposite information.
+
+    :param update: telegram.Update, the user update from Telegram
+    :param context: ContextTypes.DEFAULT_TYPE, the context of the conversation
+    :param user_message: str | None, if the update contained an audio `user_message` contains the transcribed message text
     """
     text = update.message.text or user_message
 
@@ -157,6 +181,7 @@ async def llm_processing(
         }
     )
     clarification = response.clarification
+
     if clarification:
         await update.message.reply_text(
             "Mmhh, qualcosa non va...\n" + clarification,
@@ -165,7 +190,6 @@ async def llm_processing(
         context.user_data[ContextKeys.CONTEXT].append(("assistant", clarification))
         return ChatAddEventState.EVENT_INFO
     else:
-
         event: Event = response.event
         event.event_type = context.user_data[ContextKeys.EVENT_TYPE]
         await update.message.reply_text(
@@ -185,7 +209,9 @@ async def llm_processing(
 async def llm_processing_audio(
     update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
 ):
-
+    """
+    This step is used to transcribe the audio file to text for Event description
+    """
     audio_file = await update.message.voice.get_file()
     audio_s3_key = f"{update.effective_chat.id}/audio/{audio_file.file_id}.mp3"
 
@@ -205,9 +231,11 @@ async def llm_processing_audio(
 
 
 async def schedule_event(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
-    """Add event in schedule"""
+    """
+    Create several schedulers for the single event, for create scheduled Instagram stories.
+    """
 
-    create_schedule(context.user_data[ContextKeys.EVENT])
+    tools.create_schedules(context.user_data[ContextKeys.EVENT])
 
     await update.message.reply_text(
         f"Ho creato l'evento!",
@@ -248,7 +276,9 @@ add_event_handler = ConversationHandler(
 
 
 async def deleting_event(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
-    """Delete schedule group that a specif event belongs to"""
+    """
+    Delete schedule group that a specif single event belongs to.
+    """
 
     logger.info("Deleting event %s", update.callback_query.data)
     delete_schedule_group(update.callback_query.data)
@@ -271,6 +301,9 @@ delete_event_handler = CallbackQueryHandler(callback=deleting_event, pattern="^.
 async def create_new_event_type(
     update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
 ):
+    """
+    Requires the name for the construction of the new event type.
+    """
     await update.callback_query.answer()
     await update.callback_query.edit_message_text(
         "Sono contento ci sia un nuovo evento a Ludus!\n"
@@ -283,6 +316,10 @@ async def create_new_event_type(
 
 
 async def request_image(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    It handles conflicts of event types that possess the same identifier and in case of successful
+    processing requests the image to be associated with the event type.
+    """
 
     event_types = format_event_types()
 
@@ -305,6 +342,9 @@ async def request_image(update: telegram.Update, context: ContextTypes.DEFAULT_T
 
 
 async def load_image(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Upload the image to S3, this consequently creates a new event type.
+    """
     photo_file = await update.message.photo[-1].get_file()
 
     put_s3_object(
@@ -322,6 +362,9 @@ async def load_image(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
 async def update_event_type(
     update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
 ):
+    """
+    Asks the user to choose the type of event to update from those available.
+    """
     are_there_event_type = await send_event_types(
         update,
         context,
@@ -337,6 +380,12 @@ async def update_event_type(
 async def expose_updating_action(
     update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
 ):
+    """
+    Once you have chosen the type of event to be updated you are asked which operation you want to perform between:
+    - update the event type label
+    - update the event type image
+    - check the current image
+    """
     context.user_data[ContextKeys.EVENT_TYPE] = update.callback_query.data.lower()
 
     buttons = [
@@ -371,6 +420,9 @@ async def expose_updating_action(
 async def update_event_type_label(
     update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
 ):
+    """
+    The new label for the event type is requested.
+    """
     await update.callback_query.answer()
     await update.callback_query.edit_message_text(
         "Va bene! Quale nuova label vuoi dare a questo tipo di evento?"
@@ -383,6 +435,9 @@ async def update_event_type_label(
 
 
 async def validate_label(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    The new label is validated, verifying that there is not already another event with the same title. If so, the image is moved to a new S3 key.
+    """
 
     event_types = format_event_types()
 
@@ -422,6 +477,9 @@ async def validate_label(update: telegram.Update, context: ContextTypes.DEFAULT_
 async def update_event_type_image(
     update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
 ):
+    """
+    The new image for the event type is requested.
+    """
     await update.callback_query.answer()
     await update.callback_query.edit_message_text(
         f"Ottimo! Carica pure la nuova immagine per {context.user_data[ContextKeys.EVENT_TYPE].title()}.\n"
@@ -433,6 +491,9 @@ async def update_event_type_image(
 
 
 async def validate_image(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    The old image is deleted and the new one is uploaded to S3
+    """
 
     delete_s3_object(
         bucket_name=S3_BUCKET_IMAGES_NAME,
@@ -458,6 +519,9 @@ async def validate_image(update: telegram.Update, context: ContextTypes.DEFAULT_
 async def check_event_type_image(
     update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
 ):
+    """
+    Send the image related to the requested event type uploaded to S3 and used as the basis for creating the story on Instagram
+    """
     event_type: str = context.user_data[ContextKeys.EVENT_TYPE]
 
     images_list = list_s3_objects(
@@ -493,6 +557,9 @@ async def check_event_type_image(
 async def delete_event_type(
     update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
 ):
+    """
+    Lists the possible types of events that can be deleted by the user
+    """
     is_any_event_type = await send_event_types(
         update,
         context,
@@ -506,6 +573,9 @@ async def delete_event_type(
 async def deleting_event_type(
     update: telegram.Update, context: ContextTypes.DEFAULT_TYPE
 ):
+    """
+    Delete an event type as S3 key
+    """
     delete_s3_object(
         bucket_name=S3_BUCKET_IMAGES_NAME,
         object_key=f"clean-images/{update.callback_query.data.lower()}",

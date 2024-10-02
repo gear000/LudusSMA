@@ -24,7 +24,7 @@ TELEGRAM_TOKEN = get_parameter(parameter_name="/telegram/bot-token", is_secure=T
 
 def get_orchestrator_handler() -> ConversationHandler:
     """
-    Returns the conversation handler for the bot.
+    Returns the main conversation handler for the bot.
     """
 
     return ConversationHandler(
