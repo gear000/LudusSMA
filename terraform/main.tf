@@ -122,6 +122,7 @@ data "aws_iam_policy_document" "lambda_policy_document" {
       "s3:PutObject",
       "s3:ListBucket",
       "s3:ListObject",
+      "s3:DeleteObject"
     ]
     resources = [
       aws_s3_bucket.chat_persistence_bucket.arn,
